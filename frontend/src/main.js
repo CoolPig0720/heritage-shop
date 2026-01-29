@@ -6,6 +6,7 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import App from './App.vue'
 import router from './router'
 import './styles/main.scss'
+import { i18n, getElementLocale } from '@/i18n'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -16,6 +17,7 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 
 app.use(pinia)
 app.use(router)
-app.use(ElementPlus)
+app.use(i18n)
+app.use(ElementPlus, { locale: getElementLocale(i18n.global.locale.value) })
 
 app.mount('#app')
