@@ -3,7 +3,7 @@
     <div class="header-container">
       <div class="header-left">
         <router-link to="/" class="logo">
-          <span>非遗商城</span>
+          <span>{{ $t('header.brand') }}</span>
         </router-link>
       </div>
       <div class="header-center">
@@ -15,13 +15,30 @@
           text-color="#fff"
           active-text-color="#fff"
         >
-          <el-menu-item index="/home">首页</el-menu-item>
-          <el-menu-item index="/heritage">非遗文化</el-menu-item>
-          <el-menu-item index="/products">商品列表</el-menu-item>
-          <el-menu-item index="/customize">智能定制</el-menu-item>
+          <el-menu-item index="/home">{{ $t('header.home') }}</el-menu-item>
+          <el-menu-item index="/heritage">{{ $t('header.heritage') }}</el-menu-item>
+          <el-menu-item index="/products">{{ $t('header.products') }}</el-menu-item>
+          <el-menu-item index="/customize">{{ $t('header.customize') }}</el-menu-item>
         </el-menu>
       </div>
       <div class="header-right">
+        <el-switch
+          :model-value="dark"
+          :active-icon="Moon"
+          :inactive-icon="Sunny"
+          @change="handleToggleDark"
+        />
+
+        <el-dropdown @command="handleSetLang">
+          <span class="lang-switch">{{ langLabel }}</span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="zh">{{ $t('header.langZh') }}</el-dropdown-item>
+              <el-dropdown-item command="en">{{ $t('header.langEn') }}</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+
         <template v-if="userStore.token">
           <el-dropdown>
             <span class="user-info">
@@ -32,19 +49,19 @@
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item @click="goToProfile">个人中心</el-dropdown-item>
-                <el-dropdown-item @click="goToCart">购物车</el-dropdown-item>
-                <el-dropdown-item @click="goToOrders">我的订单</el-dropdown-item>
-                <el-dropdown-item v-if="canGoUsers" @click="goToUsers" :divided="true">用户管理</el-dropdown-item>
-                <el-dropdown-item v-if="canGoProducts" @click="goToManageProducts" :divided="!canGoUsers">商品管理</el-dropdown-item>
-                <el-dropdown-item divided @click="handleLogout">退出登录</el-dropdown-item>
+                <el-dropdown-item @click="goToProfile">{{ $t('header.profile') }}</el-dropdown-item>
+                <el-dropdown-item @click="goToCart">{{ $t('header.cart') }}</el-dropdown-item>
+                <el-dropdown-item @click="goToOrders">{{ $t('header.orders') }}</el-dropdown-item>
+                <el-dropdown-item v-if="canGoUsers" @click="goToUsers" :divided="true">{{ $t('header.users') }}</el-dropdown-item>
+                <el-dropdown-item v-if="canGoProducts" @click="goToManageProducts" :divided="!canGoUsers">{{ $t('header.manageProducts') }}</el-dropdown-item>
+                <el-dropdown-item divided @click="handleLogout">{{ $t('header.logout') }}</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
         </template>
         <template v-else>
-          <el-button type="primary" @click="goToLogin">登录</el-button>
-          <el-button @click="goToRegister">注册</el-button>
+          <el-button type="primary" @click="goToLogin">{{ $t('header.login') }}</el-button>
+          <el-button @click="goToRegister">{{ $t('header.register') }}</el-button>
         </template>
       </div>
     </div>
@@ -52,11 +69,15 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
 import { getProfile } from '@/api/auth'
+import { Moon, Sunny } from '@element-plus/icons-vue'
+import { i18n } from '@/i18n'
+import { toggleDark, isDark } from '@/utils/theme'
+import { setLang } from '@/utils/lang'
 
 const router = useRouter()
 const route = useRoute()
@@ -67,6 +88,9 @@ const activeMenu = computed(() => route.path)
 const role = computed(() => userStore.userInfo?.role)
 const canGoUsers = computed(() => role.value === 'ADMIN')
 const canGoProducts = computed(() => role.value === 'ADMIN' || role.value === 'MERCHANT')
+
+const dark = ref(isDark())
+const langLabel = computed(() => (i18n.global.locale.value === 'zh' ? '中文' : 'EN'))
 
 const validateToken = async () => {
   if (userStore.token) {
@@ -126,8 +150,17 @@ const goToManageProducts = () => {
 
 const handleLogout = () => {
   userStore.logout()
-  ElMessage.success('退出登录成功')
+  ElMessage.success(i18n.global.t('common.logoutSuccess'))
   router.push('/login')
+}
+
+const handleToggleDark = () => {
+  toggleDark()
+  dark.value = isDark()
+}
+
+const handleSetLang = (lang) => {
+  setLang(lang)
 }
 </script>
 
@@ -170,6 +203,12 @@ const handleLogout = () => {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.lang-switch {
+  cursor: pointer;
+  color: #fff;
+  user-select: none;
 }
 
 .user-info {

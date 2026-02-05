@@ -92,3 +92,40 @@ export function updateCertificate(data) {
     data
   })
 }
+
+export function createAddress(data) {
+  return request({
+    url: '/api/user/address',
+    method: 'post',
+    data
+  })
+}
+
+export function updateAddress(id, data) {
+  return request({
+    url: `/api/user/address/${id}`,
+    method: 'put',
+    data
+  })
+}
+
+export function deleteAddress(id) {
+  return request({
+    url: `/api/user/address/${id}`,
+    method: 'delete'
+  })
+}
+
+export function listAddresses() {
+  return request({
+    url: '/api/user/address/list',
+    method: 'get'
+  })
+}
+
+export function setDefaultAddress(id) {
+  return request({
+    url: `/api/user/address/${id}/default`,
+    method: 'put'
+  })
+}

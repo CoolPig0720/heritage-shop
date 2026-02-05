@@ -3,20 +3,20 @@
     <div class="login-wrapper">
       <div class="login-left">
         <div class="login-left-content">
-          <h1 class="login-title">非遗商城</h1>
-          <p class="login-subtitle">传承文化，连接未来</p>
+          <h1 class="login-title">{{ $t('login.title') }}</h1>
+          <p class="login-subtitle">{{ $t('login.subtitle') }}</p>
           <div class="login-features">
             <div class="feature-item">
               <el-icon :size="30"><User /></el-icon>
-              <span>安全可靠</span>
+              <span>{{ $t('login.featureSafe') }}</span>
             </div>
             <div class="feature-item">
               <el-icon :size="30"><Lock /></el-icon>
-              <span>隐私保护</span>
+              <span>{{ $t('login.featurePrivacy') }}</span>
             </div>
             <div class="feature-item">
               <el-icon :size="30"><ShoppingCart /></el-icon>
-              <span>便捷购物</span>
+              <span>{{ $t('login.featureShop') }}</span>
             </div>
           </div>
         </div>
@@ -24,7 +24,26 @@
       
       <div class="login-right">
         <div class="login-card">
-          <h2 class="login-card-title">{{ isLogin ? '用户登录' : '用户注册' }}</h2>
+          <div class="login-tools">
+            <el-switch
+              :model-value="dark"
+              :active-icon="Moon"
+              :inactive-icon="Sunny"
+              @change="handleToggleDark"
+            />
+
+            <el-dropdown @command="handleSetLang">
+              <span class="lang-switch">{{ langLabel }}</span>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="zh">{{ $t('header.langZh') }}</el-dropdown-item>
+                  <el-dropdown-item command="en">{{ $t('header.langEn') }}</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
+
+          <h2 class="login-card-title">{{ isLogin ? $t('login.cardLoginTitle') : $t('login.cardRegisterTitle') }}</h2>
           
           <el-form 
             v-if="isLogin"
@@ -36,7 +55,7 @@
             <el-form-item prop="account">
               <el-input
                 v-model="loginForm.account"
-                placeholder="请输入账号"
+                :placeholder="$t('login.accountPlaceholder')"
                 prefix-icon="User"
                 size="large"
                 clearable
@@ -47,7 +66,7 @@
               <el-input
                 v-model="loginForm.password"
                 type="password"
-                placeholder="请输入密码"
+                :placeholder="$t('login.passwordPlaceholder')"
                 prefix-icon="Lock"
                 size="large"
                 show-password
@@ -59,7 +78,7 @@
               <div class="captcha-wrapper">
                 <el-input
                   v-model="loginForm.captcha"
-                  placeholder="请输入图片中的验证码"
+                  :placeholder="$t('login.captchaPlaceholder')"
                   prefix-icon="Key"
                   size="large"
                   clearable
@@ -80,7 +99,7 @@
                 size="large"
                 class="login-button"
               >
-                登录
+                {{ $t('login.login') }}
               </el-button>
             </el-form-item>
           </el-form>
@@ -173,18 +192,18 @@
                 size="large"
                 class="login-button"
               >
-                注册
+                {{ $t('login.register') }}
               </el-button>
             </el-form-item>
           </el-form>
           
           <div class="login-footer">
             <el-checkbox v-model="rememberPassword" class="remember-checkbox">
-              记住密码
+              {{ $t('login.remember') }}
             </el-checkbox>
-            <span class="footer-text">{{ isLogin ? '还没有账号？' : '已有账号？' }}</span>
+            <span class="footer-text">{{ isLogin ? $t('login.noAccount') : $t('login.hasAccount') }}</span>
             <a href="javascript:void(0)" @click="toggleMode" class="footer-link">
-              {{ isLogin ? '立即注册' : '立即登录' }}
+              {{ isLogin ? $t('login.switchToRegister') : $t('login.switchToLogin') }}
             </a>
           </div>
         </div>
@@ -194,12 +213,15 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { computed, ref, reactive, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { User, Lock, Key, Refresh, ShoppingCart, UserFilled } from '@element-plus/icons-vue'
+import { User, Lock, Key, Refresh, ShoppingCart, UserFilled, Moon, Sunny } from '@element-plus/icons-vue'
 import { login, register } from '@/api/auth'
 import { useUserStore } from '@/stores/user'
+import { i18n } from '@/i18n'
+import { toggleDark, isDark } from '@/utils/theme'
+import { setLang } from '@/utils/lang'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -216,6 +238,18 @@ const loginForm = reactive({
 })
 
 const rememberPassword = ref(false)
+
+const dark = ref(isDark())
+const langLabel = computed(() => (i18n.global.locale.value === 'zh' ? '中文' : 'EN'))
+
+const handleToggleDark = () => {
+  toggleDark()
+  dark.value = isDark()
+}
+
+const handleSetLang = (lang) => {
+  setLang(lang)
+}
 
 const registerForm = reactive({
   account: '',
@@ -527,10 +561,24 @@ onMounted(() => {
   padding: 40px;
 }
 
+.login-tools {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.login-tools .lang-switch {
+  cursor: pointer;
+  user-select: none;
+  color: var(--el-text-color-regular);
+}
+
 .login-card-title {
   font-size: 28px;
   font-weight: bold;
-  color: #303133;
+  color: var(--el-text-color-primary);
   text-align: center;
   margin-bottom: 40px;
 }

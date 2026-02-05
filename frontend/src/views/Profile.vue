@@ -42,6 +42,78 @@
             </el-form>
           </div>
         </el-tab-pane>
+        <el-tab-pane label="收货地址" name="address">
+          <div class="address-section">
+            <div class="address-toolbar">
+              <el-button type="primary" @click="openAddAddress">新增地址</el-button>
+            </div>
+
+            <el-skeleton v-if="addressLoading" :rows="5" animated />
+
+            <el-empty v-else-if="addresses.length === 0" description="暂无地址" />
+
+            <div v-else class="address-list">
+              <div v-for="item in addresses" :key="item.id" class="address-item">
+                <div class="address-item-main">
+                  <div class="address-item-title">
+                    <span class="address-item-name">{{ item.receiverName }}</span>
+                    <span class="address-item-phone">{{ item.receiverPhone }}</span>
+                    <el-tag v-if="item.isDefault === 1" type="success" size="small">默认</el-tag>
+                  </div>
+                  <div class="address-item-detail">
+                    {{ formatAddressLine(item) }}
+                  </div>
+                </div>
+
+                <div class="address-item-actions">
+                  <el-button size="small" @click="openEditAddress(item)">编辑</el-button>
+                  <el-button size="small" type="danger" @click="handleDeleteAddress(item)">删除</el-button>
+                  <el-button
+                    size="small"
+                    type="success"
+                    :disabled="item.isDefault === 1"
+                    @click="handleSetDefaultAddress(item)"
+                  >
+                    设为默认
+                  </el-button>
+                </div>
+              </div>
+            </div>
+
+            <el-dialog v-model="addressDialogVisible" :title="addressDialogTitle" width="520px" @closed="handleAddressDialogClosed">
+              <el-form ref="addressFormRef" :model="addressForm" :rules="addressRules" label-width="90px">
+                <el-form-item label="收货人" prop="receiverName">
+                  <el-input v-model="addressForm.receiverName" placeholder="请输入收货人姓名" />
+                </el-form-item>
+                <el-form-item label="手机号" prop="receiverPhone">
+                  <el-input v-model="addressForm.receiverPhone" placeholder="请输入收货人手机号" />
+                </el-form-item>
+                <el-form-item label="地区" prop="regionCodes">
+                  <el-cascader
+                    v-model="addressForm.regionCodes"
+                    :options="regionOptions"
+                    placeholder="请选择地区"
+                    style="width: 100%"
+                    @change="handleRegionChange"
+                  />
+                </el-form-item>
+                <el-form-item label="已选地区">
+                  <el-input :model-value="addressForm.regionNamePath" disabled />
+                </el-form-item>
+                <el-form-item label="详细地址" prop="detailAddress">
+                  <el-input v-model="addressForm.detailAddress" placeholder="请输入详细地址" />
+                </el-form-item>
+                <el-form-item>
+                  <el-checkbox v-model="addressForm.isDefault">设为默认地址</el-checkbox>
+                </el-form-item>
+              </el-form>
+              <template #footer>
+                <el-button @click="addressDialogVisible = false">取消</el-button>
+                <el-button type="primary" :loading="addressSaving" @click="submitAddress">保存</el-button>
+              </template>
+            </el-dialog>
+          </div>
+        </el-tab-pane>
         <el-tab-pane label="修改密码" name="password">
           <div class="password-section">
             <el-form :model="passwordForm" :rules="passwordRules" ref="passwordFormRef" label-width="100px">
@@ -99,10 +171,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { useUserStore } from '@/stores/user'
-import { ElMessage } from 'element-plus'
-import { getProfile, updateProfile, updatePassword, verifyCertificate, getCertificateInfo } from '@/api/auth'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { getProfile, updateProfile, updatePassword, verifyCertificate, getCertificateInfo, createAddress, updateAddress, deleteAddress, listAddresses, setDefaultAddress } from '@/api/auth'
+import { regionData, CodeToText, TextToCode } from 'element-china-area-data'
 
 const userStore = useUserStore()
 
@@ -110,6 +183,7 @@ const activeTab = ref('info')
 const formRef = ref(null)
 const passwordFormRef = ref(null)
 const certificateFormRef = ref(null)
+const addressFormRef = ref(null)
 const updating = ref(false)
 const updatingPassword = ref(false)
 const verifying = ref(false)
@@ -208,6 +282,51 @@ const formatTime = (time) => {
   return new Date(time).toLocaleString('zh-CN')
 }
 
+const addresses = ref([])
+const addressLoading = ref(false)
+const addressDialogVisible = ref(false)
+const addressSaving = ref(false)
+const editingAddressId = ref(null)
+const addressDialogTitle = computed(() => (editingAddressId.value ? '编辑地址' : '新增地址'))
+
+const addressForm = reactive({
+  receiverName: '',
+  receiverPhone: '',
+  regionNamePath: '',
+  regionCodePath: '',
+  regionDepth: 0,
+  province: '',
+  city: '',
+  district: '',
+  detailAddress: '',
+  regionCodes: [],
+  isDefault: false
+})
+
+const addressRules = {
+  receiverName: [{ required: true, message: '请输入收货人姓名', trigger: 'blur' }],
+  receiverPhone: [{ required: true, message: '请输入收货人手机号', trigger: 'blur' }],
+  regionCodes: [
+    {
+      validator: (rule, value, callback) => {
+        if (Array.isArray(value) && value.length > 0) {
+          callback()
+          return
+        }
+        if (addressForm.regionNamePath) {
+          callback()
+          return
+        }
+        callback(new Error('请选择地区'))
+      },
+      trigger: 'change'
+    }
+  ],
+  detailAddress: [{ required: true, message: '请输入详细地址', trigger: 'blur' }]
+}
+
+const regionOptions = regionData
+
 const fetchUserInfo = async () => {
   try {
     const res = await getProfile()
@@ -237,6 +356,187 @@ const fetchCertificateInfo = async () => {
     }
   } catch (error) {
     console.error('获取认证信息失败', error)
+  }
+}
+
+const fetchAddresses = async () => {
+  addressLoading.value = true
+  try {
+    const res = await listAddresses()
+    addresses.value = res.data || []
+  } catch (error) {
+    ElMessage.error('获取地址失败')
+  } finally {
+    addressLoading.value = false
+  }
+}
+
+const resetAddressForm = () => {
+  addressForm.receiverName = ''
+  addressForm.receiverPhone = ''
+  addressForm.regionNamePath = ''
+  addressForm.regionCodePath = ''
+  addressForm.regionDepth = 0
+  addressForm.province = ''
+  addressForm.city = ''
+  addressForm.district = ''
+  addressForm.detailAddress = ''
+  addressForm.regionCodes = []
+  addressForm.isDefault = false
+}
+
+const handleAddressDialogClosed = async () => {
+  resetAddressForm()
+  editingAddressId.value = null
+  await nextTick()
+  addressFormRef.value?.clearValidate()
+}
+
+const toRegionCodes = (province, city, district) => {
+  const p = TextToCode?.[province]
+  const pCode = p?.code
+  const c = p?.[city]
+  const cCode = c?.code
+  const d = c?.[district]
+  const dCode = d?.code
+  if (pCode && cCode && dCode) {
+    return [pCode, cCode, dCode]
+  }
+  return []
+}
+
+const syncRegionText = () => {
+  const codes = addressForm.regionCodes
+  if (Array.isArray(codes) && codes.length > 0) {
+    const names = codes.map((c) => CodeToText[c]).filter(Boolean)
+    addressForm.regionCodePath = codes.join('/')
+    addressForm.regionNamePath = names.join('/')
+    addressForm.regionDepth = names.length
+    addressForm.province = names[0] || ''
+    addressForm.city = names[1] || ''
+    addressForm.district = names[2] || ''
+    return
+  }
+
+  addressForm.regionCodePath = ''
+  if (addressForm.regionNamePath) {
+    const parts = addressForm.regionNamePath.split('/').map((p) => p.trim()).filter(Boolean)
+    addressForm.regionNamePath = parts.join('/')
+    addressForm.regionDepth = parts.length
+    addressForm.province = parts[0] || ''
+    addressForm.city = parts[1] || ''
+    addressForm.district = parts[2] || ''
+    return
+  }
+
+  addressForm.regionDepth = 0
+  addressForm.province = ''
+  addressForm.city = ''
+  addressForm.district = ''
+}
+
+const handleRegionChange = () => {
+  syncRegionText()
+}
+
+const openAddAddress = () => {
+  editingAddressId.value = null
+  resetAddressForm()
+  addressDialogVisible.value = true
+  nextTick(() => {
+    addressFormRef.value?.clearValidate()
+  })
+}
+
+const openEditAddress = (item) => {
+  editingAddressId.value = item.id
+  addressForm.receiverName = item.receiverName || ''
+  addressForm.receiverPhone = item.receiverPhone || ''
+  addressForm.regionNamePath = item.regionNamePath || ''
+  addressForm.regionCodePath = item.regionCodePath || ''
+  addressForm.regionDepth = item.regionDepth || 0
+  addressForm.province = item.province || ''
+  addressForm.city = item.city || ''
+  addressForm.district = item.district || ''
+  addressForm.detailAddress = item.detailAddress || ''
+  if (addressForm.regionCodePath) {
+    addressForm.regionCodes = addressForm.regionCodePath.split('/').filter(Boolean)
+  } else {
+    addressForm.regionCodes = toRegionCodes(addressForm.province, addressForm.city, addressForm.district)
+  }
+  syncRegionText()
+  addressForm.isDefault = item.isDefault === 1
+  addressDialogVisible.value = true
+  nextTick(() => {
+    addressFormRef.value?.clearValidate()
+  })
+}
+
+const formatAddressLine = (item) => {
+  const region = item.regionNamePath || `${item.province || ''}${item.city || ''}${item.district || ''}`
+  return `${region}${item.detailAddress || ''}`
+}
+
+const submitAddress = async () => {
+  if (!addressFormRef.value) return
+
+  await addressFormRef.value.validate(async (valid) => {
+    if (!valid) return
+
+    addressSaving.value = true
+    try {
+      syncRegionText()
+      const payload = {
+        receiverName: addressForm.receiverName,
+        receiverPhone: addressForm.receiverPhone,
+        regionNamePath: addressForm.regionNamePath,
+        regionCodePath: addressForm.regionCodePath || null,
+        regionDepth: addressForm.regionDepth || null,
+        detailAddress: addressForm.detailAddress,
+        isDefault: addressForm.isDefault
+      }
+
+      if (editingAddressId.value) {
+        await updateAddress(editingAddressId.value, payload)
+        if (addressForm.isDefault) {
+          await setDefaultAddress(editingAddressId.value)
+        }
+        ElMessage.success('地址更新成功')
+      } else {
+        await createAddress(payload)
+        ElMessage.success('地址新增成功')
+      }
+
+      addressDialogVisible.value = false
+      await fetchAddresses()
+    } catch (error) {
+      ElMessage.error(error.response?.data?.message || '保存地址失败')
+    } finally {
+      addressSaving.value = false
+    }
+  })
+}
+
+const handleDeleteAddress = async (item) => {
+  try {
+    await ElMessageBox.confirm('确认删除该地址吗？', '提示', { type: 'warning' })
+    await deleteAddress(item.id)
+    ElMessage.success('删除成功')
+    await fetchAddresses()
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败')
+    }
+  }
+}
+
+const handleSetDefaultAddress = async (item) => {
+  try {
+    await setDefaultAddress(item.id)
+    ElMessage.success('设置默认地址成功')
+    await fetchAddresses()
+  } catch (error) {
+    ElMessage.error('设置默认地址失败')
   }
 }
 
@@ -357,6 +657,7 @@ const handleVerifyCertificate = async () => {
 
 onMounted(() => {
   fetchUserInfo()
+  fetchAddresses()
 })
 </script>
 
@@ -388,8 +689,62 @@ onMounted(() => {
 }
 
 .info-section,
+.address-section,
 .password-section,
 .certificate-section {
   padding: 20px 0;
+}
+
+.address-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.address-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.address-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #EBEEF5;
+  border-radius: 8px;
+}
+
+.address-item-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.address-item-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.address-item-name {
+  font-weight: 600;
+}
+
+.address-item-phone {
+  color: #606266;
+}
+
+.address-item-detail {
+  color: #606266;
+  word-break: break-all;
+}
+
+.address-item-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
 }
 </style>
