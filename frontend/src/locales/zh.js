@@ -17,6 +17,7 @@ export default {
     orders: '我的订单',
     users: '用户管理',
     manageProducts: '商品管理',
+    manageHeritage: '非遗管理',
     logout: '退出登录',
     langZh: '中文',
     langEn: 'EN'

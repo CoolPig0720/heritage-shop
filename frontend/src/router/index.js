@@ -24,8 +24,20 @@ const routes = [
       {
         path: 'heritage',
         name: 'Heritage',
-        component: () => import('@/views/admin/Heritage.vue'),
+        component: () => import('@/views/Heritage.vue'),
         meta: { title: '非遗文化' }
+      },
+      {
+        path: 'heritage/projects/:id',
+        name: 'HeritageProjectDetail',
+        component: () => import('@/views/HeritageProjectDetail.vue'),
+        meta: { title: '非遗项目详情' }
+      },
+      {
+        path: 'heritage/inheritors/:id',
+        name: 'HeritageInheritorDetail',
+        component: () => import('@/views/HeritageInheritorDetail.vue'),
+        meta: { title: '非遗传承人详情' }
       },
       {
         path: 'products',

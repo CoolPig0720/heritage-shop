@@ -17,6 +17,7 @@ export default {
     orders: 'Orders',
     users: 'Users',
     manageProducts: 'Products',
+    manageHeritage: 'Heritage',
     logout: 'Logout',
     langZh: '中文',
     langEn: 'EN'

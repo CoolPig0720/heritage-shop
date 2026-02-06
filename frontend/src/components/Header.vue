@@ -54,6 +54,7 @@
                 <el-dropdown-item @click="goToOrders">{{ $t('header.orders') }}</el-dropdown-item>
                 <el-dropdown-item v-if="canGoUsers" @click="goToUsers" :divided="true">{{ $t('header.users') }}</el-dropdown-item>
                 <el-dropdown-item v-if="canGoProducts" @click="goToManageProducts" :divided="!canGoUsers">{{ $t('header.manageProducts') }}</el-dropdown-item>
+                <el-dropdown-item v-if="canGoHeritageManage" @click="goToManageHeritage">{{ $t('header.manageHeritage') }}</el-dropdown-item>
                 <el-dropdown-item divided @click="handleLogout">{{ $t('header.logout') }}</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -88,6 +89,7 @@ const activeMenu = computed(() => route.path)
 const role = computed(() => userStore.userInfo?.role)
 const canGoUsers = computed(() => role.value === 'ADMIN')
 const canGoProducts = computed(() => role.value === 'ADMIN' || role.value === 'MERCHANT')
+const canGoHeritageManage = computed(() => role.value === 'ADMIN')
 
 const dark = ref(isDark())
 const langLabel = computed(() => (i18n.global.locale.value === 'zh' ? '中文' : 'EN'))
@@ -146,6 +148,10 @@ const goToManageProducts = () => {
     return
   }
   router.push('/manage/products')
+}
+
+const goToManageHeritage = () => {
+  router.push('/manage/heritage')
 }
 
 const handleLogout = () => {
