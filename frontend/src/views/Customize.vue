@@ -1,129 +1,873 @@
 <template>
   <div class="customize">
-    <div class="page-header">
-      <h1>智能定制</h1>
-      <p>AI 助力，打造专属非遗产品</p>
+    <div class="hero">
+      <div class="hero-inner">
+        <div class="hero-title">智能定制</div>
+        <div class="hero-subtitle">AI 助力，打造专属非遗产品</div>
+        <div class="hero-actions">
+          <el-button @click="openHistoryDialog">历史记录</el-button>
+        </div>
+      </div>
     </div>
-    <div class="customize-content">
-      <div class="upload-section">
-        <el-upload
-          class="upload-demo"
-          drag
-          action="/api/upload"
-          multiple
-        >
-          <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-          <div class="el-upload__text">
-            拖拽文件到此处或 <em>点击上传</em>
-          </div>
-          <template #tip>
-            <div class="el-upload__tip">
-              支持 jpg/png 文件，文件大小不超过 5MB
+
+    <div class="container">
+      <el-tabs v-model="activeTab" class="customize-tabs" stretch>
+      <el-tab-pane label="图生图" name="img2img">
+        <div class="customize-content">
+          <div class="card upload-section">
+            <div class="card-header">
+              <div class="card-title">上传参考图</div>
+              <div class="card-desc">支持jpg/jpeg/png/bmp/webp，长宽≤5000</div>
             </div>
-          </template>
-        </el-upload>
+            <el-upload
+              class="upload"
+              drag
+              :auto-upload="false"
+              :limit="1"
+              accept=".jpg,.jpeg,.png,.bmp,.webp"
+              :file-list="fileList"
+              :before-upload="beforeSelectImage"
+              :on-change="handleFileChange"
+              :on-remove="handleFileRemove"
+              :on-exceed="handleExceed"
+            >
+              <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
+              <div class="el-upload__text">拖拽图片到此处或 <em>点击上传</em></div>
+              <template #tip>
+                <div class="el-upload__tip">
+                  支持jpg、jpeg、png、bmp、webp，图片长宽≤5000，base64编码后≤8MB
+                </div>
+              </template>
+            </el-upload>
+
+            <div v-if="previewUrl" class="preview">
+              <el-image :src="previewUrl" fit="contain" class="preview-image" />
+            </div>
+          </div>
+
+          <div class="card options-section">
+            <div class="card-header">
+              <div class="card-title">图生图参数</div>
+              <div class="card-desc">调节生成自由度、尺寸与数量</div>
+            </div>
+            <el-form :model="img2imgForm" label-width="110px" class="form">
+              <el-form-item>
+                <template #label>
+                  <span class="form-label" @click.prevent>
+                    画质增强
+                    <el-tooltip placement="top" effect="dark">
+                      <template #content>
+                        开启后将增强生成图的清晰度与画质细节，生成耗时可能增加。
+                      </template>
+                      <el-icon class="help-icon" @click.prevent.stop><QuestionFilled /></el-icon>
+                    </el-tooltip>
+                  </span>
+                </template>
+                <el-switch v-model="img2imgForm.enhanceImage" />
+              </el-form-item>
+
+              <el-form-item>
+                <template #label>
+                  <span class="form-label" @click.prevent>
+                    面部优化
+                    <el-tooltip placement="top" effect="dark">
+                      <template #content>
+                        对生成结果中的人脸区域进行细节优化。适合人像场景，耗时可能增加。
+                      </template>
+                      <el-icon class="help-icon" @click.prevent.stop><QuestionFilled /></el-icon>
+                    </el-tooltip>
+                  </span>
+                </template>
+                <el-switch v-model="img2imgForm.restoreFace" />
+              </el-form-item>
+
+              <el-form-item>
+                <template #label>
+                  <span class="form-label" @click.prevent>
+                    生成自由度
+                    <el-tooltip placement="top" effect="dark">
+                      <template #content>
+                        值越小越接近原图，值越大改动越明显。范围 0~1（建议 0.6~0.8）。
+                      </template>
+                      <el-icon class="help-icon" @click.prevent.stop><QuestionFilled /></el-icon>
+                    </el-tooltip>
+                  </span>
+                </template>
+                <div class="slider-row">
+                  <el-slider v-model="img2imgForm.strength" :min="0.01" :max="1" :step="0.01" style="flex: 1" />
+                  <div class="slider-value">{{ img2imgForm.strength.toFixed(2) }}</div>
+                </div>
+              </el-form-item>
+
+              <el-form-item>
+                <template #label>
+                  <span class="form-label" @click.prevent>
+                    Prompt
+                    <el-tooltip placement="top" effect="dark">
+                      <template #content>
+                        用文字描述你希望生成的画面内容、风格与细节。描述越具体，结果越稳定。
+                      </template>
+                      <el-icon class="help-icon" @click.prevent.stop><QuestionFilled /></el-icon>
+                    </el-tooltip>
+                  </span>
+                </template>
+                <el-input
+                  v-model="img2imgForm.prompt"
+                  type="textarea"
+                  :rows="4"
+                  placeholder="请输入prompt（最多256字）"
+                  maxlength="256"
+                  show-word-limit
+                />
+              </el-form-item>
+
+              <el-form-item>
+                <template #label>
+                  <span class="form-label" @click.prevent>
+                    输出尺寸
+                    <el-tooltip placement="top" effect="dark">
+                      <template #content>
+                        选择生成图分辨率。“与输入图一致”会尽量跟随原图比例。
+                      </template>
+                      <el-icon class="help-icon" @click.prevent.stop><QuestionFilled /></el-icon>
+                    </el-tooltip>
+                  </span>
+                </template>
+                <el-select v-model="img2imgForm.resolution" placeholder="请选择输出尺寸" style="width: 100%">
+                  <el-option label="与输入图一致" value="" />
+                  <el-option label="768x768" value="768:768" />
+                  <el-option label="1024x1024" value="1024:1024" />
+                  <el-option label="768x1024" value="768:1024" />
+                  <el-option label="1024x768" value="1024:768" />
+                </el-select>
+              </el-form-item>
+
+              <el-form-item>
+                <template #label>
+                  <span class="form-label" @click.prevent>
+                    生成数量
+                    <el-tooltip placement="top" effect="dark">
+                      <template #content>
+                        一次生成的图片张数，范围 1~4。数量越多耗时越长。
+                      </template>
+                      <el-icon class="help-icon" @click.prevent.stop><QuestionFilled /></el-icon>
+                    </el-tooltip>
+                  </span>
+                </template>
+                <el-select v-model="img2imgForm.count" style="width: 100%">
+                  <el-option label="1" :value="1" />
+                  <el-option label="2" :value="2" />
+                  <el-option label="3" :value="3" />
+                  <el-option label="4" :value="4" />
+                </el-select>
+              </el-form-item>
+
+              <el-form-item class="actions">
+                <div class="actions-row">
+                  <el-button :disabled="generating" @click="resetImg2Img">重置</el-button>
+                  <el-button type="primary" :loading="generating" @click="handleGenerateImg2Img">生成</el-button>
+                </div>
+              </el-form-item>
+            </el-form>
+          </div>
+        </div>
+      </el-tab-pane>
+
+      <el-tab-pane label="文生图" name="txt2img">
+        <div class="single-pane card">
+          <div class="card-header">
+            <div class="card-title">文生图</div>
+            <div class="card-desc">输入Prompt，选择输出尺寸</div>
+          </div>
+          <el-form :model="txt2imgForm" label-width="110px" class="form">
+            <el-form-item label="Prompt">
+              <el-input
+                v-model="txt2imgForm.prompt"
+                type="textarea"
+                :rows="4"
+                placeholder="请输入prompt（最多256字）"
+                maxlength="256"
+                show-word-limit
+              />
+            </el-form-item>
+            <el-form-item label="输出尺寸">
+              <el-select v-model="txt2imgForm.resolution" placeholder="请选择输出尺寸" style="width: 100%">
+                <el-option label="768x768" value="768:768" />
+                <el-option label="1024x1024" value="1024:1024" />
+                <el-option label="768x1024" value="768:1024" />
+                <el-option label="1024x768" value="1024:768" />
+              </el-select>
+            </el-form-item>
+            <el-form-item class="actions">
+              <div class="actions-row">
+                <el-button type="primary" :loading="generating" @click="handleGenerateTxt2Img">生成</el-button>
+              </div>
+            </el-form-item>
+          </el-form>
+        </div>
+      </el-tab-pane>
+    </el-tabs>
+
+    <div v-if="resultImages.length" class="result-section card">
+      <div class="card-header">
+        <div class="card-title">生成结果</div>
+        <div class="card-desc">点击图片可预览</div>
       </div>
-      <div class="options-section">
-        <h3>定制选项</h3>
-        <el-form :model="customizeForm" label-width="100px">
-          <el-form-item label="产品类型">
-            <el-select v-model="customizeForm.productType" placeholder="请选择产品类型">
-              <el-option label="剪纸艺术" value="1" />
-              <el-option label="蜡染工艺" value="2" />
-              <el-option label="景泰蓝" value="3" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="风格偏好">
-            <el-checkbox-group v-model="customizeForm.styles">
-              <el-checkbox label="传统" />
-              <el-checkbox label="现代" />
-              <el-checkbox label="简约" />
-              <el-checkbox label="华丽" />
-            </el-checkbox-group>
-          </el-form-item>
-          <el-form-item label="颜色偏好">
-            <el-color-picker v-model="customizeForm.color" />
-          </el-form-item>
-          <el-form-item label="定制说明">
-            <el-input
-              v-model="customizeForm.description"
-              type="textarea"
-              :rows="4"
-              placeholder="请输入您的定制需求"
-            />
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="generateDesign">生成设计方案</el-button>
-          </el-form-item>
-        </el-form>
+      <div class="result-grid">
+        <el-image
+          v-for="(img, idx) in resultImages"
+          :key="`${idx}-${img}`"
+          :src="img"
+          fit="cover"
+          :preview-src-list="resultImages"
+          preview-teleported
+          class="result-image"
+        />
       </div>
+    </div>
+
+    <el-dialog v-model="historyDialogVisible" title="历史生图记录" width="1100px">
+      <div class="history-dialog-desc">仅展示参考图、提示词与生成图</div>
+
+      <div v-if="historyLoading" class="history-loading">
+        <el-skeleton :rows="3" animated />
+      </div>
+
+      <el-empty v-else-if="!historyRecords.length" description="暂无历史记录" :image-size="80" />
+
+      <div v-else class="history-dialog-body">
+        <div class="history-list">
+          <div v-for="item in historyRecords" :key="item.id" class="history-row">
+            <div class="history-row-prompt" :title="item.prompt || ''">
+              {{ item.prompt ? item.prompt : '（无提示词）' }}
+            </div>
+            <div class="history-row-images">
+              <div class="history-img-cell">
+                <div class="history-img-label">参考图</div>
+                <el-image
+                  v-if="item.originalImageUrl"
+                  :src="normalizeUrl(item.originalImageUrl)"
+                  fit="contain"
+                  :preview-src-list="[normalizeUrl(item.originalImageUrl)]"
+                  preview-teleported
+                  class="history-row-image"
+                />
+                <div v-else class="history-image-placeholder"></div>
+              </div>
+              <div class="history-img-cell">
+                <div class="history-img-label">生成图</div>
+                <el-image
+                  :src="normalizeUrl(item.resultImageUrl)"
+                  fit="contain"
+                  :preview-src-list="historyPreviewList"
+                  :initial-index="historyIndexMap.get(item.id) ?? 0"
+                  preview-teleported
+                  class="history-row-image"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="historyTotal > historySize" class="history-pagination">
+          <el-pagination
+            v-model:current-page="historyPage"
+            v-model:page-size="historySize"
+            :page-sizes="[8, 12, 20, 40]"
+            :total="historyTotal"
+            layout="total, sizes, prev, pager, next"
+            @size-change="handleHistorySizeChange"
+            @current-change="fetchHistory"
+          />
+        </div>
+      </div>
+    </el-dialog>
     </div>
   </div>
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { UploadFilled } from '@element-plus/icons-vue'
+import { QuestionFilled, UploadFilled } from '@element-plus/icons-vue'
+import { imageToImage, pageAiImageRecords, textToImage } from '@/api/aiImage'
 
-const customizeForm = reactive({
-  productType: '',
-  styles: [],
-  color: '',
-  description: ''
+const activeTab = ref('img2img')
+const generating = ref(false)
+
+const fileList = ref([])
+const selectedFile = ref(null)
+const previewObjectUrl = ref('')
+
+const previewUrl = computed(() => previewObjectUrl.value)
+
+const img2imgForm = ref({
+  enhanceImage: true,
+  restoreFace: false,
+  strength: 0.5,
+  prompt: '',
+  resolution: '',
+  count: 1
 })
 
-const generateDesign = () => {
-  ElMessage.success('正在生成设计方案，请稍候...')
+const txt2imgForm = ref({
+  prompt: '',
+  resolution: '1024:1024'
+})
+
+const resultImages = ref([])
+
+const historyLoading = ref(false)
+const historyRecords = ref([])
+const historyTotal = ref(0)
+const historyPage = ref(1)
+const historySize = ref(12)
+const historyDialogVisible = ref(false)
+
+const normalizeUrl = (url) => {
+  if (!url) return ''
+  if (url.startsWith('http')) return url
+  return `http://localhost:8080${url}`
 }
+
+const historyPreviewList = computed(() =>
+  historyRecords.value.map((x) => normalizeUrl(x?.resultImageUrl)).filter(Boolean)
+)
+
+const historyIndexMap = computed(() => {
+  const map = new Map()
+  historyRecords.value.forEach((x, idx) => {
+    if (x?.id != null) map.set(x.id, idx)
+  })
+  return map
+})
+
+const revokePreviewUrl = () => {
+  if (previewObjectUrl.value) {
+    URL.revokeObjectURL(previewObjectUrl.value)
+    previewObjectUrl.value = ''
+  }
+}
+
+onBeforeUnmount(() => {
+  revokePreviewUrl()
+})
+
+const fetchHistory = async () => {
+  historyLoading.value = true
+  try {
+    const res = await pageAiImageRecords({
+      page: historyPage.value,
+      size: historySize.value
+    })
+    const data = res?.data || {}
+    historyRecords.value = Array.isArray(data.records) ? data.records : []
+    historyTotal.value = Number(data.total ?? 0)
+  } catch (e) {
+    historyRecords.value = []
+    historyTotal.value = 0
+  } finally {
+    historyLoading.value = false
+  }
+}
+
+const handleHistorySizeChange = async () => {
+  historyPage.value = 1
+  await fetchHistory()
+}
+
+const openHistoryDialog = async () => {
+  historyDialogVisible.value = true
+  await fetchHistory()
+}
+
+const handleExceed = () => {
+  ElMessage.warning('一次只能上传一张图片')
+}
+
+const isAllowedImageExt = (name) => {
+  const lowered = (name || '').toLowerCase()
+  return (
+    lowered.endsWith('.jpg') ||
+    lowered.endsWith('.jpeg') ||
+    lowered.endsWith('.png') ||
+    lowered.endsWith('.bmp') ||
+    lowered.endsWith('.webp')
+  )
+}
+
+const validateImageDimension = (file) =>
+  new Promise((resolve) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      const ok = img.width <= 5000 && img.height <= 5000
+      URL.revokeObjectURL(url)
+      resolve(ok)
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      resolve(false)
+    }
+    img.src = url
+  })
+
+const beforeSelectImage = async (file) => {
+  if (!isAllowedImageExt(file?.name) || !file?.type?.startsWith('image/')) {
+    ElMessage.error('请上传jpg、jpeg、png、bmp、webp格式图片')
+    return false
+  }
+
+  const maxBase64Bytes = 8 * 1024 * 1024
+  const estimatedBase64Bytes = Math.ceil((file.size * 4) / 3)
+  if (estimatedBase64Bytes > maxBase64Bytes) {
+    ElMessage.error('图片过大：base64编码后需≤8MB')
+    return false
+  }
+
+  const ok = await validateImageDimension(file)
+  if (!ok) {
+    ElMessage.error('图片长宽需≤5000')
+    return false
+  }
+  return true
+}
+
+const handleFileChange = (uploadFile, uploadFiles) => {
+  const raw = uploadFile?.raw
+  if (!raw) return
+
+  selectedFile.value = raw
+  fileList.value = uploadFiles.slice(-1)
+
+  revokePreviewUrl()
+  previewObjectUrl.value = URL.createObjectURL(raw)
+}
+
+const handleFileRemove = () => {
+  selectedFile.value = null
+  fileList.value = []
+  revokePreviewUrl()
+}
+
+const resetImg2Img = () => {
+  handleFileRemove()
+  img2imgForm.value = {
+    enhanceImage: true,
+    restoreFace: false,
+    strength: 0.5,
+    prompt: '',
+    resolution: '',
+    count: 1
+  }
+  resultImages.value = []
+}
+
+const handleGenerateImg2Img = async () => {
+  if (!selectedFile.value) {
+    ElMessage.error('请先上传一张原图')
+    return
+  }
+  if (!img2imgForm.value.prompt?.trim()) {
+    ElMessage.error('请输入Prompt')
+    return
+  }
+
+  generating.value = true
+  try {
+    const fd = new FormData()
+    fd.append('file', selectedFile.value)
+    fd.append('prompt', img2imgForm.value.prompt.trim())
+    fd.append('strength', String(img2imgForm.value.strength))
+    fd.append('enhanceImage', String(img2imgForm.value.enhanceImage))
+    fd.append('restoreFace', String(img2imgForm.value.restoreFace))
+    fd.append('count', String(img2imgForm.value.count))
+    fd.append('rspImgType', 'url')
+    if (img2imgForm.value.resolution) {
+      fd.append('resolution', img2imgForm.value.resolution)
+    }
+
+    const res = await imageToImage(fd)
+    const images = res?.data?.resultImages || []
+    resultImages.value = images.filter(Boolean)
+    if (!resultImages.value.length && res?.data?.resultImage) {
+      resultImages.value = [res.data.resultImage]
+    }
+    if (!resultImages.value.length) {
+      ElMessage.error('生成失败：未返回图片')
+      return
+    }
+    ElMessage.success('生成成功')
+    await fetchHistory()
+  } catch (e) {
+    const msg = e?.response?.data?.message || e?.message || '生成失败'
+    ElMessage.error(msg)
+  } finally {
+    generating.value = false
+  }
+}
+
+const handleGenerateTxt2Img = async () => {
+  if (!txt2imgForm.value.prompt?.trim()) {
+    ElMessage.error('请输入Prompt')
+    return
+  }
+
+  generating.value = true
+  try {
+    const res = await textToImage({
+      prompt: txt2imgForm.value.prompt.trim(),
+      resolution: txt2imgForm.value.resolution,
+      rspImgType: 'url'
+    })
+    const images = res?.data?.resultImages || []
+    resultImages.value = images.filter(Boolean)
+    if (!resultImages.value.length && res?.data?.resultImage) {
+      resultImages.value = [res.data.resultImage]
+    }
+    if (!resultImages.value.length) {
+      ElMessage.error('生成失败：未返回图片')
+      return
+    }
+    ElMessage.success('生成成功')
+    await fetchHistory()
+  } catch (e) {
+    const msg = e?.response?.data?.message || e?.message || '生成失败'
+    ElMessage.error(msg)
+  } finally {
+    generating.value = false
+  }
+}
+
+onMounted(() => {
+  fetchHistory()
+})
 </script>
 
 <style scoped>
 .customize {
-  padding: 20px;
+  min-height: calc(100vh - 60px);
+  background: linear-gradient(180deg, #f7f8ff 0%, #f6f7fb 40%, #f5f6fa 100%);
+  padding-bottom: 32px;
 }
 
-.page-header {
-  text-align: center;
-  margin-bottom: 40px;
+.hero {
+  background: radial-gradient(1200px 600px at 50% -20%, rgba(64, 158, 255, 0.35), rgba(64, 158, 255, 0) 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0));
+  border-bottom: 1px solid rgba(235, 238, 245, 0.8);
+  padding: 28px 20px 18px;
 }
 
-.page-header h1 {
-  font-size: 36px;
-  color: #303133;
-  margin-bottom: 10px;
+.hero-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
 }
 
-.page-header p {
-  font-size: 18px;
-  color: #909399;
+.hero-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: 0.2px;
+}
+
+.hero-subtitle {
+  font-size: 14px;
+  color: rgba(17, 24, 39, 0.6);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 16px auto 0;
+  padding: 0 20px;
 }
 
 .customize-content {
-  max-width: 1200px;
-  margin: 0 auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 40px;
+  gap: 16px;
 }
 
-.upload-section {
-  background: #fff;
-  padding: 40px;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+.customize-tabs {
+  background: transparent;
 }
 
-.options-section {
-  background: #fff;
-  padding: 40px;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+.card {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(235, 238, 245, 0.9);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(17, 24, 39, 0.06);
+  backdrop-filter: blur(6px);
 }
 
-.options-section h3 {
-  font-size: 20px;
-  color: #303133;
-  margin-bottom: 20px;
+.upload-section,
+.options-section,
+.single-pane,
+.result-section {
+  padding: 18px;
+}
+
+.card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.card-desc {
+  font-size: 12px;
+  color: rgba(17, 24, 39, 0.55);
+}
+
+.preview {
+  margin-top: 16px;
+  border: 1px solid rgba(235, 238, 245, 0.9);
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(249, 250, 251, 0.8);
+}
+
+.preview-image {
+  width: 100%;
+  height: 340px;
+}
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.slider-value {
+  width: 56px;
+  text-align: right;
+  color: #606266;
+  font-variant-numeric: tabular-nums;
+}
+
+.form-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.help-icon {
+  font-size: 14px;
+  color: rgba(17, 24, 39, 0.45);
+  cursor: pointer;
+}
+
+.help-icon:hover {
+  color: #409eff;
+}
+
+.single-pane {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.result-section {
+  margin-top: 16px;
+}
+
+.hero-actions {
+  position: absolute;
+  right: 0;
+  top: 4px;
+}
+
+.hero-actions :deep(.el-button) {
+  border-radius: 10px;
+}
+
+.history-dialog-desc {
+  font-size: 12px;
+  color: rgba(17, 24, 39, 0.6);
+  margin-bottom: 12px;
+}
+
+.history-dialog-body {
+  max-height: 70vh;
+  overflow: auto;
+  padding-right: 6px;
+}
+
+.history-loading {
+  padding: 10px 0;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-row {
+  border: 1px solid rgba(235, 238, 245, 0.9);
+  border-radius: 14px;
+  background: rgba(249, 250, 251, 0.8);
+  padding: 16px;
+}
+
+.history-row-prompt {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.history-row-images {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.history-img-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.history-img-label {
+  font-size: 12px;
+  color: rgba(17, 24, 39, 0.65);
+}
+
+.history-row-image {
+  width: 100%;
+  height: 360px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.history-image-placeholder {
+  width: 100%;
+  height: 360px;
+  border-radius: 12px;
+  border: 1px dashed rgba(17, 24, 39, 0.18);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.history-item {
+  border: 1px solid rgba(235, 238, 245, 0.9);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(249, 250, 251, 0.8);
+}
+
+.history-image {
+  width: 100%;
+  height: 180px;
+}
+
+.history-meta {
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.history-prompt {
+  font-size: 13px;
+  color: #111827;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.history-ref {
+  font-size: 12px;
+  color: rgba(17, 24, 39, 0.6);
+}
+
+.history-ref.empty {
+  color: rgba(17, 24, 39, 0.4);
+}
+
+.history-pagination {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.result-image {
+  width: 100%;
+  height: 200px;
+  border-radius: 10px;
+}
+
+.actions-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  width: 100%;
+}
+
+:deep(.el-tabs__header) {
+  margin: 0 0 12px;
+}
+
+:deep(.el-tabs__nav-wrap::after) {
+  height: 0;
+}
+
+:deep(.el-tabs__item) {
+  font-weight: 600;
+}
+
+:deep(.el-upload-dragger) {
+  border-radius: 12px;
+  border: 1px dashed rgba(64, 158, 255, 0.4);
+  background: rgba(64, 158, 255, 0.04);
+}
+
+:deep(.el-upload-dragger:hover) {
+  border-color: rgba(64, 158, 255, 0.8);
+  background: rgba(64, 158, 255, 0.06);
+}
+
+:deep(.el-input__wrapper),
+:deep(.el-textarea__inner) {
+  border-radius: 10px;
+}
+
+@media (max-width: 960px) {
+  .customize-content {
+    grid-template-columns: 1fr;
+  }
+
+  .preview-image {
+    height: 260px;
+  }
 }
 </style>

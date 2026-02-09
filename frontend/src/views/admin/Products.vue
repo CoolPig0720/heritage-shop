@@ -155,9 +155,17 @@
 
             <div v-if="form.model3dUrl" class="upload-preview">
               <el-link :href="normalizeUrl(form.model3dUrl)" target="_blank" type="primary">
-                {{ getFileName(form.model3dUrl) }}
+                {{ uploadedModelName || getFileName(form.model3dUrl) }}
               </el-link>
+              <el-button size="small" @click="modelPreviewVisible = !modelPreviewVisible">
+                {{ modelPreviewVisible ? '收起预览' : '预览' }}
+              </el-button>
               <el-button size="small" @click="clearModel">删除</el-button>
+            </div>
+            <div v-if="form.model3dUrl && modelPreviewVisible" class="model-preview">
+              <div ref="modelPreviewRef" class="model-preview-canvas" />
+              <div v-if="modelPreviewLoading" class="model-preview-loading">模型加载中...</div>
+              <div v-if="modelPreviewError" class="model-preview-error">{{ modelPreviewError }}</div>
             </div>
           </div>
         </el-form-item>
@@ -231,9 +239,12 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { Search, Plus, Edit, Delete } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import * as THREE from 'three'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import {
   addProductImages,
   createProduct,
@@ -367,9 +378,21 @@ const handleTraceQrSuccess = (response) => {
   ElMessage.error(response?.message || '上传失败')
 }
 
-const handleModelSuccess = (response) => {
+const handleModelSuccess = async (response, uploadFile) => {
   if (response?.code === 200) {
     form.model3dUrl = response.data || ''
+    uploadedModelName.value = uploadFile?.name || ''
+    modelPreviewVisible.value = true
+    if (isEdit.value && form.id) {
+      try {
+        await updateProduct(form.id, { model3dUrl: form.model3dUrl })
+        ElMessage.success('上传并保存成功')
+      } catch (e) {
+        ElMessage.success('上传成功')
+        ElMessage.error('保存 3D 模型失败')
+      }
+      return
+    }
     ElMessage.success('上传成功')
     return
   }
@@ -380,12 +403,193 @@ const clearTraceQr = () => {
   form.traceQrUrl = ''
 }
 
-const clearModel = () => {
+const clearModel = async () => {
   form.model3dUrl = ''
+  uploadedModelName.value = ''
+  modelPreviewVisible.value = false
+  destroyModelPreview()
+  if (isEdit.value && form.id) {
+    try {
+      await updateProduct(form.id, { model3dUrl: '' })
+      ElMessage.success('已删除')
+    } catch (e) {
+      ElMessage.error('删除失败')
+    }
+  }
 }
 
 const productImages = ref([])
 const imagesLoading = ref(false)
+
+const uploadedModelName = ref('')
+const modelPreviewVisible = ref(false)
+const modelPreviewRef = ref()
+const modelPreviewLoading = ref(false)
+const modelPreviewError = ref('')
+let modelPreview = null
+
+const destroyModelPreview = () => {
+  if (!modelPreview) return
+  try {
+    if (modelPreview.animationId) {
+      cancelAnimationFrame(modelPreview.animationId)
+    }
+    if (modelPreview.onResize) {
+      window.removeEventListener('resize', modelPreview.onResize)
+    }
+    if (modelPreview.controls) {
+      modelPreview.controls.dispose()
+    }
+    if (modelPreview.renderer) {
+      modelPreview.renderer.dispose()
+      if (modelPreview.renderer.domElement?.parentNode) {
+        modelPreview.renderer.domElement.parentNode.removeChild(modelPreview.renderer.domElement)
+      }
+    }
+    if (modelPreview.scene) {
+      modelPreview.scene.traverse((obj) => {
+        if (obj?.geometry) {
+          obj.geometry.dispose?.()
+        }
+        if (obj?.material) {
+          const materials = Array.isArray(obj.material) ? obj.material : [obj.material]
+          materials.forEach((m) => {
+            if (!m) return
+            Object.keys(m).forEach((k) => {
+              const v = m[k]
+              if (v && v.isTexture) v.dispose?.()
+            })
+            m.dispose?.()
+          })
+        }
+      })
+    }
+  } finally {
+    modelPreview = null
+    modelPreviewLoading.value = false
+  }
+}
+
+const initModelPreview = async () => {
+  const container = modelPreviewRef.value
+  if (!container) return
+  const modelUrl = normalizeUrl(form.model3dUrl)
+  if (!modelUrl) return
+
+  destroyModelPreview()
+  modelPreviewLoading.value = true
+  modelPreviewError.value = ''
+
+  const width = container.clientWidth || 520
+  const height = 260
+
+  const scene = new THREE.Scene()
+  scene.background = new THREE.Color('#f5f7fa')
+
+  const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 5000)
+  camera.position.set(0, 1.2, 3)
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
+  renderer.setSize(width, height)
+  container.innerHTML = ''
+  container.appendChild(renderer.domElement)
+
+  const controls = new OrbitControls(camera, renderer.domElement)
+  controls.enableDamping = true
+
+  const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0)
+  scene.add(hemi)
+  const dir = new THREE.DirectionalLight(0xffffff, 1.0)
+  dir.position.set(3, 5, 2)
+  scene.add(dir)
+
+  const loader = new GLTFLoader()
+
+  const fitCameraToObject = (obj3d) => {
+    const box = new THREE.Box3().setFromObject(obj3d)
+    if (!isFinite(box.min.x) || !isFinite(box.max.x)) return
+    const size = box.getSize(new THREE.Vector3())
+    const center = box.getCenter(new THREE.Vector3())
+
+    controls.target.copy(center)
+    const maxDim = Math.max(size.x, size.y, size.z) || 1
+    const fov = (camera.fov * Math.PI) / 180
+    const distance = Math.abs((maxDim / 2) / Math.tan(fov / 2)) * 1.6
+
+    const dir = new THREE.Vector3(1, 0.8, 1).normalize()
+    camera.position.copy(center.clone().add(dir.multiplyScalar(distance)))
+    camera.near = distance / 100
+    camera.far = distance * 100
+    camera.updateProjectionMatrix()
+    controls.update()
+  }
+
+  const onResize = () => {
+    const w = container.clientWidth || width
+    const h = height
+    camera.aspect = w / h
+    camera.updateProjectionMatrix()
+    renderer.setSize(w, h)
+  }
+  window.addEventListener('resize', onResize)
+
+  modelPreview = {
+    scene,
+    camera,
+    renderer,
+    controls,
+    animationId: null,
+    onResize
+  }
+
+  loader.load(
+    modelUrl,
+    (gltf) => {
+      const model = gltf.scene || gltf.scenes?.[0]
+      if (model) {
+        scene.add(model)
+        fitCameraToObject(model)
+      }
+      modelPreviewLoading.value = false
+    },
+    undefined,
+    (err) => {
+      modelPreviewLoading.value = false
+      modelPreviewError.value = err?.message || '模型加载失败'
+    }
+  )
+
+  const animate = () => {
+    if (!modelPreview) return
+    modelPreview.controls?.update()
+    modelPreview.renderer.render(modelPreview.scene, modelPreview.camera)
+    modelPreview.animationId = requestAnimationFrame(animate)
+  }
+  animate()
+}
+
+watch(
+  () => dialogVisible.value,
+  (open) => {
+    if (!open) {
+      modelPreviewVisible.value = false
+      destroyModelPreview()
+    }
+  }
+)
+
+watch(
+  [() => dialogVisible.value, () => form.model3dUrl, () => modelPreviewVisible.value],
+  async ([open, url, visible]) => {
+    if (!open || !visible || !url) {
+      destroyModelPreview()
+      return
+    }
+    await nextTick()
+    await initModelPreview()
+  }
+)
 
 const fetchProductImages = async () => {
   if (!form.id) return
@@ -507,6 +711,8 @@ const handleEdit = async (row) => {
   form.traceCode = row.traceCode || ''
   form.traceQrUrl = row.traceQrUrl || ''
   form.model3dUrl = row.model3dUrl || ''
+  uploadedModelName.value = ''
+  modelPreviewVisible.value = false
   dialogVisible.value = true
   await nextTick()
   formRef.value?.clearValidate()
@@ -660,6 +866,37 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.model-preview {
+  width: 100%;
+  margin-top: 10px;
+  position: relative;
+}
+
+.model-preview-canvas {
+  width: 100%;
+  height: 260px;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.model-preview-loading {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.model-preview-error {
+  margin-top: 8px;
+  color: #f56c6c;
+  font-size: 12px;
 }
 
 .images-panel {
