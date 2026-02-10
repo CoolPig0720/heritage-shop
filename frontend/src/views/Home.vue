@@ -59,23 +59,23 @@
           <h2 class="section-title">热门商品</h2>
           <el-button type="primary" link @click="goToProducts">查看更多 <el-icon><ArrowRight /></el-icon></el-button>
         </div>
-        <div class="product-grid">
+        <div v-loading="productsLoading" class="product-grid">
           <div v-for="product in products" :key="product.id" class="product-card" @click="goToDetail(product.id)">
             <div class="product-image">
-              <img :src="product.coverImage || '/placeholder.jpg'" :alt="product.name" />
-              <div class="product-badge" v-if="product.isHot">热销</div>
+              <img :src="getCover(product)" :alt="product.name" />
+              <div class="product-badge">推荐</div>
             </div>
             <div class="product-info">
               <h3 class="product-name">{{ product.name }}</h3>
-              <p class="product-desc">{{ product.description }}</p>
+              <p class="product-desc">{{ product.description || '暂无描述' }}</p>
               <div class="product-footer">
                 <span class="price">¥{{ product.price }}</span>
-                <el-button type="primary" size="small" @click.stop="addToCart(product)">
-                  <el-icon><ShoppingCart /></el-icon>
-                </el-button>
               </div>
             </div>
           </div>
+        </div>
+        <div v-if="!productsLoading && products.length === 0" class="empty">
+          <el-empty description="暂无商品" />
         </div>
       </div>
     </div>
@@ -86,16 +86,22 @@
           <h2 class="section-title">非遗文化</h2>
           <el-button type="primary" link @click="goToHeritage">了解更多 <el-icon><ArrowRight /></el-icon></el-button>
         </div>
-        <div class="heritage-grid">
+        <div v-loading="heritageLoading" class="heritage-grid">
           <div v-for="item in heritageItems" :key="item.id" class="heritage-card" @click="goToHeritage">
-            <div class="heritage-image">
-              <img :src="item.image || '/placeholder.jpg'" :alt="item.name" />
+            <div class="heritage-cover">
+              <div class="heritage-icon">
+                <el-icon :size="34"><CollectionTag /></el-icon>
+              </div>
+              <div class="heritage-title">{{ item.name }}</div>
             </div>
             <div class="heritage-info">
-              <h3>{{ item.name }}</h3>
               <p>{{ item.description }}</p>
+              <div class="heritage-meta">{{ item.meta }}</div>
             </div>
           </div>
+        </div>
+        <div v-if="!heritageLoading && heritageItems.length === 0" class="empty">
+          <el-empty description="暂无非遗分类" />
         </div>
       </div>
     </div>
@@ -104,20 +110,20 @@
       <div class="section-container">
         <div class="stats-grid">
           <div class="stat-item">
-            <div class="stat-number">1000+</div>
-            <div class="stat-label">非遗产品</div>
+            <div class="stat-number">{{ products.length }}</div>
+            <div class="stat-label">推荐商品</div>
           </div>
           <div class="stat-item">
-            <div class="stat-number">500+</div>
-            <div class="stat-label">传承大师</div>
+            <div class="stat-number">{{ categoryCount }}</div>
+            <div class="stat-label">非遗分类</div>
           </div>
           <div class="stat-item">
-            <div class="stat-number">10000+</div>
-            <div class="stat-label">满意客户</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number">100+</div>
+            <div class="stat-number">{{ projectTotal }}</div>
             <div class="stat-label">非遗项目</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ myAiRecordTotal }}</div>
+            <div class="stat-label">我的生图记录</div>
           </div>
         </div>
       </div>
@@ -126,74 +132,103 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { ShoppingCart, MagicStick, Star, Trophy, Van, ArrowRight } from '@element-plus/icons-vue'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { CollectionTag, ShoppingCart, MagicStick, Star, Trophy, Van, ArrowRight } from '@element-plus/icons-vue'
+import { getRecommendProducts } from '@/api/shop'
+import { getHeritageCategoryTree, pageHeritageProjects } from '@/api/heritage'
+import { pageAiImageRecords } from '@/api/aiImage'
 
+const route = useRoute()
 const router = useRouter()
 
-const products = ref([
-  { 
-    id: 1, 
-    name: '手工剪纸艺术画', 
-    price: 299, 
-    coverImage: '/placeholder.jpg',
-    description: '传统剪纸工艺，精美绝伦',
-    isHot: true
-  },
-  { 
-    id: 2, 
-    name: '传统蜡染围巾', 
-    price: 599, 
-    coverImage: '/placeholder.jpg',
-    description: '天然染料，手工制作',
-    isHot: true
-  },
-  { 
-    id: 3, 
-    name: '景泰蓝花瓶', 
-    price: 1299, 
-    coverImage: '/placeholder.jpg',
-    description: '皇家工艺，精美绝伦',
-    isHot: false
-  },
-  { 
-    id: 4, 
-    name: '苏绣团扇', 
-    price: 399, 
-    coverImage: '/placeholder.jpg',
-    description: '苏州刺绣，细腻精美',
-    isHot: true
-  }
-])
+const productsLoading = ref(false)
+const products = ref([])
 
-const heritageItems = ref([
-  {
-    id: 1,
-    name: '剪纸艺术',
-    description: '中国传统的民间艺术，用剪刀或刻刀在纸上剪刻花纹',
-    image: '/placeholder.jpg'
-  },
-  {
-    id: 2,
-    name: '蜡染工艺',
-    description: '中国传统纺织印染工艺，具有独特的民族风格',
-    image: '/placeholder.jpg'
-  },
-  {
-    id: 3,
-    name: '景泰蓝',
-    description: '铜胎掐丝珐琅，中国著名的特种工艺品',
-    image: '/placeholder.jpg'
-  },
-  {
-    id: 4,
-    name: '苏绣',
-    description: '苏州地区刺绣产品的总称，中国四大名绣之一',
-    image: '/placeholder.jpg'
+const heritageLoading = ref(false)
+const heritageCategories = ref([])
+const heritageItems = computed(() => {
+  const root = Array.isArray(heritageCategories.value) ? heritageCategories.value : []
+  return root.slice(0, 4).map((x) => {
+    const name = (x?.name ?? '').toString() || '未命名分类'
+    const childCount = Array.isArray(x?.children) ? x.children.length : 0
+    const desc = childCount > 0 ? `包含 ${childCount} 个子类` : '点击了解更多'
+    const meta = childCount > 0 ? '更多分类内容' : '更多非遗内容'
+    return { id: x?.id ?? name, name, description: desc, meta }
+  })
+})
+
+const projectTotal = ref(0)
+const myAiRecordTotal = ref(0)
+
+const PLACEHOLDER_IMAGE =
+  'data:image/svg+xml;charset=utf-8,' +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
+      <rect width="600" height="400" fill="#f5f7fa"/>
+      <path d="M160 280l80-100 70 80 60-60 110 140H160z" fill="#dcdfe6"/>
+      <circle cx="240" cy="160" r="28" fill="#dcdfe6"/>
+      <text x="300" y="330" text-anchor="middle" font-size="18" fill="#909399">暂无图片</text>
+    </svg>`
+  )
+
+const normalizeUrl = (url) => {
+  if (!url) return ''
+  if (url.startsWith('http')) return url
+  return `http://localhost:8080${url}`
+}
+
+const getCover = (product) => {
+  const url = normalizeUrl(product?.coverImageUrl)
+  return url || PLACEHOLDER_IMAGE
+}
+
+const flattenCategories = (nodes, out = []) => {
+  const list = Array.isArray(nodes) ? nodes : []
+  list.forEach((n) => {
+    out.push(n)
+    if (Array.isArray(n?.children) && n.children.length > 0) {
+      flattenCategories(n.children, out)
+    }
+  })
+  return out
+}
+
+const categoryCount = computed(() => flattenCategories(heritageCategories.value).length)
+
+const loadHomeData = async () => {
+  productsLoading.value = true
+  heritageLoading.value = true
+  try {
+    const results = await Promise.allSettled([
+      getRecommendProducts({ count: 8 }),
+      getHeritageCategoryTree(),
+      pageHeritageProjects({ page: 1, size: 1 }),
+      pageAiImageRecords({ page: 1, size: 1 })
+    ])
+
+    const [productRes, categoryRes, projectRes, aiRecordRes] = results.map((r) =>
+      r.status === 'fulfilled' ? r.value : null
+    )
+
+    products.value = Array.isArray(productRes?.data) ? productRes.data : []
+    heritageCategories.value = Array.isArray(categoryRes?.data) ? categoryRes.data : []
+
+    const projData = projectRes?.data || {}
+    projectTotal.value = Number(projData.total ?? 0)
+
+    const aiData = aiRecordRes?.data || {}
+    myAiRecordTotal.value = Number(aiData.total ?? 0)
+  } catch (e) {
+    products.value = []
+    heritageCategories.value = []
+    projectTotal.value = 0
+    myAiRecordTotal.value = 0
+  } finally {
+    productsLoading.value = false
+    heritageLoading.value = false
   }
-])
+}
 
 const goToProducts = () => {
   router.push('/products')
@@ -208,17 +243,17 @@ const goToHeritage = () => {
 }
 
 const goToDetail = (id) => {
-  router.push(`/product/${id}`)
+  router.push({ path: `/product/${id}`, query: { from: route.fullPath } })
 }
 
-const addToCart = (product) => {
-  ElMessage.success(`已将 ${product.name} 添加到购物车`)
-}
+onMounted(() => {
+  loadHomeData()
+})
 </script>
 
 <style scoped>
 .home {
-  padding-top: 60px;
+  padding-top: 0;
 }
 
 .banner {
@@ -378,6 +413,10 @@ const addToCart = (product) => {
   gap: 30px;
 }
 
+.empty {
+  padding: 30px 0;
+}
+
 .product-card {
   background: #fff;
   border-radius: 12px;
@@ -413,7 +452,8 @@ const addToCart = (product) => {
   position: absolute;
   top: 12px;
   right: 12px;
-  background: #F56C6C;
+  background: rgba(245, 108, 108, 0.92);
+  backdrop-filter: blur(6px);
   color: #fff;
   padding: 4px 12px;
   border-radius: 4px;
@@ -476,37 +516,47 @@ const addToCart = (product) => {
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
 }
 
-.heritage-image {
-  height: 200px;
-  overflow: hidden;
+.heritage-cover {
+  height: 160px;
+  padding: 18px;
+  color: #fff;
+  background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 60%),
+    linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
-.heritage-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s;
+.heritage-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.heritage-card:hover .heritage-image img {
-  transform: scale(1.1);
+.heritage-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 .heritage-info {
   padding: 20px;
 }
 
-.heritage-info h3 {
-  font-size: 18px;
-  margin-bottom: 8px;
-  color: #303133;
-  font-weight: 500;
-}
-
 .heritage-info p {
   font-size: 14px;
   color: #606266;
   line-height: 1.6;
+  margin: 0 0 10px;
+}
+
+.heritage-meta {
+  font-size: 12px;
+  color: #909399;
 }
 
 .stats-section {

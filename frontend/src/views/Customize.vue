@@ -226,8 +226,13 @@
       </div>
     </div>
 
-    <el-dialog v-model="historyDialogVisible" title="历史生图记录" width="1100px">
-      <div class="history-dialog-desc">仅展示参考图、提示词与生成图</div>
+    <el-dialog v-model="historyDialogVisible" width="1100px">
+      <template #header>
+        <div class="history-dialog-header">
+          <div class="history-dialog-title">历史生图记录</div>
+          <div class="history-dialog-desc">按是否存在参考图分为图生图/文生图，仅展示参考图、提示词与生成图</div>
+        </div>
+      </template>
 
       <div v-if="historyLoading" class="history-loading">
         <el-skeleton :rows="3" animated />
@@ -236,38 +241,66 @@
       <el-empty v-else-if="!historyRecords.length" description="暂无历史记录" :image-size="80" />
 
       <div v-else class="history-dialog-body">
-        <div class="history-list">
-          <div v-for="item in historyRecords" :key="item.id" class="history-row">
-            <div class="history-row-prompt" :title="item.prompt || ''">
-              {{ item.prompt ? item.prompt : '（无提示词）' }}
-            </div>
-            <div class="history-row-images">
-              <div class="history-img-cell">
-                <div class="history-img-label">参考图</div>
-                <el-image
-                  v-if="item.originalImageUrl"
-                  :src="normalizeUrl(item.originalImageUrl)"
-                  fit="contain"
-                  :preview-src-list="[normalizeUrl(item.originalImageUrl)]"
-                  preview-teleported
-                  class="history-row-image"
-                />
-                <div v-else class="history-image-placeholder"></div>
+        <el-tabs v-model="historyTypeTab" class="history-type-tabs" stretch>
+          <el-tab-pane :label="`图生图（${img2imgHistoryRecords.length}）`" name="img2img">
+            <el-empty v-if="!img2imgHistoryRecords.length" description="暂无图生图记录" :image-size="80" />
+            <div v-else class="history-list">
+              <div v-for="item in img2imgHistoryRecords" :key="item.id" class="history-row">
+                <div class="history-row-prompt" :title="item.prompt || ''">
+                  {{ item.prompt ? item.prompt : '（无提示词）' }}
+                </div>
+                <div class="history-row-images">
+                  <div class="history-img-cell">
+                    <div class="history-img-label">参考图</div>
+                    <el-image
+                      v-if="item.originalImageUrl"
+                      :src="normalizeUrl(item.originalImageUrl)"
+                      fit="contain"
+                      :preview-src-list="[normalizeUrl(item.originalImageUrl)]"
+                      preview-teleported
+                      class="history-row-image"
+                    />
+                    <div v-else class="history-image-placeholder"></div>
+                  </div>
+                  <div class="history-img-cell">
+                    <div class="history-img-label">生成图</div>
+                    <el-image
+                      :src="normalizeUrl(item.resultImageUrl)"
+                      fit="contain"
+                      :preview-src-list="img2imgHistoryPreviewList"
+                      :initial-index="img2imgHistoryIndexMap.get(item.id) ?? 0"
+                      preview-teleported
+                      class="history-row-image"
+                    />
+                  </div>
+                </div>
               </div>
-              <div class="history-img-cell">
-                <div class="history-img-label">生成图</div>
-                <el-image
-                  :src="normalizeUrl(item.resultImageUrl)"
-                  fit="contain"
-                  :preview-src-list="historyPreviewList"
-                  :initial-index="historyIndexMap.get(item.id) ?? 0"
-                  preview-teleported
-                  class="history-row-image"
-                />
+            </div>
+          </el-tab-pane>
+          <el-tab-pane :label="`文生图（${txt2imgHistoryRecords.length}）`" name="txt2img">
+            <el-empty v-if="!txt2imgHistoryRecords.length" description="暂无文生图记录" :image-size="80" />
+            <div v-else class="history-list">
+              <div v-for="item in txt2imgHistoryRecords" :key="item.id" class="history-row">
+                <div class="history-row-prompt" :title="item.prompt || ''">
+                  {{ item.prompt ? item.prompt : '（无提示词）' }}
+                </div>
+                <div class="history-row-images history-row-images--single">
+                  <div class="history-img-cell">
+                    <div class="history-img-label">生成图</div>
+                    <el-image
+                      :src="normalizeUrl(item.resultImageUrl)"
+                      fit="contain"
+                      :preview-src-list="txt2imgHistoryPreviewList"
+                      :initial-index="txt2imgHistoryIndexMap.get(item.id) ?? 0"
+                      preview-teleported
+                      class="history-row-image"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </el-tab-pane>
+        </el-tabs>
 
         <div v-if="historyTotal > historySize" class="history-pagination">
           <el-pagination
@@ -323,6 +356,7 @@ const historyTotal = ref(0)
 const historyPage = ref(1)
 const historySize = ref(12)
 const historyDialogVisible = ref(false)
+const historyTypeTab = ref('img2img')
 
 const normalizeUrl = (url) => {
   if (!url) return ''
@@ -330,13 +364,33 @@ const normalizeUrl = (url) => {
   return `http://localhost:8080${url}`
 }
 
-const historyPreviewList = computed(() =>
-  historyRecords.value.map((x) => normalizeUrl(x?.resultImageUrl)).filter(Boolean)
+const isBlank = (value) => value == null || String(value).trim() === ''
+
+const img2imgHistoryRecords = computed(() =>
+  historyRecords.value.filter((x) => !isBlank(x?.originalImageUrl))
+)
+const txt2imgHistoryRecords = computed(() =>
+  historyRecords.value.filter((x) => isBlank(x?.originalImageUrl))
 )
 
-const historyIndexMap = computed(() => {
+const img2imgHistoryPreviewList = computed(() =>
+  img2imgHistoryRecords.value.map((x) => normalizeUrl(x?.resultImageUrl)).filter(Boolean)
+)
+const txt2imgHistoryPreviewList = computed(() =>
+  txt2imgHistoryRecords.value.map((x) => normalizeUrl(x?.resultImageUrl)).filter(Boolean)
+)
+
+const img2imgHistoryIndexMap = computed(() => {
   const map = new Map()
-  historyRecords.value.forEach((x, idx) => {
+  img2imgHistoryRecords.value.forEach((x, idx) => {
+    if (x?.id != null) map.set(x.id, idx)
+  })
+  return map
+})
+
+const txt2imgHistoryIndexMap = computed(() => {
+  const map = new Map()
+  txt2imgHistoryRecords.value.forEach((x, idx) => {
     if (x?.id != null) map.set(x.id, idx)
   })
   return map
@@ -378,6 +432,9 @@ const handleHistorySizeChange = async () => {
 
 const openHistoryDialog = async () => {
   historyDialogVisible.value = true
+  if (historyTypeTab.value !== 'img2img' && historyTypeTab.value !== 'txt2img') {
+    historyTypeTab.value = 'img2img'
+  }
   await fetchHistory()
 }
 
@@ -690,10 +747,29 @@ onMounted(() => {
   border-radius: 10px;
 }
 
+.history-dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-right: 42px;
+}
+
+.history-dialog-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+}
+
 .history-dialog-desc {
+  flex: 1;
+  min-width: 0;
   font-size: 12px;
   color: rgba(17, 24, 39, 0.6);
-  margin-bottom: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .history-dialog-body {
@@ -735,6 +811,10 @@ onMounted(() => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
+}
+
+.history-row-images--single {
+  grid-template-columns: 1fr;
 }
 
 .history-img-cell {

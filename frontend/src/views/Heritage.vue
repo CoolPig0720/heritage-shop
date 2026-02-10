@@ -83,9 +83,10 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { getHeritageCategoryTree, pageHeritageProjects } from '@/api/heritage'
 
+const route = useRoute()
 const router = useRouter()
 
 const categoryLoading = ref(false)
@@ -169,11 +170,11 @@ const handleCurrentChange = () => {
 }
 
 const goProject = (id) => {
-  router.push(`/heritage/projects/${id}`)
+  router.push({ path: `/heritage/projects/${id}`, query: { from: route.fullPath } })
 }
 
 const goInheritor = (id) => {
-  router.push(`/heritage/inheritors/${id}`)
+  router.push({ path: `/heritage/inheritors/${id}`, query: { from: route.fullPath } })
 }
 
 const indexMethod = (index) => (page.value - 1) * size.value + index + 1
@@ -186,13 +187,14 @@ onMounted(async () => {
 
 <style scoped>
 .heritage {
-  padding-top: 60px;
+  padding: 40px 20px;
+  min-height: calc(100vh - 60px);
+  background: var(--app-bg);
 }
 
 .section-container {
-  max-width: 1200px;
+  max-width: var(--app-max-width);
   margin: 0 auto;
-  padding: 20px;
 }
 
 .section-header {
@@ -209,7 +211,7 @@ onMounted(async () => {
 }
 
 .list-card {
-  border-radius: 12px;
+  border-radius: var(--app-radius);
 }
 
 .filter-row {

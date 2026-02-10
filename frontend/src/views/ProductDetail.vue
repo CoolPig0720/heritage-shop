@@ -1,77 +1,88 @@
 <template>
   <div class="product-detail">
-    <div class="detail-container">
-      <div class="detail-left">
-        <el-carousel v-if="product.imageUrls.length > 0" height="400px" indicator-position="outside">
-          <el-carousel-item v-for="url in product.imageUrls" :key="url">
-            <el-image :src="url" fit="cover" style="width: 100%; height: 400px" />
-          </el-carousel-item>
-        </el-carousel>
-        <el-image v-else :src="product.coverImageUrl" fit="contain" style="width: 100%; height: 400px" />
-      </div>
-      <div class="detail-right">
-        <h1>{{ product.name }}</h1>
-        <p class="price">¥{{ product.price }}</p>
-        <div class="info">
-          <p><span>状态：</span>{{ product.status === 1 ? '上架' : '下架' }}</p>
-          <p v-if="product.traceCode"><span>溯源码：</span>{{ product.traceCode }}</p>
-          <p v-if="product.model3dUrl">
-            <span>3D 模型：</span>
-            <el-link :href="product.model3dUrl" target="_blank" type="primary">查看</el-link>
-          </p>
-        </div>
-        <div class="description">
-          <h3>商品描述</h3>
-          <p>{{ product.description }}</p>
-        </div>
-        <div class="model3d">
-          <div class="section-header">
-            <h3>3D 模型预览</h3>
-            <el-link v-if="product.model3dUrl" :href="product.model3dUrl" target="_blank" type="primary">
-              新窗口查看
-            </el-link>
+    <div class="section-container" v-loading="loading">
+      <el-breadcrumb separator="/">
+        <el-breadcrumb-item :to="backTo">{{ backLabel }}</el-breadcrumb-item>
+        <el-breadcrumb-item>商品详情</el-breadcrumb-item>
+      </el-breadcrumb>
+
+      <el-card class="detail-card" shadow="never">
+        <div class="detail-container">
+          <div class="detail-left">
+            <el-carousel v-if="product.imageUrls.length > 0" height="400px" indicator-position="outside">
+              <el-carousel-item v-for="url in product.imageUrls" :key="url">
+                <el-image :src="url" fit="cover" style="width: 100%; height: 400px" />
+              </el-carousel-item>
+            </el-carousel>
+            <el-image v-else :src="product.coverImageUrl" fit="contain" style="width: 100%; height: 400px" />
           </div>
-          <div v-if="product.model3dUrl" class="model3d-panel">
-            <div ref="modelPreviewRef" class="model3d-canvas" />
-            <div v-if="modelPreviewLoading" class="model3d-loading">模型加载中...</div>
-            <div v-if="modelPreviewError" class="model3d-error">{{ modelPreviewError }}</div>
-          </div>
-          <div v-else class="model3d-empty">
-            <el-empty description="暂无 3D 模型" />
+          <div class="detail-right">
+            <h1 class="title">{{ product.name }}</h1>
+            <p class="price">¥{{ product.price }}</p>
+            <div class="info">
+              <p><span>状态：</span>{{ product.status === 1 ? '上架' : '下架' }}</p>
+              <p v-if="product.traceCode"><span>溯源码：</span>{{ product.traceCode }}</p>
+              <p v-if="product.model3dUrl">
+                <span>3D 模型：</span>
+                <el-link :href="product.model3dUrl" target="_blank" type="primary">查看</el-link>
+              </p>
+            </div>
+            <div class="description">
+              <h3>商品描述</h3>
+              <p>{{ product.description }}</p>
+            </div>
+            <div class="model3d">
+              <div class="section-header">
+                <h3>3D 模型预览</h3>
+                <el-link v-if="product.model3dUrl" :href="product.model3dUrl" target="_blank" type="primary">
+                  新窗口查看
+                </el-link>
+              </div>
+              <div v-if="product.model3dUrl" class="model3d-panel">
+                <div ref="modelPreviewRef" class="model3d-canvas" />
+                <div v-if="modelPreviewLoading" class="model3d-loading">模型加载中...</div>
+                <div v-if="modelPreviewError" class="model3d-error">{{ modelPreviewError }}</div>
+              </div>
+              <div v-else class="model3d-empty">
+                <el-empty description="暂无 3D 模型" />
+              </div>
+            </div>
+            <div class="trace">
+              <h3>溯源二维码</h3>
+              <div class="trace-box">
+                <el-image
+                  v-if="product.traceQrUrl"
+                  :src="product.traceQrUrl"
+                  fit="contain"
+                  style="width: 180px; height: 180px"
+                />
+                <el-empty v-else description="暂无溯源二维码" :image-size="80" />
+              </div>
+            </div>
+            <div class="actions">
+              <el-input-number v-model="quantity" :min="1" :max="99" />
+              <el-button type="primary" @click="addToCart">加入购物车</el-button>
+              <el-button @click="buyNow">立即购买</el-button>
+            </div>
           </div>
         </div>
-        <div class="trace">
-          <h3>溯源二维码</h3>
-          <div class="trace-box">
-            <el-image
-              v-if="product.traceQrUrl"
-              :src="product.traceQrUrl"
-              fit="contain"
-              style="width: 180px; height: 180px"
-            />
-            <el-empty v-else description="暂无溯源二维码" :image-size="80" />
-          </div>
-        </div>
-        <div class="actions">
-          <el-input-number v-model="quantity" :min="1" :max="99" />
-          <el-button type="primary" @click="addToCart">加入购物车</el-button>
-          <el-button @click="buyNow">立即购买</el-button>
-        </div>
-      </div>
+      </el-card>
     </div>
   </div>
 </template>
 
 <script setup>
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { getProductDetail } from '@/api/shop'
+import { addCartItem } from '@/api/cart'
 
 const route = useRoute()
+const router = useRouter()
 
 const quantity = ref(1)
 const loading = ref(false)
@@ -79,6 +90,23 @@ const modelPreviewRef = ref()
 const modelPreviewLoading = ref(false)
 const modelPreviewError = ref('')
 let modelPreview = null
+
+const backTo = computed(() => {
+  const from = route.query?.from
+  if (typeof from === 'string' && from.startsWith('/')) return from
+  return '/products'
+})
+
+const backLabel = computed(() => {
+  const from = route.query?.from
+  if (typeof from === 'string') {
+    if (from.startsWith('/home')) return '首页'
+    if (from.startsWith('/products')) return '商品列表'
+    if (from.startsWith('/cart')) return '购物车'
+    if (from.startsWith('/orders')) return '我的订单'
+  }
+  return '商品列表'
+})
 
 const PLACEHOLDER_IMAGE =
   'data:image/svg+xml;charset=utf-8,' +
@@ -277,12 +305,24 @@ const loadDetail = async (id) => {
   }
 }
 
-const addToCart = () => {
-  ElMessage.success('已加入购物车')
+const addToCart = async () => {
+  if (!product.value?.id) return
+  try {
+    await addCartItem({ productId: product.value.id, quantity: quantity.value })
+    ElMessage.success('已加入购物车')
+  } catch (e) {
+    ElMessage.error('加入购物车失败')
+  }
 }
 
-const buyNow = () => {
-  ElMessage.success('跳转到订单确认页面')
+const buyNow = async () => {
+  if (!product.value?.id) return
+  try {
+    await addCartItem({ productId: product.value.id, quantity: quantity.value })
+    router.push('/cart')
+  } catch (e) {
+    ElMessage.error('加入购物车失败')
+  }
 }
 
 onMounted(() => {
@@ -315,22 +355,35 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .product-detail {
-  padding: 20px;
+  padding: 40px 20px;
+  min-height: calc(100vh - 60px);
+  background: var(--app-bg);
+}
+
+.section-container {
+  max-width: var(--app-max-width);
+  margin: 0 auto;
+}
+
+.detail-card {
+  border-radius: var(--app-radius);
+  border: 1px solid var(--app-border);
+  overflow: hidden;
+  margin-top: 14px;
+}
+
+.detail-card :deep(.el-card__body) {
+  padding: 24px;
 }
 
 .detail-container {
-  max-width: 1200px;
-  margin: 0 auto;
   display: flex;
-  gap: 40px;
-  background: #fff;
-  padding: 40px;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  gap: 32px;
 }
 
 .detail-left {
   flex: 1;
+  min-width: 0;
 }
 
 .detail-left .el-image {
@@ -340,9 +393,10 @@ onBeforeUnmount(() => {
 
 .detail-right {
   flex: 1;
+  min-width: 0;
 }
 
-.detail-right h1 {
+.detail-right .title {
   font-size: 28px;
   color: #303133;
   margin-bottom: 20px;
@@ -454,5 +508,19 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   background: #fafafa;
+}
+
+@media (max-width: 960px) {
+  .detail-container {
+    flex-direction: column;
+    gap: 18px;
+  }
+  .detail-card :deep(.el-card__body) {
+    padding: 16px;
+  }
+  .detail-right .actions {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
 }
 </style>

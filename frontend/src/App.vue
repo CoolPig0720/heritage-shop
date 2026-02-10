@@ -18,8 +18,22 @@ const elementLocale = computed(() => getElementLocale(i18n.global.locale.value))
   box-sizing: border-box;
 }
 
+:root {
+  --app-max-width: 1200px;
+  --app-bg: #f8f9fa;
+  --app-border: #ebeef5;
+  --app-radius: 12px;
+}
+
 html, body, #app {
   width: 100%;
   height: 100%;
+}
+
+body {
+  background: var(--app-bg);
+  color: #303133;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
+    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 </style>

@@ -32,14 +32,15 @@ const goBack = () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #f8f9fa;
+  background: var(--app-bg);
 }
 
 .not-found-content {
   text-align: center;
   padding: 60px 40px;
   background: #fff;
-  border-radius: 12px;
+  border-radius: var(--app-radius);
+  border: 1px solid var(--app-border);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   max-width: 500px;
 }

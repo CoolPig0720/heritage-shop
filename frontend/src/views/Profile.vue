@@ -663,16 +663,18 @@ onMounted(() => {
 
 <style scoped>
 .profile {
-  padding: 20px;
+  padding: 40px 20px;
+  min-height: calc(100vh - 60px);
+  background: var(--app-bg);
 }
 
 .profile-container {
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
   background: #fff;
-  padding: 40px;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  border-radius: var(--app-radius);
+  border: 1px solid var(--app-border);
 }
 
 .avatar-section {
@@ -681,7 +683,7 @@ onMounted(() => {
   gap: 20px;
   margin-bottom: 30px;
   padding-bottom: 30px;
-  border-bottom: 1px solid #EBEEF5;
+  border-bottom: 1px solid var(--app-border);
 }
 
 .avatar-uploader {
@@ -712,8 +714,8 @@ onMounted(() => {
   justify-content: space-between;
   gap: 12px;
   padding: 16px;
-  border: 1px solid #EBEEF5;
-  border-radius: 8px;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius);
 }
 
 .address-item-main {

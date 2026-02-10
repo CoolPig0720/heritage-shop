@@ -1,0 +1,17 @@
+DROP TABLE IF EXISTS `payment`;
+
+CREATE TABLE `payment` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `pay_no` VARCHAR(64) NOT NULL,
+    `order_id` BIGINT NOT NULL,
+    `amount` DECIMAL(10,2) NOT NULL DEFAULT 0,
+    `channel` VARCHAR(20) NOT NULL DEFAULT 'MOCK',
+    `status` VARCHAR(20) NOT NULL DEFAULT 'INIT',
+    `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `paid_time` DATETIME DEFAULT NULL,
+    `fail_reason` VARCHAR(255) DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_pay_no` (`pay_no`),
+    KEY `idx_order_id` (`order_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

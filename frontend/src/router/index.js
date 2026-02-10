@@ -31,13 +31,13 @@ const routes = [
         path: 'heritage/projects/:id',
         name: 'HeritageProjectDetail',
         component: () => import('@/views/HeritageProjectDetail.vue'),
-        meta: { title: '非遗项目详情' }
+        meta: { title: '非遗项目详情', showBack: true, backLabel: '非遗文化', backTo: '/heritage' }
       },
       {
         path: 'heritage/inheritors/:id',
         name: 'HeritageInheritorDetail',
         component: () => import('@/views/HeritageInheritorDetail.vue'),
-        meta: { title: '非遗传承人详情' }
+        meta: { title: '非遗传承人详情', showBack: true, backLabel: '非遗文化', backTo: '/heritage' }
       },
       {
         path: 'products',
@@ -49,7 +49,7 @@ const routes = [
         path: 'product/:id',
         name: 'ProductDetail',
         component: () => import('@/views/ProductDetail.vue'),
-        meta: { title: '商品详情' }
+        meta: { title: '商品详情', showBack: true, backLabel: '商品列表', backTo: '/products' }
       },
       {
         path: 'customize',

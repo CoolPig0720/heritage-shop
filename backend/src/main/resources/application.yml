@@ -40,13 +40,14 @@ jwt:
   secret: heritage-shop-secret-key-2024
   expiration: 604800000
 
-ai:
-  tencentcloud:
-    secret-id: ${TENCENTCLOUD_SECRET_ID:}
-    secret-key: ${TENCENTCLOUD_SECRET_KEY:}
-    region: ${TENCENTCLOUD_REGION:ap-guangzhou}
-    endpoint: ${TENCENTCLOUD_ENDPOINT:aiart.tencentcloudapi.com}
+# ai:
+#   tencentcloud:
+#     secret-id: ${TENCENTCLOUD_SECRET_ID:}
+#     secret-key: ${TENCENTCLOUD_SECRET_KEY:}
+#     region: ${TENCENTCLOUD_REGION:ap-guangzhou}
+#     endpoint: ${TENCENTCLOUD_ENDPOINT:aiart.tencentcloudapi.com}
 
+    
 knife4j:
   enable: true
   setting:

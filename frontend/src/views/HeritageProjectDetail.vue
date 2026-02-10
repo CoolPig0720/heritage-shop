@@ -325,7 +325,7 @@ const goInheritor = (id) => {
     router.push({ path, query: { from: 'manage' } })
     return
   }
-  router.push(path)
+  router.push({ path, query: { from: route.fullPath } })
 }
 
 onMounted(() => {
@@ -342,18 +342,20 @@ watch(
 
 <style scoped>
 .heritage-detail {
-  padding-top: 60px;
+  padding: 40px 20px;
+  min-height: calc(100vh - 60px);
+  background: var(--app-bg);
 }
 
 .section-container {
-  max-width: 1200px;
+  max-width: var(--app-max-width);
   margin: 0 auto;
-  padding: 20px;
 }
 
 .detail-card {
   margin-top: 14px;
-  border-radius: 12px;
+  border-radius: var(--app-radius);
+  border: 1px solid var(--app-border);
 }
 
 .title {

@@ -69,9 +69,10 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { getRecommendProducts } from '@/api/shop'
 
+const route = useRoute()
 const router = useRouter()
 
 const loading = ref(false)
@@ -172,7 +173,7 @@ const resetFilters = () => {
 }
 
 const goToDetail = (id) => {
-  router.push(`/product/${id}`)
+  router.push({ path: `/product/${id}`, query: { from: route.fullPath } })
 }
 
 const getCover = (product) => {
@@ -187,13 +188,14 @@ onMounted(() => {
 
 <style scoped>
 .shop-products {
-  padding-top: 60px;
+  padding: 40px 20px;
+  min-height: calc(100vh - 60px);
+  background: var(--app-bg);
 }
 
 .section-container {
-  max-width: 1200px;
+  max-width: var(--app-max-width);
   margin: 0 auto;
-  padding: 20px;
 }
 
 .section-header {
@@ -211,7 +213,7 @@ onMounted(() => {
 
 .filter-card {
   margin-bottom: 16px;
-  border-radius: 12px;
+  border-radius: var(--app-radius);
 }
 
 .filter-row {

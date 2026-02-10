@@ -24,7 +24,7 @@ import Footer from '@/components/Footer.vue'
 .admin-content {
   flex: 1;
   padding-top: 60px;
-  background: #f0f2f5;
+  background: var(--app-bg);
   overflow-y: auto;
 }
 </style>
