@@ -5,7 +5,7 @@
         <h2 class="section-title">非遗文化</h2>
       </div>
 
-      <el-card class="list-card" shadow="never">
+      <el-card class="list-card table-card" shadow="never">
         <div class="filter-row">
           <el-select
             v-model="selectedCategoryId"
@@ -56,26 +56,24 @@
               <span v-else>暂无</span>
             </template>
           </el-table-column>
-          <el-table-column prop="applyUnit" label="申报单位" min-width="180" show-overflow-tooltip />
+          <el-table-column prop="applyUnit" label="申报单位或地区" min-width="180" show-overflow-tooltip />
           <el-table-column prop="protectUnit" label="保护单位" min-width="180" show-overflow-tooltip />
-          <el-table-column label="操作" width="100">
+          <el-table-column label="操作" width="100" align="right" header-align="right">
             <template #default="{ row }">
-              <el-button link type="primary" @click="goProject(row.id)">查看</el-button>
+              <div class="row-actions row-actions--right">
+                <el-button type="primary" plain round size="small" @click="goProject(row.id)">查看</el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>
 
-        <div class="pagination">
-          <el-pagination
-            v-model:current-page="page"
-            v-model:page-size="size"
-            :page-sizes="[10, 20, 50, 100]"
-            :total="total"
-            layout="total, sizes, prev, pager, next, jumper"
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-          />
-        </div>
+        <AppPagination
+          v-model:current-page="page"
+          v-model:page-size="size"
+          :total="total"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
       </el-card>
     </div>
   </div>
@@ -84,6 +82,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import AppPagination from '@/components/AppPagination.vue'
 import { getHeritageCategoryTree, pageHeritageProjects } from '@/api/heritage'
 
 const route = useRoute()
@@ -96,7 +95,7 @@ const selectedCategoryId = ref(null)
 const loading = ref(false)
 const keyword = ref('')
 const page = ref(1)
-const size = ref(10)
+const size = ref(5)
 const total = ref(0)
 const records = ref([])
 

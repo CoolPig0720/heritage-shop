@@ -31,13 +31,13 @@ const routes = [
         path: 'heritage/projects/:id',
         name: 'HeritageProjectDetail',
         component: () => import('@/views/HeritageProjectDetail.vue'),
-        meta: { title: '非遗项目详情', showBack: true, backLabel: '非遗文化', backTo: '/heritage' }
+        meta: { title: '非遗项目详情' }
       },
       {
         path: 'heritage/inheritors/:id',
         name: 'HeritageInheritorDetail',
         component: () => import('@/views/HeritageInheritorDetail.vue'),
-        meta: { title: '非遗传承人详情', showBack: true, backLabel: '非遗文化', backTo: '/heritage' }
+        meta: { title: '非遗传承人详情' }
       },
       {
         path: 'products',
@@ -49,7 +49,7 @@ const routes = [
         path: 'product/:id',
         name: 'ProductDetail',
         component: () => import('@/views/ProductDetail.vue'),
-        meta: { title: '商品详情', showBack: true, backLabel: '商品列表', backTo: '/products' }
+        meta: { title: '商品详情' }
       },
       {
         path: 'customize',
@@ -81,13 +81,13 @@ const routes = [
     path: '/manage',
     name: 'Manage',
     component: () => import('@/layouts/AdminLayout.vue'),
-    redirect: '/manage/dashboard',
+    redirect: '/manage/users',
     meta: { requiresAuth: true, requiresAdmin: true },
     children: [
       {
         path: 'dashboard',
         name: 'ManageDashboard',
-        component: () => import('@/views/admin/Dashboard.vue'),
+        redirect: '/manage/users',
         meta: { title: '管理后台' }
       },
       {
@@ -114,13 +114,13 @@ const routes = [
     path: '/merchant',
     name: 'Merchant',
     component: () => import('@/layouts/MerchantLayout.vue'),
-    redirect: '/merchant/dashboard',
+    redirect: '/merchant/products',
     meta: { requiresAuth: true, requiresMerchant: true },
     children: [
       {
         path: 'dashboard',
         name: 'MerchantDashboard',
-        component: () => import('@/views/merchant/Dashboard.vue'),
+        redirect: '/merchant/products',
         meta: { title: '商家后台' }
       },
       {
@@ -128,12 +128,6 @@ const routes = [
         name: 'MerchantProducts',
         component: () => import('@/views/merchant/Products.vue'),
         meta: { title: '商品管理' }
-      },
-      {
-        path: 'custom-orders',
-        name: 'MerchantCustomOrders',
-        component: () => import('@/views/merchant/CustomOrders.vue'),
-        meta: { title: '定制订单' }
       }
     ]
   },

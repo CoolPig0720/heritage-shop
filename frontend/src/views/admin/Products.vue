@@ -62,115 +62,149 @@
             {{ formatTime(row.createTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right" align="center">
+        <el-table-column label="操作" width="200" align="center">
           <template #default="{ row }">
-            <el-button type="primary" link size="small" @click="handleEdit(row)">
-              <el-icon><Edit /></el-icon>
-              编辑
-            </el-button>
-            <el-button type="danger" link size="small" @click="handleDelete(row)">
-              <el-icon><Delete /></el-icon>
-              删除
-            </el-button>
+            <div class="row-actions">
+              <el-button type="primary" plain round size="small" @click="handleEdit(row)">
+                <el-icon><Edit /></el-icon>
+                编辑
+              </el-button>
+              <el-button type="danger" plain round size="small" @click="handleDelete(row)">
+                <el-icon><Delete /></el-icon>
+                删除
+              </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
       
-      <div class="pagination">
-        <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
-      </div>
+      <AppPagination
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
-        <el-form-item label="商品名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入商品名称" />
-        </el-form-item>
+    <el-dialog
+      v-model="dialogVisible"
+      :title="dialogTitle"
+      width="min(920px, 94vw)"
+      top="3vh"
+      class="product-edit-dialog"
+    >
+      <el-form ref="formRef" class="product-edit-form" :model="form" :rules="rules" label-width="90px">
+        <el-row :gutter="10" class="form-grid">
+          <el-col :xs="24" :md="15">
+            <el-form-item label="商品名称" prop="name">
+              <el-input v-model="form.name" placeholder="请输入商品名称" class="name-input" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :md="9">
+            <el-form-item label="价格" prop="price">
+              <el-input-number
+                v-model="form.price"
+                :min="0"
+                :precision="2"
+                :step="10"
+                placeholder="不填默认 999"
+                class="price-input"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row v-if="isEdit" :gutter="10" class="form-grid">
+          <el-col :xs="24" :md="15">
+            <el-form-item label="状态" prop="status">
+              <el-radio-group v-model="form.status">
+                <el-radio :label="1">上架</el-radio>
+                <el-radio :label="0">下架</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :md="9">
+            <el-form-item label="溯源码" prop="traceCode">
+              <el-input v-model="form.traceCode" placeholder="可选" class="tracecode-input" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
         <el-form-item label="商品描述" prop="description">
           <el-input
             v-model="form.description"
             type="textarea"
-            :rows="4"
+            :rows="3"
             placeholder="请输入商品描述"
           />
         </el-form-item>
-        <el-form-item label="价格" prop="price">
-          <el-input-number
-            v-model="form.price"
-            :min="0"
-            :precision="2"
-            :step="10"
-            placeholder="不填默认 999"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item v-if="isEdit" label="状态" prop="status">
-          <el-radio-group v-model="form.status">
-            <el-radio :label="1">上架</el-radio>
-            <el-radio :label="0">下架</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item v-if="isEdit" label="溯源码" prop="traceCode">
-          <el-input v-model="form.traceCode" placeholder="可选" />
-        </el-form-item>
-        <el-form-item v-if="isEdit" label="溯源二维码" prop="traceQrUrl">
-          <div class="upload-row">
-            <el-upload
-              :action="uploadUrl"
-              name="file"
-              :headers="uploadHeaders"
-              :show-file-list="false"
-              :before-upload="beforeUploadTraceQr"
-              :on-success="handleTraceQrSuccess"
-            >
-              <el-button size="small" type="primary">上传二维码</el-button>
-            </el-upload>
+        <el-row v-if="isEdit" :gutter="16" class="form-grid">
+          <el-col :xs="24" :md="12">
+            <el-form-item label="溯源二维码" prop="traceQrUrl">
+              <div class="asset-box">
+                <el-upload
+                  :action="uploadUrl"
+                  name="file"
+                  :headers="uploadHeaders"
+                  :show-file-list="false"
+                  :before-upload="beforeUploadTraceQr"
+                  :on-success="handleTraceQrSuccess"
+                >
+                  <el-button size="small" type="primary">上传二维码</el-button>
+                </el-upload>
+                <el-button v-if="form.traceQrUrl" size="small" @click="clearTraceQr">删除</el-button>
+              </div>
+              <div v-if="form.traceQrUrl" class="qr-preview">
+                <el-image class="qr-preview-image" :src="normalizeUrl(form.traceQrUrl)" fit="contain" />
+              </div>
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :md="12">
+            <el-form-item label="3D 模型" prop="model3dUrl">
+              <div class="asset-box">
+                <el-upload
+                  :action="uploadUrl"
+                  name="file"
+                  :headers="uploadHeaders"
+                  :show-file-list="false"
+                  :before-upload="beforeUploadModel"
+                  :on-success="handleModelSuccess"
+                >
+                  <el-button size="small" type="primary">上传 3D 模型</el-button>
+                </el-upload>
 
-            <div v-if="form.traceQrUrl" class="upload-preview">
-              <el-image :src="normalizeUrl(form.traceQrUrl)" style="width: 64px; height: 64px" fit="cover" />
-              <el-button size="small" @click="clearTraceQr">删除</el-button>
-            </div>
-          </div>
-        </el-form-item>
-        <el-form-item v-if="isEdit" label="3D 模型" prop="model3dUrl">
-          <div class="upload-row">
-            <el-upload
-              :action="uploadUrl"
-              name="file"
-              :headers="uploadHeaders"
-              :show-file-list="false"
-              :before-upload="beforeUploadModel"
-              :on-success="handleModelSuccess"
-            >
-              <el-button size="small" type="primary">上传 3D 模型</el-button>
-            </el-upload>
+                <div v-if="form.model3dUrl" class="asset-preview">
+                  <el-button size="small" @click="downloadFile(form.model3dUrl)">下载</el-button>
+                  <el-button size="small" @click="modelPreviewVisible = !modelPreviewVisible">
+                    {{ modelPreviewVisible ? '收起预览' : '预览' }}
+                  </el-button>
+                  <el-button size="small" @click="clearModel">删除</el-button>
+                </div>
+              </div>
 
-            <div v-if="form.model3dUrl" class="upload-preview">
-              <el-link :href="normalizeUrl(form.model3dUrl)" target="_blank" type="primary">
-                {{ uploadedModelName || getFileName(form.model3dUrl) }}
-              </el-link>
-              <el-button size="small" @click="modelPreviewVisible = !modelPreviewVisible">
-                {{ modelPreviewVisible ? '收起预览' : '预览' }}
-              </el-button>
-              <el-button size="small" @click="clearModel">删除</el-button>
-            </div>
-            <div v-if="form.model3dUrl && modelPreviewVisible" class="model-preview">
-              <div ref="modelPreviewRef" class="model-preview-canvas" />
-              <div v-if="modelPreviewLoading" class="model-preview-loading">模型加载中...</div>
-              <div v-if="modelPreviewError" class="model-preview-error">{{ modelPreviewError }}</div>
-            </div>
-          </div>
-        </el-form-item>
+              <div v-if="form.model3dUrl && modelPreviewVisible" class="model-preview">
+                <model-viewer
+                  class="model-preview-viewer"
+                  :src="normalizeUrl(form.model3dUrl)"
+                  :poster="modelPosterUrl"
+                  :alt="form.name || '3D 模型预览'"
+                  camera-controls
+                  auto-rotate
+                  shadow-intensity="1"
+                  exposure="1"
+                  touch-action="pan-y"
+                  @load="handleModelPreviewLoad"
+                  @error="handleModelPreviewError"
+                />
+                <div v-if="modelPreviewLoading" class="model-preview-loading">模型加载中...</div>
+                <div v-if="modelPreviewError" class="model-preview-error">{{ modelPreviewError }}</div>
+              </div>
+            </el-form-item>
+          </el-col>
+        </el-row>
 
-        <el-form-item v-if="isEdit" label="商品图片">
+        <el-form-item v-if="isEdit" label="商品图片" class="images-item">
           <div class="images-panel">
             <div class="images-toolbar">
               <el-upload
@@ -191,38 +225,45 @@
               v-if="productImages.length"
               v-loading="imagesLoading"
               :data="productImages"
-              size="small"
+              :row-class-name="getImageRowClass"
+              size="default"
+              class="images-table"
+              table-layout="fixed"
               style="width: 100%"
             >
-              <el-table-column label="预览" width="90">
+              <el-table-column label="预览" width="92" align="center">
                 <template #default="{ row }">
-                  <el-image :src="normalizeUrl(row.imageUrl)" style="width: 64px; height: 64px" fit="cover" />
+                  <el-image class="image-thumb" :src="normalizeUrl(row.imageUrl)" fit="cover" />
                 </template>
               </el-table-column>
-              <el-table-column label="图片地址" min-width="220">
+              <el-table-column label="封面" width="92" align="center">
                 <template #default="{ row }">
-                  <el-link :href="normalizeUrl(row.imageUrl)" target="_blank" type="primary">
-                    {{ getFileName(row.imageUrl) }}
-                  </el-link>
+                  <el-tag v-if="row.isCover === 1" type="success" size="small" effect="light">封面</el-tag>
+                  <span v-else class="muted">—</span>
                 </template>
               </el-table-column>
-              <el-table-column label="封面" width="80">
+              <el-table-column label="排序" width="140" align="center">
                 <template #default="{ row }">
-                  <el-tag v-if="row.isCover === 1" type="success">封面</el-tag>
+                  <el-input-number
+                    v-model="row.sortOrder"
+                    :min="0"
+                    :step="1"
+                    controls-position="right"
+                    size="small"
+                    class="sort-input"
+                  />
                 </template>
               </el-table-column>
-              <el-table-column label="排序" width="120">
+              <el-table-column label="操作" min-width="240" align="center">
                 <template #default="{ row }">
-                  <el-input-number v-model="row.sortOrder" :min="0" :step="1" controls-position="right" />
-                </template>
-              </el-table-column>
-              <el-table-column label="操作" width="220">
-                <template #default="{ row }">
-                  <el-button link size="small" :disabled="row.isCover === 1" @click="setCoverImage(row)">
-                    设为封面
-                  </el-button>
-                  <el-button link size="small" @click="saveImageRow(row)">保存</el-button>
-                  <el-button link size="small" type="danger" @click="deleteImageRow(row)">删除</el-button>
+                  <div class="image-actions">
+                    <el-button link size="small" :disabled="row.isCover === 1" @click="setCoverImage(row)">
+                      设为封面
+                    </el-button>
+                    <el-button link size="small" @click="saveImageRow(row)">保存</el-button>
+                    <el-button link size="small" @click="downloadFile(row.imageUrl)">下载</el-button>
+                    <el-button link size="small" type="danger" @click="deleteImageRow(row)">删除</el-button>
+                  </div>
                 </template>
               </el-table-column>
             </el-table>
@@ -242,9 +283,7 @@
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { Search, Plus, Edit, Delete } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import * as THREE from 'three'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import AppPagination from '@/components/AppPagination.vue'
 import {
   addProductImages,
   createProduct,
@@ -262,7 +301,7 @@ const userStore = useUserStore()
 
 const searchKeyword = ref('')
 const currentPage = ref(1)
-const pageSize = ref(10)
+const pageSize = ref(5)
 const total = ref(0)
 const loading = ref(false)
 
@@ -299,6 +338,12 @@ const normalizeUrl = (url) => {
   if (!url) return ''
   if (url.startsWith('http')) return url
   return `http://localhost:8080${url}`
+}
+
+const downloadFile = (url) => {
+  const resolvedUrl = normalizeUrl(url)
+  if (!resolvedUrl) return
+  window.open(resolvedUrl, '_blank')
 }
 
 const PLACEHOLDER_IMAGE =
@@ -369,9 +414,19 @@ const beforeUploadProductImage = (file) => {
   return true
 }
 
-const handleTraceQrSuccess = (response) => {
+const handleTraceQrSuccess = async (response) => {
   if (response?.code === 200) {
     form.traceQrUrl = response.data || ''
+    if (isEdit.value && form.id) {
+      try {
+        await updateProduct(form.id, { traceQrUrl: form.traceQrUrl })
+        ElMessage.success('上传并保存成功')
+      } catch (e) {
+        ElMessage.success('上传成功')
+        ElMessage.error('保存溯源二维码失败')
+      }
+      return
+    }
     ElMessage.success('上传成功')
     return
   }
@@ -399,15 +454,24 @@ const handleModelSuccess = async (response, uploadFile) => {
   ElMessage.error(response?.message || '上传失败')
 }
 
-const clearTraceQr = () => {
+const clearTraceQr = async () => {
   form.traceQrUrl = ''
+  if (isEdit.value && form.id) {
+    try {
+      await updateProduct(form.id, { traceQrUrl: '' })
+      ElMessage.success('已删除')
+    } catch (e) {
+      ElMessage.error('删除失败')
+    }
+  }
 }
 
 const clearModel = async () => {
   form.model3dUrl = ''
   uploadedModelName.value = ''
   modelPreviewVisible.value = false
-  destroyModelPreview()
+  modelPreviewLoading.value = false
+  modelPreviewError.value = ''
   if (isEdit.value && form.id) {
     try {
       await updateProduct(form.id, { model3dUrl: '' })
@@ -420,153 +484,26 @@ const clearModel = async () => {
 
 const productImages = ref([])
 const imagesLoading = ref(false)
+const getImageRowClass = ({ row }) => (Number(row?.isCover) === 1 ? 'row-is-cover' : '')
 
 const uploadedModelName = ref('')
 const modelPreviewVisible = ref(false)
-const modelPreviewRef = ref()
 const modelPreviewLoading = ref(false)
 const modelPreviewError = ref('')
-let modelPreview = null
+const modelPosterUrl = computed(() => {
+  const cover = productImages.value?.find?.((img) => img?.isCover === 1)
+  const url = normalizeUrl(cover?.imageUrl)
+  return url || PLACEHOLDER_IMAGE
+})
 
-const destroyModelPreview = () => {
-  if (!modelPreview) return
-  try {
-    if (modelPreview.animationId) {
-      cancelAnimationFrame(modelPreview.animationId)
-    }
-    if (modelPreview.onResize) {
-      window.removeEventListener('resize', modelPreview.onResize)
-    }
-    if (modelPreview.controls) {
-      modelPreview.controls.dispose()
-    }
-    if (modelPreview.renderer) {
-      modelPreview.renderer.dispose()
-      if (modelPreview.renderer.domElement?.parentNode) {
-        modelPreview.renderer.domElement.parentNode.removeChild(modelPreview.renderer.domElement)
-      }
-    }
-    if (modelPreview.scene) {
-      modelPreview.scene.traverse((obj) => {
-        if (obj?.geometry) {
-          obj.geometry.dispose?.()
-        }
-        if (obj?.material) {
-          const materials = Array.isArray(obj.material) ? obj.material : [obj.material]
-          materials.forEach((m) => {
-            if (!m) return
-            Object.keys(m).forEach((k) => {
-              const v = m[k]
-              if (v && v.isTexture) v.dispose?.()
-            })
-            m.dispose?.()
-          })
-        }
-      })
-    }
-  } finally {
-    modelPreview = null
-    modelPreviewLoading.value = false
-  }
+const handleModelPreviewLoad = () => {
+  modelPreviewLoading.value = false
+  modelPreviewError.value = ''
 }
 
-const initModelPreview = async () => {
-  const container = modelPreviewRef.value
-  if (!container) return
-  const modelUrl = normalizeUrl(form.model3dUrl)
-  if (!modelUrl) return
-
-  destroyModelPreview()
-  modelPreviewLoading.value = true
-  modelPreviewError.value = ''
-
-  const width = container.clientWidth || 520
-  const height = 260
-
-  const scene = new THREE.Scene()
-  scene.background = new THREE.Color('#f5f7fa')
-
-  const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 5000)
-  camera.position.set(0, 1.2, 3)
-
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
-  renderer.setSize(width, height)
-  container.innerHTML = ''
-  container.appendChild(renderer.domElement)
-
-  const controls = new OrbitControls(camera, renderer.domElement)
-  controls.enableDamping = true
-
-  const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0)
-  scene.add(hemi)
-  const dir = new THREE.DirectionalLight(0xffffff, 1.0)
-  dir.position.set(3, 5, 2)
-  scene.add(dir)
-
-  const loader = new GLTFLoader()
-
-  const fitCameraToObject = (obj3d) => {
-    const box = new THREE.Box3().setFromObject(obj3d)
-    if (!isFinite(box.min.x) || !isFinite(box.max.x)) return
-    const size = box.getSize(new THREE.Vector3())
-    const center = box.getCenter(new THREE.Vector3())
-
-    controls.target.copy(center)
-    const maxDim = Math.max(size.x, size.y, size.z) || 1
-    const fov = (camera.fov * Math.PI) / 180
-    const distance = Math.abs((maxDim / 2) / Math.tan(fov / 2)) * 1.6
-
-    const dir = new THREE.Vector3(1, 0.8, 1).normalize()
-    camera.position.copy(center.clone().add(dir.multiplyScalar(distance)))
-    camera.near = distance / 100
-    camera.far = distance * 100
-    camera.updateProjectionMatrix()
-    controls.update()
-  }
-
-  const onResize = () => {
-    const w = container.clientWidth || width
-    const h = height
-    camera.aspect = w / h
-    camera.updateProjectionMatrix()
-    renderer.setSize(w, h)
-  }
-  window.addEventListener('resize', onResize)
-
-  modelPreview = {
-    scene,
-    camera,
-    renderer,
-    controls,
-    animationId: null,
-    onResize
-  }
-
-  loader.load(
-    modelUrl,
-    (gltf) => {
-      const model = gltf.scene || gltf.scenes?.[0]
-      if (model) {
-        scene.add(model)
-        fitCameraToObject(model)
-      }
-      modelPreviewLoading.value = false
-    },
-    undefined,
-    (err) => {
-      modelPreviewLoading.value = false
-      modelPreviewError.value = err?.message || '模型加载失败'
-    }
-  )
-
-  const animate = () => {
-    if (!modelPreview) return
-    modelPreview.controls?.update()
-    modelPreview.renderer.render(modelPreview.scene, modelPreview.camera)
-    modelPreview.animationId = requestAnimationFrame(animate)
-  }
-  animate()
+const handleModelPreviewError = (e) => {
+  modelPreviewLoading.value = false
+  modelPreviewError.value = e?.detail?.message || e?.message || '模型加载失败'
 }
 
 watch(
@@ -574,7 +511,8 @@ watch(
   (open) => {
     if (!open) {
       modelPreviewVisible.value = false
-      destroyModelPreview()
+      modelPreviewLoading.value = false
+      modelPreviewError.value = ''
     }
   }
 )
@@ -583,11 +521,13 @@ watch(
   [() => dialogVisible.value, () => form.model3dUrl, () => modelPreviewVisible.value],
   async ([open, url, visible]) => {
     if (!open || !visible || !url) {
-      destroyModelPreview()
+      modelPreviewLoading.value = false
+      modelPreviewError.value = ''
       return
     }
+    modelPreviewLoading.value = true
+    modelPreviewError.value = ''
     await nextTick()
-    await initModelPreview()
   }
 )
 
@@ -596,7 +536,21 @@ const fetchProductImages = async () => {
   imagesLoading.value = true
   try {
     const res = await listProductImages(form.id)
-    productImages.value = res.data || []
+    const list = (res.data || []).map((img) => ({
+      ...img,
+      isCover: Number(img?.isCover ?? 0),
+      sortOrder: Number(img?.sortOrder ?? 0)
+    }))
+
+    let hasCover = false
+    productImages.value = list.map((img) => {
+      if (img.isCover === 1) {
+        if (hasCover) return { ...img, isCover: 0 }
+        hasCover = true
+        return img
+      }
+      return img
+    })
   } catch (e) {
     productImages.value = []
   } finally {
@@ -625,9 +579,17 @@ const handleProductImageUploadSuccess = async (response) => {
 
 const setCoverImage = async (row) => {
   if (!row?.id) return
-  await updateProductImage(row.id, { isCover: 1 })
-  ElMessage.success('已设置封面')
-  await fetchProductImages()
+  try {
+    const others = productImages.value.filter((img) => img?.id && img.id !== row.id && Number(img.isCover) === 1)
+    if (others.length) {
+      await Promise.all(others.map((img) => updateProductImage(img.id, { isCover: 0 })))
+    }
+    await updateProductImage(row.id, { isCover: 1 })
+    ElMessage.success('已设置封面')
+    await fetchProductImages()
+  } catch (e) {
+    ElMessage.error('设置封面失败')
+  }
 }
 
 const saveImageRow = async (row) => {
@@ -787,39 +749,6 @@ onMounted(() => {
   padding: 20px;
 }
 
-.page-title {
-  font-size: 24px;
-  font-weight: bold;
-  color: #303133;
-  margin-bottom: 20px;
-}
-
-.table-card {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-}
-
-.table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.search-input {
-  width: 320px;
-  max-width: 100%;
-}
-
-.pagination {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
-}
-
 .product-info-cell {
   display: flex;
   align-items: center;
@@ -868,18 +797,73 @@ onMounted(() => {
   gap: 12px;
 }
 
-.model-preview {
+.asset-box {
   width: 100%;
-  margin-top: 10px;
-  position: relative;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
 }
 
-.model-preview-canvas {
-  width: 100%;
-  height: 260px;
+.asset-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+
+.asset-thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #ebeef5;
+  background: #fff;
+}
+
+.asset-link {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qr-preview {
+  width: 240px;
+  max-width: 100%;
+  aspect-ratio: 1 / 1;
+  margin-top: 8px;
   border: 1px solid #ebeef5;
   border-radius: 8px;
   overflow: hidden;
+  background: #fff;
+}
+
+.qr-preview-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: #fff;
+}
+
+.model-preview {
+  width: 240px;
+  max-width: 100%;
+  aspect-ratio: 1 / 1;
+  position: relative;
+  margin-top: 8px;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+  overflow: hidden;
+  background: radial-gradient(120% 120% at 50% 30%, #1f2937 0%, #0b1220 55%, #05070d 100%);
+}
+
+.model-preview-viewer {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: transparent;
 }
 
 .model-preview-loading {
@@ -901,31 +885,180 @@ onMounted(() => {
 
 .images-panel {
   width: 100%;
+  max-width: 100%;
+  margin: 0;
 }
 
 .images-toolbar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
-:deep(.el-table) {
+.image-thumb {
+  width: 56px;
+  height: 56px;
   border-radius: 10px;
   overflow: hidden;
+  border: 1px solid #ebeef5;
+  background: #fff;
 }
 
-:deep(.el-table__header th) {
+.image-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+
+.image-actions :deep(.el-button.is-link) {
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.image-actions :deep(.el-button.is-link:hover) {
+  background: #f2f6fc;
+}
+
+.muted {
+  color: #909399;
+}
+
+:deep(.images-table) {
+  border-radius: 10px;
+  overflow: hidden;
+  width: 100% !important;
+}
+
+:deep(.images-table .el-table__cell) {
+  padding: 12px 10px;
+  vertical-align: middle;
+}
+
+:deep(.images-table .cell) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:deep(.images-table .el-table__body tr > td.el-table__cell) {
+  background: #fff;
+}
+
+:deep(.images-table .el-table__body tr:hover > td.el-table__cell) {
+  background: #fff;
+}
+
+:deep(.images-table .el-table__body tr.row-is-cover > td.el-table__cell) {
+  background: #f5f7fa;
+}
+
+:deep(.images-table .el-table__body tr.row-is-cover:hover > td.el-table__cell) {
+  background: #f5f7fa;
+}
+
+:deep(.images-table .sort-input) {
+  width: 110px;
+}
+
+:deep(.images-table .el-table__header th) {
   background-color: #f5f7fa;
   color: #606266;
   font-weight: 600;
+}
+
+:deep(.el-table__fixed-right-patch) {
+  background-color: #f5f7fa !important;
+}
+
+:deep(.el-table__fixed-right .el-table__header-wrapper) {
+  background-color: #f5f7fa !important;
+}
+
+:deep(.el-table__fixed-right .el-table__header th) {
+  background-color: #f5f7fa !important;
+}
+
+:deep(.el-table__fixed-right .el-table__header-wrapper th),
+:deep(.el-table__fixed-right .el-table__header-wrapper th.el-table__cell),
+:deep(.el-table__fixed-right .el-table__header th.el-table__cell),
+:deep(.el-table__fixed-right .el-table__fixed-header-wrapper),
+:deep(.el-table__fixed-right .el-table__fixed-header-wrapper th),
+:deep(.el-table__fixed-right .el-table__fixed-header-wrapper th.el-table__cell) {
+  background-color: #f5f7fa !important;
 }
 
 :deep(.el-table__row:hover) {
   background-color: #f5f7fa;
 }
 
+:deep(.el-table__fixed-right .el-table__body tr.hover-row > td.el-table__cell) {
+  background-color: #f5f7fa;
+}
+
 :deep(.el-card__body) {
   padding: 20px;
+}
+
+:deep(.product-edit-dialog .el-dialog__body) {
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 14px 12px;
+}
+
+.product-edit-form .form-grid {
+  margin-bottom: 4px;
+}
+
+:deep(.product-edit-dialog .el-form-item__label) {
+  white-space: nowrap;
+}
+
+:deep(.product-edit-dialog .el-form-item) {
+  margin-bottom: 12px;
+}
+
+:deep(.product-edit-dialog .el-dialog__header) {
+  padding: 12px 14px 0;
+  margin-right: 0;
+}
+
+:deep(.product-edit-dialog .el-dialog__footer) {
+  padding: 10px 14px 12px;
+}
+
+:deep(.product-edit-dialog .name-input) {
+  width: 350px;
+  max-width: 100%;
+}
+
+:deep(.product-edit-dialog .price-input) {
+  width: 230px;
+}
+
+:deep(.product-edit-dialog .tracecode-input) {
+  width: 230px;
+  max-width: 100%;
+}
+
+:deep(.product-edit-dialog .images-item .el-form-item__content) {
+  width: 100%;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .asset-box,
+  .asset-preview,
+  .image-actions {
+    flex-wrap: wrap;
+  }
+}
+
+.full-width {
+  width: 100%;
 }
 </style>

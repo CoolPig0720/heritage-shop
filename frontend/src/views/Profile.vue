@@ -3,43 +3,64 @@
     <div class="profile-container">
       <el-tabs v-model="activeTab">
         <el-tab-pane label="个人信息" name="info">
-          <div class="info-section">
-            <div class="avatar-section">
-              <el-avatar :size="120" :src="userInfo.avatar || ''">
-                {{ userInfo.name?.charAt(0) || 'U' }}
-              </el-avatar>
-              <el-upload
-                class="avatar-uploader"
-                action="http://localhost:8080/api/file/upload"
-                :show-file-list="false"
-                :on-success="handleAvatarSuccess"
-                :before-upload="beforeAvatarUpload"
-                :headers="uploadHeaders"
-                name="file"
-              >
-                <el-button type="primary" size="small">更换头像</el-button>
-              </el-upload>
+          <div class="info-layout">
+            <div class="info-left">
+              <div class="avatar-wrapper">
+                <el-avatar :size="100" :src="userInfo.avatar || ''" class="profile-avatar">
+                  {{ userInfo.name?.charAt(0) || 'U' }}
+                </el-avatar>
+                <div class="avatar-mask">
+                  <el-upload
+                    class="avatar-uploader-trigger"
+                    action="http://localhost:8080/api/file/upload"
+                    :show-file-list="false"
+                    :on-success="handleAvatarSuccess"
+                    :before-upload="beforeAvatarUpload"
+                    :headers="uploadHeaders"
+                    name="file"
+                  >
+                    <el-icon><Camera /></el-icon>
+                    <span>更换头像</span>
+                  </el-upload>
+                </div>
+              </div>
+              <div class="user-role-badge">{{ roleText }}</div>
             </div>
-            <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
-              <el-form-item label="账号" prop="account">
-                <el-input v-model="form.account" disabled />
-              </el-form-item>
-              <el-form-item label="名称" prop="name">
-                <el-input v-model="form.name" placeholder="请输入名称" />
-              </el-form-item>
-              <el-form-item label="角色" prop="role">
-                <el-input v-model="roleText" disabled />
-              </el-form-item>
-              <el-form-item label="证件号" prop="certificateNumber">
-                <el-input v-model="form.certificateNumber" disabled />
-              </el-form-item>
-              <el-form-item label="注册时间">
-                <el-input :value="formatTime(userInfo.registerTime)" disabled />
-              </el-form-item>
-              <el-form-item>
-                <el-button type="primary" @click="handleUpdateProfile" :loading="updating">保存</el-button>
-              </el-form-item>
-            </el-form>
+            
+            <div class="info-right">
+              <h3 class="section-title">基本信息</h3>
+              <el-form :model="form" :rules="rules" ref="formRef" label-position="top" class="compact-form">
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="账号" prop="account">
+                      <el-input v-model="form.account" disabled />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="名称" prop="name">
+                      <el-input v-model="form.name" placeholder="请输入名称" />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+                
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="证件号" prop="certificateNumber">
+                      <el-input v-model="form.certificateNumber" disabled placeholder="未认证" />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="注册时间">
+                      <el-input :value="formatTime(userInfo.registerTime)" disabled />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+
+                <el-form-item style="margin-top: 10px">
+                  <el-button type="primary" @click="handleUpdateProfile" :loading="updating" class="submit-btn">保存修改</el-button>
+                </el-form-item>
+              </el-form>
+            </div>
           </div>
         </el-tab-pane>
         <el-tab-pane label="收货地址" name="address">
@@ -53,7 +74,7 @@
             <el-empty v-else-if="addresses.length === 0" description="暂无地址" />
 
             <div v-else class="address-list">
-              <div v-for="item in addresses" :key="item.id" class="address-item">
+              <div v-for="item in pagedAddresses" :key="item.id" class="address-item">
                 <div class="address-item-main">
                   <div class="address-item-title">
                     <span class="address-item-name">{{ item.receiverName }}</span>
@@ -66,17 +87,33 @@
                 </div>
 
                 <div class="address-item-actions">
-                  <el-button size="small" @click="openEditAddress(item)">编辑</el-button>
-                  <el-button size="small" type="danger" @click="handleDeleteAddress(item)">删除</el-button>
+                  <el-button size="small" type="primary" plain round @click="openEditAddress(item)">
+                    <el-icon><Edit /></el-icon>
+                    编辑
+                  </el-button>
+                  <el-button size="small" type="danger" plain round @click="handleDeleteAddress(item)">
+                    <el-icon><Delete /></el-icon>
+                    删除
+                  </el-button>
                   <el-button
                     size="small"
                     type="success"
+                    plain
+                    round
                     :disabled="item.isDefault === 1"
                     @click="handleSetDefaultAddress(item)"
                   >
                     设为默认
                   </el-button>
                 </div>
+              </div>
+              
+              <div class="pagination-container">
+                <AppPagination
+                  v-model:current-page="addressCurrentPage"
+                  v-model:page-size="addressPageSize"
+                  :total="addresses.length"
+                />
               </div>
             </div>
 
@@ -116,53 +153,49 @@
         </el-tab-pane>
         <el-tab-pane label="修改密码" name="password">
           <div class="password-section">
-            <el-form :model="passwordForm" :rules="passwordRules" ref="passwordFormRef" label-width="100px">
+            <el-form :model="passwordForm" :rules="passwordRules" ref="passwordFormRef" label-position="top" class="single-column-form">
               <el-form-item label="原密码" prop="oldPassword">
-                <el-input v-model="passwordForm.oldPassword" type="password" placeholder="请输入原密码" />
+                <el-input v-model="passwordForm.oldPassword" type="password" placeholder="请输入原密码" show-password />
               </el-form-item>
               <el-form-item label="新密码" prop="newPassword">
-                <el-input v-model="passwordForm.newPassword" type="password" placeholder="请输入新密码" />
+                <el-input v-model="passwordForm.newPassword" type="password" placeholder="请输入新密码" show-password />
               </el-form-item>
               <el-form-item label="确认密码" prop="confirmPassword">
-                <el-input v-model="passwordForm.confirmPassword" type="password" placeholder="请再次输入新密码" />
+                <el-input v-model="passwordForm.confirmPassword" type="password" placeholder="请再次输入新密码" show-password />
               </el-form-item>
-              <el-form-item>
-                <el-button type="primary" @click="handleUpdatePassword" :loading="updatingPassword">修改密码</el-button>
+              <el-form-item style="margin-top: 20px">
+                <el-button type="primary" @click="handleUpdatePassword" :loading="updatingPassword" class="submit-btn">修改密码</el-button>
               </el-form-item>
             </el-form>
           </div>
         </el-tab-pane>
         <el-tab-pane label="实名认证" name="certificate">
           <div class="certificate-section">
-            <el-form :model="certificateForm" :rules="certificateRules" ref="certificateFormRef" label-width="120px">
+            <el-form :model="certificateForm" :rules="certificateRules" ref="certificateFormRef" label-position="top" class="single-column-form">
               <el-form-item label="证件号" prop="certificateNumber">
                 <el-input v-model="certificateForm.certificateNumber" placeholder="请输入证件号" :disabled="isCertified" />
               </el-form-item>
               <el-form-item label="真实姓名" prop="name">
                 <el-input v-model="certificateForm.name" placeholder="请输入真实姓名" :disabled="isCertified" />
               </el-form-item>
-              <el-form-item v-if="!isCertified">
-                <el-button type="primary" @click="handleVerifyCertificate" :loading="verifying">提交认证</el-button>
+              <el-form-item v-if="!isCertified" style="margin-top: 20px">
+                <el-button type="primary" @click="handleVerifyCertificate" :loading="verifying" class="submit-btn">提交认证</el-button>
               </el-form-item>
             </el-form>
-            <el-alert
-              v-if="isCertified"
-              :title="`认证状态：${certificateStatusText}`"
-              type="success"
-              :closable="false"
-              style="margin-top: 20px"
-            />
-            <el-alert
-              v-if="certificateInfo"
-              title="认证信息"
-              type="info"
-              :closable="false"
-              style="margin-top: 20px"
-            >
-              <p>证件号：{{ certificateInfo.certificateNumber }}</p>
-              <p>真实姓名：{{ certificateInfo.name }}</p>
-              <p>角色：{{ certificateInfo.role === 'ADMIN' ? '管理员' : certificateInfo.role === 'MERCHANT' ? '商家' : '普通用户' }}</p>
-            </el-alert>
+            <div class="certificate-status-wrapper" v-if="isCertified || certificateInfo">
+              <el-alert
+                v-if="isCertified"
+                :title="`认证状态：${certificateStatusText}`"
+                type="success"
+                :closable="false"
+                show-icon
+              />
+              <el-descriptions v-if="certificateInfo" :column="1" border style="margin-top: 20px">
+                <el-descriptions-item label="证件号">{{ certificateInfo.certificateNumber }}</el-descriptions-item>
+                <el-descriptions-item label="真实姓名">{{ certificateInfo.name }}</el-descriptions-item>
+                <el-descriptions-item label="角色">{{ certificateInfo.role === 'ADMIN' ? '管理员' : certificateInfo.role === 'MERCHANT' ? '商家' : '普通用户' }}</el-descriptions-item>
+              </el-descriptions>
+            </div>
           </div>
         </el-tab-pane>
       </el-tabs>
@@ -174,8 +207,10 @@
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import AppPagination from '@/components/AppPagination.vue'
 import { getProfile, updateProfile, updatePassword, verifyCertificate, getCertificateInfo, createAddress, updateAddress, deleteAddress, listAddresses, setDefaultAddress } from '@/api/auth'
 import { regionData, CodeToText, TextToCode } from 'element-china-area-data'
+import { Camera, Edit, Delete } from '@element-plus/icons-vue'
 
 const userStore = useUserStore()
 
@@ -284,6 +319,15 @@ const formatTime = (time) => {
 
 const addresses = ref([])
 const addressLoading = ref(false)
+const addressCurrentPage = ref(1)
+const addressPageSize = ref(5)
+
+const pagedAddresses = computed(() => {
+  const start = (addressCurrentPage.value - 1) * addressPageSize.value
+  const end = start + addressPageSize.value
+  return addresses.value.slice(start, end)
+})
+
 const addressDialogVisible = ref(false)
 const addressSaving = ref(false)
 const editingAddressId = ref(null)
@@ -672,31 +716,133 @@ onMounted(() => {
   max-width: 900px;
   margin: 0 auto;
   background: #fff;
-  padding: 24px;
+  padding: 32px 40px;
   border-radius: var(--app-radius);
   border: 1px solid var(--app-border);
+  min-height: 600px; /* Prevent jumping */
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
 }
 
-.avatar-section {
+/* Info Layout */
+.info-layout {
+  display: flex;
+  gap: 60px;
+  padding: 20px 0;
+}
+
+.info-left {
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  border-right: 1px solid var(--app-border);
+  padding-right: 40px;
+}
+
+.info-right {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Avatar Styling */
+.avatar-wrapper {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-bottom: 16px;
+  cursor: pointer;
+  border: 4px solid #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.profile-avatar {
+  width: 100%;
+  height: 100%;
+  font-size: 36px;
+  background: #409EFF;
+}
+
+.avatar-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
-  gap: 20px;
-  margin-bottom: 30px;
-  padding-bottom: 30px;
-  border-bottom: 1px solid var(--app-border);
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
 }
 
-.avatar-uploader {
-  display: inline-block;
+.avatar-wrapper:hover .avatar-mask {
+  opacity: 1;
 }
 
-.info-section,
-.address-section,
+.avatar-uploader-trigger {
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 12px;
+  gap: 4px;
+}
+
+.user-role-badge {
+  padding: 4px 12px;
+  background: #ecf5ff;
+  color: #409EFF;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Section Title */
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+/* Forms */
+.compact-form :deep(.el-form-item__label),
+.single-column-form :deep(.el-form-item__label) {
+  font-weight: 500;
+  color: #606266;
+  padding-bottom: 8px;
+}
+
+.single-column-form {
+  max-width: 420px;
+  margin: 0 auto;
+  padding-top: 20px;
+}
+
+.submit-btn {
+  width: 100%;
+  height: 40px;
+  font-size: 15px;
+  letter-spacing: 1px;
+}
+
+.certificate-status-wrapper {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
 .password-section,
 .certificate-section {
   padding: 20px 0;
 }
 
+/* Address Styling */
 .address-toolbar {
   display: flex;
   justify-content: flex-end;
@@ -706,16 +852,31 @@ onMounted(() => {
 .address-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+}
+
+.pagination-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--app-border);
 }
 
 .address-item {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 12px;
   padding: 16px;
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius);
+  transition: all 0.2s;
+}
+
+.address-item:hover {
+  border-color: #409EFF;
+  box-shadow: 0 2px 12px rgba(64, 158, 255, 0.1);
 }
 
 .address-item-main {
@@ -732,6 +893,7 @@ onMounted(() => {
 
 .address-item-name {
   font-weight: 600;
+  font-size: 15px;
 }
 
 .address-item-phone {
@@ -741,12 +903,33 @@ onMounted(() => {
 .address-item-detail {
   color: #606266;
   word-break: break-all;
+  line-height: 1.5;
 }
 
 .address-item-actions {
   display: flex;
-  flex-direction: column;
   gap: 8px;
-  align-items: flex-end;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .info-layout {
+    flex-direction: column;
+    gap: 30px;
+  }
+  
+  .info-left {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--app-border);
+    padding-right: 0;
+    padding-bottom: 20px;
+  }
+  
+  .profile-container {
+    padding: 20px;
+  }
 }
 </style>

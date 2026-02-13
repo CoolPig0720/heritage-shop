@@ -76,17 +76,14 @@
           </div>
         </el-card>
 
-        <div class="orders-pagination">
-          <el-pagination
-            v-model:current-page="page"
-            v-model:page-size="size"
-            layout="total, prev, pager, next, sizes"
-            :total="total"
-            :page-sizes="[5, 10, 20, 50]"
-            @current-change="fetchOrders"
-            @size-change="handleSizeChange"
-          />
-        </div>
+        <AppPagination
+          variant="orders"
+          v-model:current-page="page"
+          v-model:page-size="size"
+          :total="total"
+          @current-change="fetchOrders"
+          @size-change="handleSizeChange"
+        />
       </div>
     </div>
 
@@ -178,6 +175,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
+import AppPagination from '@/components/AppPagination.vue'
 import { getOrderDetail, pageOrders, cancelOrder } from '@/api/order'
 import { createPayment, mockPay } from '@/api/payment'
 
@@ -608,12 +606,6 @@ const getStatusClass = (status) => {
 .order-actions {
   display: flex;
   gap: 10px;
-}
-
-.orders-pagination {
-  margin-top: 16px;
-  display: flex;
-  justify-content: flex-end;
 }
 
 .pay-url {

@@ -174,41 +174,64 @@
       </el-tab-pane>
 
       <el-tab-pane label="文生图" name="txt2img">
-        <div class="single-pane card">
-          <div class="card-header">
-            <div class="card-title">文生图</div>
-            <div class="card-desc">输入Prompt，选择输出尺寸</div>
+        <div class="txt2img-layout">
+          <div class="card txt2img-form">
+            <div class="card-header">
+              <div class="card-title">文生图</div>
+              <div class="card-desc">输入Prompt，选择输出尺寸</div>
+            </div>
+            <el-form :model="txt2imgForm" label-width="110px" class="form">
+              <el-form-item label="Prompt">
+                <el-input
+                  v-model="txt2imgForm.prompt"
+                  type="textarea"
+                  :rows="4"
+                  placeholder="请输入prompt（最多256字）"
+                  maxlength="256"
+                  show-word-limit
+                />
+              </el-form-item>
+              <el-form-item label="输出尺寸">
+                <el-select v-model="txt2imgForm.resolution" placeholder="请选择输出尺寸" style="width: 100%">
+                  <el-option label="768x768" value="768:768" />
+                  <el-option label="1024x1024" value="1024:1024" />
+                  <el-option label="768x1024" value="768:1024" />
+                  <el-option label="1024x768" value="1024:768" />
+                </el-select>
+              </el-form-item>
+              <el-form-item class="actions">
+                <div class="actions-row">
+                  <el-button type="primary" :loading="generating" @click="handleGenerateTxt2Img">生成</el-button>
+                </div>
+              </el-form-item>
+            </el-form>
           </div>
-          <el-form :model="txt2imgForm" label-width="110px" class="form">
-            <el-form-item label="Prompt">
-              <el-input
-                v-model="txt2imgForm.prompt"
-                type="textarea"
-                :rows="4"
-                placeholder="请输入prompt（最多256字）"
-                maxlength="256"
-                show-word-limit
-              />
-            </el-form-item>
-            <el-form-item label="输出尺寸">
-              <el-select v-model="txt2imgForm.resolution" placeholder="请选择输出尺寸" style="width: 100%">
-                <el-option label="768x768" value="768:768" />
-                <el-option label="1024x1024" value="1024:1024" />
-                <el-option label="768x1024" value="768:1024" />
-                <el-option label="1024x768" value="1024:768" />
-              </el-select>
-            </el-form-item>
-            <el-form-item class="actions">
-              <div class="actions-row">
-                <el-button type="primary" :loading="generating" @click="handleGenerateTxt2Img">生成</el-button>
+
+          <div class="card txt2img-result">
+            <div class="card-header">
+              <div class="card-title">生图结果</div>
+              <div class="card-desc">支持完整预览与放大查看</div>
+            </div>
+            <div class="txt2img-result-body">
+              <el-empty v-if="!resultImages.length" description="暂无生成结果" :image-size="90" />
+              <div v-else class="txt2img-result-grid">
+                <el-image
+                  v-for="(img, idx) in resultImages"
+                  :key="`txt2img-${idx}-${img}`"
+                  :src="img"
+                  fit="contain"
+                  :preview-src-list="resultImages"
+                  preview-teleported
+                  class="txt2img-result-image"
+                />
               </div>
-            </el-form-item>
-          </el-form>
+            </div>
+          </div>
         </div>
       </el-tab-pane>
     </el-tabs>
 
-    <div v-if="resultImages.length" class="result-section card">
+    <div v-if="resultImages.length && activeTab === 'img2img'" class="result-section card">
       <div class="card-header">
         <div class="card-title">生成结果</div>
         <div class="card-desc">点击图片可预览</div>
@@ -302,17 +325,15 @@
           </el-tab-pane>
         </el-tabs>
 
-        <div v-if="historyTotal > historySize" class="history-pagination">
-          <el-pagination
-            v-model:current-page="historyPage"
-            v-model:page-size="historySize"
-            :page-sizes="[8, 12, 20, 40]"
-            :total="historyTotal"
-            layout="total, sizes, prev, pager, next"
-            @size-change="handleHistorySizeChange"
-            @current-change="fetchHistory"
-          />
-        </div>
+        <AppPagination
+          v-if="historyTotal > historySize"
+          variant="history"
+          v-model:current-page="historyPage"
+          v-model:page-size="historySize"
+          :total="historyTotal"
+          @size-change="handleHistorySizeChange"
+          @current-change="fetchHistory"
+        />
       </div>
     </el-dialog>
     </div>
@@ -323,6 +344,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { QuestionFilled, UploadFilled } from '@element-plus/icons-vue'
+import AppPagination from '@/components/AppPagination.vue'
 import { imageToImage, pageAiImageRecords, textToImage } from '@/api/aiImage'
 
 const activeTab = ref('img2img')
@@ -733,6 +755,42 @@ onMounted(() => {
   margin: 0 auto;
 }
 
+.txt2img-layout {
+  display: grid;
+  grid-template-columns: minmax(420px, 1fr) minmax(420px, 1fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.txt2img-form,
+.txt2img-result {
+  padding: 18px;
+  min-height: 520px;
+  display: flex;
+  flex-direction: column;
+}
+
+.txt2img-result-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.txt2img-result-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  flex: 1;
+}
+
+.txt2img-result-image {
+  width: 100%;
+  height: 100%;
+  min-height: 360px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
 .result-section {
   margin-top: 16px;
 }
@@ -888,12 +946,6 @@ onMounted(() => {
   color: rgba(17, 24, 39, 0.4);
 }
 
-.history-pagination {
-  margin-top: 12px;
-  display: flex;
-  justify-content: flex-end;
-}
-
 .result-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -944,6 +996,14 @@ onMounted(() => {
 @media (max-width: 960px) {
   .customize-content {
     grid-template-columns: 1fr;
+  }
+
+  .txt2img-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .txt2img-result-image {
+    height: 360px;
   }
 
   .preview-image {

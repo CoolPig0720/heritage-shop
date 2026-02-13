@@ -9,87 +9,123 @@
       <el-card class="detail-card" shadow="never">
         <div class="detail-container">
           <div class="detail-left">
-            <el-carousel v-if="product.imageUrls.length > 0" height="400px" indicator-position="outside">
+            <el-carousel v-if="product.imageUrls.length > 0" height="500px" indicator-position="outside">
               <el-carousel-item v-for="url in product.imageUrls" :key="url">
-                <el-image :src="url" fit="cover" style="width: 100%; height: 400px" />
+                <el-image :src="url" fit="cover" style="width: 100%; height: 500px" :preview-src-list="product.imageUrls" />
               </el-carousel-item>
             </el-carousel>
-            <el-image v-else :src="product.coverImageUrl" fit="contain" style="width: 100%; height: 400px" />
+            <el-image v-else :src="product.coverImageUrl" fit="contain" style="width: 100%; height: 500px" :preview-src-list="[product.coverImageUrl]" />
           </div>
+          
           <div class="detail-right">
-            <h1 class="title">{{ product.name }}</h1>
-            <p class="price">¥{{ product.price }}</p>
-            <div class="info">
-              <p><span>状态：</span>{{ product.status === 1 ? '上架' : '下架' }}</p>
-              <p v-if="product.traceCode"><span>溯源码：</span>{{ product.traceCode }}</p>
-              <p v-if="product.model3dUrl">
-                <span>3D 模型：</span>
-                <el-link :href="product.model3dUrl" target="_blank" type="primary">查看</el-link>
-              </p>
+            <div class="product-header">
+              <h1 class="title">{{ product.name }}</h1>
+              <div class="price-status-row">
+                <div class="price-row">
+                  <span class="currency">¥</span>
+                  <span class="price">{{ product.price }}</span>
+                </div>
+                <el-tag :type="product.status === 1 ? 'success' : 'info'" effect="plain" class="status-tag">
+                  {{ product.status === 1 ? '上架销售中' : '已下架' }}
+                </el-tag>
+              </div>
             </div>
-            <div class="description">
-              <h3>商品描述</h3>
+
+            <div class="product-description-preview">
+              <h3>商品简介</h3>
               <p>{{ product.description }}</p>
             </div>
-            <div class="model3d">
-              <div class="section-header">
-                <h3>3D 模型预览</h3>
-                <el-link v-if="product.model3dUrl" :href="product.model3dUrl" target="_blank" type="primary">
-                  新窗口查看
-                </el-link>
-              </div>
-              <div v-if="product.model3dUrl" class="model3d-panel">
-                <div ref="modelPreviewRef" class="model3d-canvas" />
-                <div v-if="modelPreviewLoading" class="model3d-loading">模型加载中...</div>
-                <div v-if="modelPreviewError" class="model3d-error">{{ modelPreviewError }}</div>
-              </div>
-              <div v-else class="model3d-empty">
-                <el-empty description="暂无 3D 模型" />
-              </div>
+
+            <div class="digital-assets-buttons">
+              <el-button v-if="product.traceQrUrl" @click="qrDialogVisible = true">
+                <el-icon><View /></el-icon> 查看溯源二维码
+              </el-button>
+              <el-button v-if="product.model3dUrl" @click="modelDialogVisible = true">
+                <el-icon><View /></el-icon> 查看3D模型
+              </el-button>
             </div>
-            <div class="trace">
-              <h3>溯源二维码</h3>
-              <div class="trace-box">
-                <el-image
-                  v-if="product.traceQrUrl"
-                  :src="product.traceQrUrl"
-                  fit="contain"
-                  style="width: 180px; height: 180px"
-                />
-                <el-empty v-else description="暂无溯源二维码" :image-size="80" />
+
+            <div class="product-actions">
+              <div class="quantity-selector">
+                <span class="label">数量</span>
+                <el-input-number v-model="quantity" :min="1" :max="99" />
               </div>
-            </div>
-            <div class="actions">
-              <el-input-number v-model="quantity" :min="1" :max="99" />
-              <el-button type="primary" @click="addToCart">加入购物车</el-button>
-              <el-button @click="buyNow">立即购买</el-button>
+              <div class="action-buttons">
+                <el-button type="primary" size="default" class="buy-btn" @click="addToCart">加入购物车</el-button>
+                <el-button type="danger" size="default" class="buy-btn" plain @click="buyNow">立即购买</el-button>
+              </div>
             </div>
           </div>
         </div>
       </el-card>
+
+      <!-- Traceability QR Code Dialog -->
+      <el-dialog v-model="qrDialogVisible" title="商品溯源信息" width="600px" align-center>
+        <div class="dialog-content">
+          <div class="qr-display">
+             <el-image :src="product.traceQrUrl" fit="contain" class="qr-dialog-image" />
+             <p class="dialog-hint">溯源码：{{ product.traceCode }}</p>
+          </div>
+        </div>
+        <template #footer>
+          <div class="dialog-footer">
+            <el-button @click="qrDialogVisible = false">关闭</el-button>
+            <el-button type="primary" @click="handleDownload(product.traceQrUrl, `${product.name}-trace-qr.png`)">
+              <el-icon><Download /></el-icon> 下载二维码
+            </el-button>
+          </div>
+        </template>
+      </el-dialog>
+
+      <!-- 3D Model Dialog -->
+      <el-dialog v-model="modelDialogVisible" title="3D 模型预览" width="800px" align-center class="model-dialog">
+        <div class="dialog-content">
+          <model-viewer
+            class="model3d-viewer"
+            :src="product.model3dUrl"
+            :poster="product.coverImageUrl"
+            :alt="product.name"
+            camera-controls
+            auto-rotate
+            shadow-intensity="1"
+            exposure="1"
+            touch-action="pan-y"
+            @load="handleModelLoad"
+            @error="handleModelError"
+          />
+          <div v-if="modelViewerLoading" class="model3d-loading">模型加载中...</div>
+          <div v-if="modelViewerError" class="model3d-error">{{ modelViewerError }}</div>
+        </div>
+        <template #footer>
+          <div class="dialog-footer">
+            <el-button @click="modelDialogVisible = false">关闭</el-button>
+            <el-button type="primary" @click="handleDownload(product.model3dUrl, `${product.name}-model.glb`)">
+              <el-icon><Download /></el-icon> 下载模型
+            </el-button>
+          </div>
+        </template>
+      </el-dialog>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import * as THREE from 'three'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { getProductDetail } from '@/api/shop'
 import { addCartItem } from '@/api/cart'
+import { FullScreen, Picture as IconPicture, TopRight, View, Download } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
 
 const quantity = ref(1)
 const loading = ref(false)
-const modelPreviewRef = ref()
-const modelPreviewLoading = ref(false)
-const modelPreviewError = ref('')
-let modelPreview = null
+const modelViewerLoading = ref(false)
+const modelViewerError = ref('')
+const qrDialogVisible = ref(false)
+const modelDialogVisible = ref(false)
 
 const backTo = computed(() => {
   const from = route.query?.from
@@ -138,136 +174,14 @@ const normalizeUrl = (url) => {
   return `http://localhost:8080${url}`
 }
 
-const destroyModelPreview = () => {
-  if (!modelPreview) return
-  try {
-    if (modelPreview.animationId) {
-      cancelAnimationFrame(modelPreview.animationId)
-    }
-    if (modelPreview.onResize) {
-      window.removeEventListener('resize', modelPreview.onResize)
-    }
-    if (modelPreview.controls) {
-      modelPreview.controls.dispose()
-    }
-    if (modelPreview.renderer) {
-      modelPreview.renderer.dispose()
-      if (modelPreview.renderer.domElement?.parentNode) {
-        modelPreview.renderer.domElement.parentNode.removeChild(modelPreview.renderer.domElement)
-      }
-    }
-    if (modelPreview.scene) {
-      modelPreview.scene.traverse((obj) => {
-        if (obj?.geometry) {
-          obj.geometry.dispose?.()
-        }
-        if (obj?.material) {
-          const materials = Array.isArray(obj.material) ? obj.material : [obj.material]
-          materials.forEach((m) => {
-            if (!m) return
-            Object.keys(m).forEach((k) => {
-              const v = m[k]
-              if (v && v.isTexture) v.dispose?.()
-            })
-            m.dispose?.()
-          })
-        }
-      })
-    }
-  } finally {
-    modelPreview = null
-    modelPreviewLoading.value = false
-  }
+const handleModelLoad = () => {
+  modelViewerLoading.value = false
+  modelViewerError.value = ''
 }
 
-const initModelPreview = async () => {
-  const container = modelPreviewRef.value
-  const modelUrl = product.value?.model3dUrl
-  if (!container || !modelUrl) return
-
-  destroyModelPreview()
-  modelPreviewLoading.value = true
-  modelPreviewError.value = ''
-
-  const width = container.clientWidth || 520
-  const height = 320
-
-  const scene = new THREE.Scene()
-  scene.background = new THREE.Color('#f5f7fa')
-
-  const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 5000)
-  camera.position.set(0, 1.2, 3)
-
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
-  renderer.setSize(width, height)
-  container.innerHTML = ''
-  container.appendChild(renderer.domElement)
-
-  const controls = new OrbitControls(camera, renderer.domElement)
-  controls.enableDamping = true
-
-  const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0)
-  scene.add(hemi)
-  const dir = new THREE.DirectionalLight(0xffffff, 1.0)
-  dir.position.set(3, 5, 2)
-  scene.add(dir)
-
-  const loader = new GLTFLoader()
-
-  const fitCameraToObject = (obj3d) => {
-    const box = new THREE.Box3().setFromObject(obj3d)
-    if (!isFinite(box.min.x) || !isFinite(box.max.x)) return
-    const size = box.getSize(new THREE.Vector3())
-    const center = box.getCenter(new THREE.Vector3())
-
-    controls.target.copy(center)
-    const maxDim = Math.max(size.x, size.y, size.z) || 1
-    const fov = (camera.fov * Math.PI) / 180
-    const distance = Math.abs((maxDim / 2) / Math.tan(fov / 2)) * 1.6
-
-    const direction = new THREE.Vector3(1, 0.8, 1).normalize()
-    camera.position.copy(center.clone().add(direction.multiplyScalar(distance)))
-    camera.near = distance / 100
-    camera.far = distance * 100
-    camera.updateProjectionMatrix()
-    controls.update()
-  }
-
-  const onResize = () => {
-    const w = container.clientWidth || width
-    camera.aspect = w / height
-    camera.updateProjectionMatrix()
-    renderer.setSize(w, height)
-  }
-  window.addEventListener('resize', onResize)
-
-  modelPreview = { scene, camera, renderer, controls, animationId: null, onResize }
-
-  loader.load(
-    modelUrl,
-    (gltf) => {
-      const model = gltf.scene || gltf.scenes?.[0]
-      if (model) {
-        scene.add(model)
-        fitCameraToObject(model)
-      }
-      modelPreviewLoading.value = false
-    },
-    undefined,
-    (err) => {
-      modelPreviewLoading.value = false
-      modelPreviewError.value = err?.message || '模型加载失败'
-    }
-  )
-
-  const animate = () => {
-    if (!modelPreview) return
-    modelPreview.controls?.update()
-    modelPreview.renderer.render(modelPreview.scene, modelPreview.camera)
-    modelPreview.animationId = requestAnimationFrame(animate)
-  }
-  animate()
+const handleModelError = (e) => {
+  modelViewerLoading.value = false
+  modelViewerError.value = e?.detail?.message || '模型加载失败'
 }
 
 const loadDetail = async (id) => {
@@ -283,8 +197,8 @@ const loadDetail = async (id) => {
       model3dUrl: data.model3dUrl ? normalizeUrl(data.model3dUrl) : '',
       imageUrls: Array.isArray(data.imageUrls) ? data.imageUrls.map(normalizeUrl) : []
     }
-    await nextTick()
-    await initModelPreview()
+    modelViewerLoading.value = !!product.value.model3dUrl
+    modelViewerError.value = ''
   } catch (e) {
     ElMessage.error('获取商品详情失败')
     product.value = {
@@ -299,7 +213,8 @@ const loadDetail = async (id) => {
       coverImageUrl: PLACEHOLDER_IMAGE,
       imageUrls: []
     }
-    destroyModelPreview()
+    modelViewerLoading.value = false
+    modelViewerError.value = ''
   } finally {
     loading.value = false
   }
@@ -338,19 +253,20 @@ watch(
 
 watch(
   () => product.value.model3dUrl,
-  async (url) => {
-    if (!url) {
-      destroyModelPreview()
-      return
-    }
-    await nextTick()
-    await initModelPreview()
+  (url) => {
+    modelViewerLoading.value = !!url
+    modelViewerError.value = ''
   }
 )
 
-onBeforeUnmount(() => {
-  destroyModelPreview()
-})
+const handleDownload = (url, filename) => {
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
 </script>
 
 <style scoped>
@@ -373,154 +289,426 @@ onBeforeUnmount(() => {
 }
 
 .detail-card :deep(.el-card__body) {
-  padding: 24px;
+  padding: 0;
 }
 
 .detail-container {
   display: flex;
-  gap: 32px;
+  background: #fff;
+  border-bottom: 1px solid var(--app-border);
 }
 
 .detail-left {
-  flex: 1;
-  min-width: 0;
+  flex: 0 0 500px;
+  width: 500px;
+  border-right: 1px solid var(--app-border);
 }
 
 .detail-left .el-image {
   width: 100%;
-  height: 400px;
+  height: 500px;
 }
 
 .detail-right {
   flex: 1;
-  min-width: 0;
+  padding: 32px 40px;
+  display: flex;
+  flex-direction: column;
 }
 
-.detail-right .title {
+.product-header {
+  margin-bottom: 24px;
+}
+
+.title {
   font-size: 28px;
-  color: #303133;
-  margin-bottom: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.3;
+  margin-bottom: 16px;
 }
 
-.detail-right .price {
-  font-size: 32px;
-  color: #F56C6C;
-  font-weight: bold;
-  margin-bottom: 20px;
-}
-
-.detail-right .info {
-  margin-bottom: 20px;
-}
-
-.detail-right .info p {
-  margin: 10px 0;
-  color: #606266;
-}
-
-.detail-right .info span {
-  color: #909399;
-  margin-right: 10px;
-}
-
-.detail-right .description {
-  margin-bottom: 30px;
-}
-
-.detail-right .description h3 {
-  font-size: 18px;
-  color: #303133;
-  margin-bottom: 10px;
-}
-
-.detail-right .description p {
-  color: #606266;
-  line-height: 1.8;
-}
-
-.detail-right .actions {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-}
-
-.detail-right .model3d {
-  margin-bottom: 20px;
-}
-
-.detail-right .section-header {
+.price-status-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
-.detail-right .model3d-panel {
+.price-row {
+  display: flex;
+  align-items: baseline;
+  color: #f56c6c;
+}
+
+.status-tag {
+  height: 28px;
+  padding: 0 12px;
+}
+
+.currency {
+  font-size: 20px;
+  margin-right: 4px;
+}
+
+.price {
+  font-size: 36px;
+  font-weight: 700;
+}
+
+.product-description-preview {
+  margin-bottom: 24px;
+  color: #606266;
+  line-height: 1.6;
+}
+
+.product-description-preview h3 {
+  font-size: 16px;
+  color: #303133;
+  margin-bottom: 8px;
+}
+
+.digital-assets-buttons {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.qr-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 0;
+}
+
+.qr-dialog-image {
+  width: 380px;
+  height: 380px;
+}
+
+.dialog-hint {
+  color: #606266;
+  font-size: 14px;
+}
+
+.model-dialog :deep(.el-dialog__body) {
+  padding: 0;
+}
+
+.dialog-content {
   position: relative;
 }
 
-.detail-right .model3d-canvas {
-  width: 100%;
-  height: 320px;
-  border: 1px solid #ebeef5;
-  border-radius: 8px;
-  overflow: hidden;
+.product-actions {
+  margin-top: auto;
+  padding-top: 32px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
-.detail-right .model3d-loading {
-  position: absolute;
-  left: 12px;
-  top: 12px;
-  padding: 6px 10px;
-  background: rgba(0, 0, 0, 0.55);
-  color: #fff;
-  border-radius: 6px;
-  font-size: 12px;
-}
-
-.detail-right .model3d-error {
-  margin-top: 8px;
-  color: #f56c6c;
-  font-size: 12px;
-}
-
-.detail-right .model3d-empty {
-  padding: 8px 0;
-}
-
-.detail-right .trace {
-  margin-bottom: 20px;
-}
-
-.detail-right .trace h3 {
-  font-size: 18px;
-  color: #303133;
-  margin-bottom: 10px;
-}
-
-.detail-right .trace-box {
-  width: 180px;
-  height: 180px;
-  border: 1px dashed #dcdfe6;
-  border-radius: 10px;
+.quantity-selector {
   display: flex;
   align-items: center;
+  gap: 16px;
+  background: #f7f9fc;
+  border-radius: 12px;
+  padding: 10px 14px;
+  border: 1px solid #e6eef9;
+  width: fit-content;
+  --el-color-primary: #e0e6ef;
+  --el-input-focus-border-color: #e0e6ef;
+  --el-input-hover-border-color: #e0e6ef;
+}
+
+.quantity-selector .label {
+  font-size: 14px;
+  color: #606266;
+  font-weight: 600;
+}
+
+.quantity-selector :deep(.el-input-number) {
+  box-shadow: none;
+}
+
+.quantity-selector :deep(.el-input-number:focus-within) {
+  box-shadow: none;
+}
+
+.quantity-selector :deep(.el-input-number.is-controls-right:focus-within .el-input__wrapper),
+.quantity-selector :deep(.el-input-number:focus-within .el-input__wrapper) {
+  box-shadow: none;
+  border-color: #e0e6ef;
+}
+
+.quantity-selector :deep(.el-input-number),
+.quantity-selector :deep(.el-input-number.is-controls-right) {
+  border-color: #e0e6ef;
+  box-shadow: none;
+}
+
+.quantity-selector :deep(.el-input-number__wrap),
+.quantity-selector :deep(.el-input-number__wrap:focus),
+.quantity-selector :deep(.el-input-number__wrap:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+.quantity-selector :deep(.el-input-number__decrease),
+.quantity-selector :deep(.el-input-number__increase) {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #e0e6ef;
+  color: #5f6b7a;
+}
+
+.quantity-selector :deep(.el-input-number__decrease:hover),
+.quantity-selector :deep(.el-input-number__increase:hover) {
+  border-color: #e0e6ef;
+  color: #5f6b7a;
+}
+
+.quantity-selector :deep(.el-input-number__decrease:focus),
+.quantity-selector :deep(.el-input-number__increase:focus),
+.quantity-selector :deep(.el-input-number__decrease:focus-visible),
+.quantity-selector :deep(.el-input-number__increase:focus-visible) {
+  outline: none;
+  border-color: #e0e6ef;
+  box-shadow: none;
+}
+
+.quantity-selector :deep(.el-input-number__decrease:active),
+.quantity-selector :deep(.el-input-number__increase:active) {
+  border-color: #e0e6ef;
+  box-shadow: none;
+}
+
+.quantity-selector :deep(.el-input-number__input) {
+  height: 32px;
+  line-height: 32px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.quantity-selector :deep(.el-input__wrapper.is-focus) {
+  box-shadow: none;
+  border-color: #e0e6ef;
+}
+
+.quantity-selector :deep(.el-input__wrapper) {
+  box-shadow: none;
+}
+
+.quantity-selector :deep(.el-input__wrapper:hover) {
+  border-color: #e0e6ef;
+}
+
+.quantity-selector :deep(.el-input-number__decrease.is-disabled),
+.quantity-selector :deep(.el-input-number__increase.is-disabled) {
+  border-color: #e0e6ef;
+  color: #c0c4cc;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 16px;
+}
+
+.buy-btn {
+  flex: 1;
+  height: 46px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border-radius: 12px;
+  box-shadow: 0 10px 20px rgba(64, 158, 255, 0.2);
+}
+
+.buy-btn.is-plain {
+  box-shadow: none;
+  border-width: 1px;
+}
+
+.buy-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Product Content Tabs */
+.product-content {
+  padding: 20px 40px 40px;
+  min-height: 400px;
+}
+
+.content-tabs :deep(.el-tabs__item) {
+  font-size: 16px;
+  height: 50px;
+  line-height: 50px;
+}
+
+.description-content {
+  padding: 20px 0;
+  color: #303133;
+  line-height: 1.8;
+  font-size: 15px;
+}
+
+/* Digital Experience Tab */
+.digital-container {
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.digital-section {
+  width: 100%;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  border-left: 4px solid #409EFF;
+  padding-left: 12px;
+}
+
+.section-title h3 {
+  font-size: 18px;
+  color: #303133;
+  margin: 0;
+}
+
+.model-wrapper {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.model3d-viewer {
+  width: 100%;
+  height: 500px;
+  background: radial-gradient(circle at center, #2d3748 0%, #1a202c 100%);
+}
+
+.model3d-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  background: rgba(0,0,0,0.6);
+  padding: 8px 16px;
+  border-radius: 4px;
+}
+
+.model3d-error {
+  color: #f56c6c;
+  text-align: center;
+  padding: 20px;
+}
+
+.trace-wrapper {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.trace-card {
+  background: #f8f9fa;
+  padding: 24px;
+  border-radius: 12px;
+  text-align: center;
+  border: 1px solid #ebeef5;
+}
+
+.qr-container {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  margin: 0 auto 12px;
+  background: #fff;
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  cursor: pointer;
+}
+
+.trace-qr-img {
+  width: 100%;
+  height: 100%;
+}
+
+.qr-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  background: #fafafa;
+  opacity: 0;
+  transition: opacity 0.3s;
+  border-radius: 8px;
+  gap: 4px;
+}
+
+.qr-container:hover .qr-overlay {
+  opacity: 1;
+}
+
+.trace-hint {
+  font-size: 14px;
+  color: #606266;
+  margin: 0;
+}
+
+.qr-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background: #f5f7fa;
+  color: #909399;
+  font-size: 24px;
 }
 
 @media (max-width: 960px) {
   .detail-container {
     flex-direction: column;
-    gap: 18px;
   }
-  .detail-card :deep(.el-card__body) {
-    padding: 16px;
+  
+  .detail-left {
+    flex: none;
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--app-border);
   }
-  .detail-right .actions {
-    flex-wrap: wrap;
-    gap: 12px;
+  
+  .detail-left .el-image,
+  .detail-left .el-carousel {
+    height: 360px !important;
+  }
+  
+  .detail-right {
+    padding: 24px;
+  }
+  
+  .product-content {
+    padding: 20px;
+  }
+  
+  .model3d-viewer {
+    height: 300px;
   }
 }
 </style>

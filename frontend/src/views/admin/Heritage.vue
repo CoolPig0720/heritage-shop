@@ -79,37 +79,35 @@
             <span v-else>暂无</span>
           </template>
         </el-table-column>
-        <el-table-column prop="applyUnit" label="申报单位" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="applyUnit" label="申报单位或地区" min-width="200" show-overflow-tooltip />
         <el-table-column prop="protectUnit" label="保护单位" min-width="200" show-overflow-tooltip />
         <el-table-column label="操作" width="200" align="center">
           <template #default="{ row }">
-            <el-button type="primary" link size="small" @click="handleEdit(row)">
-              <el-icon><Edit /></el-icon>
-              编辑
-            </el-button>
-            <el-button type="danger" link size="small" @click="handleDelete(row)">
-              <el-icon><Delete /></el-icon>
-              删除
-            </el-button>
+            <div class="row-actions">
+              <el-button type="primary" plain round size="small" @click="handleEdit(row)">
+                <el-icon><Edit /></el-icon>
+                编辑
+              </el-button>
+              <el-button type="danger" plain round size="small" @click="handleDelete(row)">
+                <el-icon><Delete /></el-icon>
+                删除
+              </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
       
-      <div class="pagination">
-        <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
-      </div>
+      <AppPagination
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
     </el-card>
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="720px" @closed="resetDialog">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
         <el-form-item label="类型" prop="categoryId">
           <el-select v-model="form.categoryId" placeholder="请选择类型" filterable style="width: 100%">
             <el-option v-for="opt in flatCategoryOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
@@ -121,7 +119,7 @@
         <el-form-item label="介绍" prop="description">
           <el-input v-model="form.description" type="textarea" :rows="6" maxlength="2000" show-word-limit />
         </el-form-item>
-        <el-form-item label="申报单位" prop="applyUnit">
+        <el-form-item label="申报单位或地区" prop="applyUnit">
           <el-input v-model="form.applyUnit" maxlength="200" show-word-limit />
         </el-form-item>
         <el-form-item label="保护单位" prop="protectUnit">
@@ -209,29 +207,27 @@
           <el-table-column prop="description" label="简介" min-width="240" show-overflow-tooltip />
           <el-table-column label="操作" width="180" align="center">
             <template #default="{ row }">
-              <el-button type="primary" link size="small" @click="openInheritorEdit(row)">
-                <el-icon><Edit /></el-icon>
-                编辑
-              </el-button>
-              <el-button type="danger" link size="small" @click="handleInheritorDelete(row)">
-                <el-icon><Delete /></el-icon>
-                删除
-              </el-button>
+              <div class="row-actions">
+                <el-button type="primary" plain round size="small" @click="openInheritorEdit(row)">
+                  <el-icon><Edit /></el-icon>
+                  编辑
+                </el-button>
+                <el-button type="danger" plain round size="small" @click="handleInheritorDelete(row)">
+                  <el-icon><Delete /></el-icon>
+                  删除
+                </el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>
 
-        <div class="pagination">
-          <el-pagination
-            v-model:current-page="inheritorPage"
-            v-model:page-size="inheritorPageSize"
-            :page-sizes="[10, 20, 50, 100]"
-            :total="inheritorTotal"
-            layout="total, sizes, prev, pager, next, jumper"
-            @size-change="handleInheritorSizeChange"
-            @current-change="handleInheritorCurrentChange"
-          />
-        </div>
+        <AppPagination
+          v-model:current-page="inheritorPage"
+          v-model:page-size="inheritorPageSize"
+          :total="inheritorTotal"
+          @size-change="handleInheritorSizeChange"
+          @current-change="handleInheritorCurrentChange"
+        />
       </div>
     </el-drawer>
 
@@ -288,6 +284,7 @@
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { Delete, Edit, Plus, Search } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import AppPagination from '@/components/AppPagination.vue'
 import { useUserStore } from '@/stores/user'
 import { useRouter } from 'vue-router'
 import {
@@ -311,7 +308,7 @@ const router = useRouter()
 
 const searchKeyword = ref('')
 const currentPage = ref(1)
-const pageSize = ref(10)
+const pageSize = ref(5)
 const total = ref(0)
 const loading = ref(false)
 
@@ -339,7 +336,7 @@ const rules = {
   categoryId: [{ required: true, message: '请选择类型', trigger: 'change' }],
   name: [{ required: true, message: '请输入名称', trigger: 'blur' }],
   description: [{ required: true, message: '请输入介绍', trigger: 'blur' }],
-  applyUnit: [{ required: true, message: '请输入申报单位', trigger: 'blur' }],
+  applyUnit: [{ required: true, message: '请输入申报单位或地区', trigger: 'blur' }],
   protectUnit: [{ required: true, message: '请输入保护单位', trigger: 'blur' }]
 }
 
@@ -457,7 +454,7 @@ const inheritorListLoading = ref(false)
 const inheritorList = ref([])
 const inheritorKeyword = ref('')
 const inheritorPage = ref(1)
-const inheritorPageSize = ref(10)
+const inheritorPageSize = ref(5)
 const inheritorTotal = ref(0)
 
 const fetchInheritorList = async () => {
@@ -782,24 +779,6 @@ onMounted(async () => {
   padding: 20px;
 }
 
-.page-title {
-  font-size: 24px;
-  font-weight: bold;
-  color: #303133;
-  margin-bottom: 20px;
-}
-
-.table-card {
-  background: #fff;
-}
-
-.table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
 .actions {
   display: flex;
   align-items: center;
@@ -815,16 +794,6 @@ onMounted(async () => {
 
 .type-select {
   width: 220px;
-}
-
-.search-input {
-  width: 320px;
-}
-
-.pagination {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
 }
 
 .drawer-body {

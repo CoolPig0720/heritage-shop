@@ -4,6 +4,7 @@ frontend/dist/
 
 # 后端
 backend/target/
+backend/hs_err_pid*.log
 
 # IDE
 .idea/

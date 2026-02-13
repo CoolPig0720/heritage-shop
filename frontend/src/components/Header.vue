@@ -2,9 +2,6 @@
   <div class="header">
     <div class="header-container">
       <div class="header-left">
-        <el-button v-if="showBack" class="back-btn" text :icon="ArrowLeft" @click="handleBack">
-          {{ backLabel }}
-        </el-button>
         <router-link to="/" class="logo">
           <span>{{ $t('header.brand') }}</span>
         </router-link>
@@ -21,9 +18,9 @@
           active-text-color="#fff"
         >
           <el-menu-item index="/home">{{ $t('header.home') }}</el-menu-item>
+          <el-menu-item index="/products">{{ $t('header.products') }}</el-menu-item>
           <el-menu-item index="/heritage">{{ $t('header.heritage') }}</el-menu-item>
           <el-menu-item index="/customize">{{ $t('header.customize') }}</el-menu-item>
-          <el-menu-item index="/products">{{ $t('header.products') }}</el-menu-item>
         </el-menu>
       </div>
       <div class="header-right">
@@ -80,7 +77,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
 import { getProfile } from '@/api/auth'
-import { ArrowLeft, Moon, Sunny } from '@element-plus/icons-vue'
+import { Moon, Sunny } from '@element-plus/icons-vue'
 import { i18n } from '@/i18n'
 import { toggleDark, isDark } from '@/utils/theme'
 import { setLang } from '@/utils/lang'
@@ -98,34 +95,6 @@ const canGoHeritageManage = computed(() => role.value === 'ADMIN')
 
 const dark = ref(isDark())
 const langLabel = computed(() => (i18n.global.locale.value === 'zh' ? '中文' : 'EN'))
-
-const showBack = computed(() => Boolean(route.meta?.showBack))
-
-const backLabel = computed(() => {
-  const q = route.query?.from
-  if (typeof q === 'string') {
-    if (q === 'manage') return '非遗管理'
-    if (q.startsWith('/home')) return '首页'
-    if (q.startsWith('/products')) return '商品列表'
-    if (q.startsWith('/cart')) return '购物车'
-    if (q.startsWith('/orders')) return '我的订单'
-    if (q.startsWith('/heritage')) return '非遗文化'
-    if (q.startsWith('/manage')) return '管理后台'
-    if (q.startsWith('/merchant')) return '商家后台'
-  }
-  return route.meta?.backLabel || '返回'
-})
-
-const resolveBackTo = () => {
-  const q = route.query?.from
-  if (typeof q === 'string') {
-    if (q.startsWith('/')) return q
-    if (q === 'manage') return '/manage/heritage'
-  }
-  const metaTo = route.meta?.backTo
-  if (typeof metaTo === 'string' && metaTo) return metaTo
-  return '/'
-}
 
 const validateToken = async () => {
   if (userStore.token) {
@@ -201,14 +170,6 @@ const handleToggleDark = () => {
 const handleSetLang = (lang) => {
   setLang(lang)
 }
-
-const handleBack = () => {
-  if (window.history.length > 1) {
-    router.back()
-    return
-  }
-  router.push(resolveBackTo())
-}
 </script>
 
 <style scoped>
@@ -240,19 +201,6 @@ const handleBack = () => {
   min-width: 0;
 }
 
-.back-btn {
-  color: #fff;
-  flex-shrink: 0;
-}
-
-.back-btn :deep(.el-icon) {
-  font-size: 16px;
-}
-
-.back-btn:hover {
-  color: rgba(255, 255, 255, 0.92);
-}
-
 .header-left .logo {
   font-size: 24px;
   font-weight: bold;
@@ -261,11 +209,8 @@ const handleBack = () => {
 }
 
 @media (max-width: 768px) {
-  .back-btn {
-    padding: 6px 8px;
-  }
-  .back-btn :deep(span) {
-    display: none;
+  .header-container {
+    padding: 0 12px;
   }
 }
 
@@ -307,7 +252,31 @@ const handleBack = () => {
   flex: 0 0 auto;
 }
 
-:deep(.el-menu--horizontal .el-menu-item) {
-  padding: 0 14px;
+:deep(.header-menu.el-menu--horizontal .el-menu-item) {
+  font-size: 16px;
+  font-weight: 600;
+  padding: 0 20px;
+  border-radius: 999px;
+  border: none;
+  margin: 0 4px;
+  color: rgba(255, 255, 255, 0.85) !important;
+  background-color: transparent;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:deep(.header-menu.el-menu--horizontal .el-menu-item:not(.is-disabled):hover) {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #fff !important;
+}
+
+:deep(.header-menu.el-menu--horizontal .el-menu-item::after) {
+  display: none !important;
+}
+
+:deep(.header-menu.el-menu--horizontal .el-menu-item.is-active) {
+  background-color: rgba(255, 255, 255, 0.25);
+  color: #fff !important;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 </style>

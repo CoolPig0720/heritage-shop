@@ -77,29 +77,27 @@
         </el-table-column>
         <el-table-column label="操作" width="180" align="center">
           <template #default="{ row }">
-            <el-button type="primary" link @click="handleEdit(row)">
-              <el-icon><Edit /></el-icon>
-              编辑
-            </el-button>
-            <el-button type="danger" link @click="handleDelete(row)">
-              <el-icon><Delete /></el-icon>
-              删除
-            </el-button>
+            <div class="row-actions">
+              <el-button type="primary" plain round size="small" @click="handleEdit(row)">
+                <el-icon><Edit /></el-icon>
+                编辑
+              </el-button>
+              <el-button type="danger" plain round size="small" @click="handleDelete(row)">
+                <el-icon><Delete /></el-icon>
+                删除
+              </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
       
-      <div class="pagination">
-        <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
-      </div>
+      <AppPagination
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
     </el-card>
     
     <el-dialog
@@ -158,6 +156,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { Search, Plus, Edit, Delete } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import AppPagination from '@/components/AppPagination.vue'
 import { getUserList, deleteUser, register, updateUser } from '@/api/auth'
 import { useUserStore } from '@/stores/user'
 
@@ -168,7 +167,7 @@ const users = ref([])
 const searchName = ref('')
 const searchRole = ref('')
 const currentPage = ref(1)
-const pageSize = ref(10)
+const pageSize = ref(5)
 const total = ref(0)
 
 const dialogVisible = ref(false)
@@ -429,40 +428,6 @@ onMounted(() => {
   padding: 20px;
 }
 
-.page-title {
-  font-size: 24px;
-  font-weight: bold;
-  color: #303133;
-  margin-bottom: 20px;
-}
-
-.table-card {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-}
-
-.table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.search-filters {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.search-input {
-  width: 240px;
-  max-width: 100%;
-}
-
 .role-select {
   width: 180px;
   max-width: 100%;
@@ -502,27 +467,6 @@ onMounted(() => {
   display: inline-block;
 }
 
-.pagination {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-:deep(.el-table) {
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-:deep(.el-table__header th) {
-  background-color: #f5f7fa;
-  color: #606266;
-  font-weight: 600;
-}
-
-:deep(.el-table__row:hover) {
-  background-color: #f5f7fa;
-}
-
 :deep(.el-table__row.admin-row) {
   background-color: #f0f0f0;
 }
@@ -533,9 +477,5 @@ onMounted(() => {
 
 :deep(.el-tag) {
   font-weight: 500;
-}
-
-:deep(.el-card__body) {
-  padding: 20px;
 }
 </style>

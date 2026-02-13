@@ -36,7 +36,7 @@
               </template>
             </el-table-column>
             <el-table-column prop="categoryName" label="分类" width="160" />
-            <el-table-column prop="applyUnit" label="申报单位" min-width="160" show-overflow-tooltip />
+            <el-table-column prop="applyUnit" label="申报单位或地区" min-width="160" show-overflow-tooltip />
             <el-table-column prop="protectUnit" label="保护单位" min-width="160" show-overflow-tooltip />
             <el-table-column label="操作" width="100">
               <template #default="{ row }">

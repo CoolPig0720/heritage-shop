@@ -12,7 +12,7 @@
             <h1 class="title">{{ detail.name || '项目详情' }}</h1>
             <div class="meta">
               <el-tag v-if="detail.categoryName" type="info">{{ detail.categoryName }}</el-tag>
-              <span v-if="detail.applyUnit" class="meta-item">申报单位：{{ detail.applyUnit }}</span>
+              <span v-if="detail.applyUnit" class="meta-item">申报单位或地区：{{ detail.applyUnit }}</span>
               <span v-if="detail.protectUnit" class="meta-item">保护单位：{{ detail.protectUnit }}</span>
             </div>
           </div>
@@ -54,8 +54,11 @@
                 class="media-delete"
                 type="danger"
                 size="small"
+                plain
+                round
                 @click.stop="deleteMedia(img)"
               >
+                <el-icon><Delete /></el-icon>
                 删除
               </el-button>
             </div>
@@ -94,8 +97,11 @@
                 class="media-delete"
                 type="danger"
                 size="small"
+                plain
+                round
                 @click.stop="deleteMedia(img)"
               >
+                <el-icon><Delete /></el-icon>
                 删除
               </el-button>
             </div>
@@ -128,8 +134,11 @@
                 class="media-delete"
                 type="danger"
                 size="small"
+                plain
+                round
                 @click.stop="deleteMedia(v)"
               >
+                <el-icon><Delete /></el-icon>
                 删除
               </el-button>
             </div>
@@ -173,6 +182,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Delete } from '@element-plus/icons-vue'
 import { createAdminHeritageProjectMedia, deleteAdminHeritageProjectMedia, getHeritageProjectDetail } from '@/api/heritage'
 import { useUserStore } from '@/stores/user'
 

@@ -25,7 +25,7 @@
           </template>
 
           <div class="cart-list">
-            <div v-for="item in cartItems" :key="item.id" class="cart-item" :class="{ disabled: item.disabled }">
+            <div v-for="item in pagedCartItems" :key="item.id" class="cart-item" :class="{ disabled: item.disabled }">
               <div class="col product">
                 <el-checkbox
                   v-model="item.selected"
@@ -67,8 +67,19 @@
               </div>
 
               <div class="col ops">
-                <el-button type="danger" size="small" plain :loading="updating" @click="removeItem(item)">删除</el-button>
+                <el-button type="danger" size="small" plain round :loading="updating" @click="removeItem(item)">
+                  <el-icon><Delete /></el-icon>
+                  删除
+                </el-button>
               </div>
+            </div>
+            
+            <div class="pagination-container">
+              <AppPagination
+                v-model:current-page="cartCurrentPage"
+                v-model:page-size="cartPageSize"
+                :total="cartItems.length"
+              />
             </div>
           </div>
         </el-card>
@@ -123,6 +134,8 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Delete } from '@element-plus/icons-vue'
+import AppPagination from '@/components/AppPagination.vue'
 import { deleteCartItem, listCartItems, updateCartItemQuantity, updateCartItemSelected } from '@/api/cart'
 import { createOrder } from '@/api/order'
 import { listAddresses } from '@/api/auth'
@@ -143,6 +156,14 @@ const router = useRouter()
 const loading = ref(false)
 const updating = ref(false)
 const cartItems = ref([])
+const cartCurrentPage = ref(1)
+const cartPageSize = ref(5)
+
+const pagedCartItems = computed(() => {
+  const start = (cartCurrentPage.value - 1) * cartPageSize.value
+  const end = start + cartPageSize.value
+  return cartItems.value.slice(start, end)
+})
 
 const addressDialogVisible = ref(false)
 const addressLoading = ref(false)
@@ -549,5 +570,12 @@ onMounted(() => {
 .address-item-detail {
   color: #606266;
   word-break: break-all;
+}
+
+.pagination-container {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 20px;
+  border-top: 1px solid #ebeef5;
 }
 </style>

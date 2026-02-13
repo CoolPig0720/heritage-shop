@@ -67,3 +67,107 @@ a {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.page-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #303133;
+  margin-bottom: 20px;
+}
+
+.table-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.table-card .el-card__body {
+  padding: 20px;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.table-header .search-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.search-input {
+  width: 320px;
+  max-width: 100%;
+}
+
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.row-actions--right {
+  justify-content: flex-end;
+}
+
+.row-actions .el-button {
+  padding: 6px 12px;
+  font-weight: 500;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.row-actions .el-button .el-icon {
+  margin-right: 4px;
+}
+
+.row-actions .el-button--primary.is-plain {
+  background: #ecf5ff;
+  border-color: #d9ecff;
+  color: #409eff;
+}
+
+.row-actions .el-button--primary.is-plain:hover {
+  background: #d9ecff;
+  border-color: #c6e2ff;
+}
+
+.row-actions .el-button--danger.is-plain {
+  background: #fef0f0;
+  border-color: #fde2e2;
+  color: #f56c6c;
+}
+
+.row-actions .el-button--danger.is-plain:hover {
+  background: #fde2e2;
+  border-color: #fab6b6;
+}
+
+.table-card .el-table {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.table-card .el-table__header th {
+  background-color: #f5f7fa;
+  color: #606266;
+  font-weight: 600;
+}
+
+.table-card .el-table__cell {
+  padding: 12px 10px;
+  vertical-align: middle;
+}
