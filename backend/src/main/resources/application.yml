@@ -39,7 +39,7 @@ spring:
 jwt:
   secret: heritage-shop-secret-key-2024
   expiration: 604800000
-
+#ai部分由于存在密钥，无法推送
 # ai:
 #   tencentcloud:
 #     secret-id: ${TENCENTCLOUD_SECRET_ID:}
