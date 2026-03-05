@@ -315,7 +315,8 @@ onMounted(() => {
 .cart {
   padding: 40px 20px;
   min-height: calc(100vh - 60px);
-  background: var(--app-bg);
+  background: var(--bg-page);
+  transition: background-color 0.3s ease;
 }
 
 .page-header {
@@ -325,7 +326,7 @@ onMounted(() => {
 
 .page-header h1 {
   font-size: 36px;
-  color: #303133;
+  color: var(--text-color-primary);
 }
 
 .cart-container {
@@ -356,12 +357,12 @@ onMounted(() => {
 .header-title {
   font-size: 18px;
   font-weight: 700;
-  color: #303133;
+  color: var(--text-color-primary);
 }
 
 .header-subtitle {
   font-size: 12px;
-  color: #909399;
+  color: var(--text-color-secondary);
 }
 
 .cart-table-header {
@@ -369,24 +370,24 @@ onMounted(() => {
   align-items: center;
   gap: 16px;
   padding: 10px 12px;
-  background: #f5f7fa;
-  border: 1px solid var(--app-border);
+  background: var(--table-header-bg);
+  border: 1px solid var(--border-color-base);
   border-left: none;
   border-right: none;
-  color: #606266;
+  color: var(--text-color-secondary);
   font-size: 12px;
 }
 
 .cart-list {
-  background: #fff;
+  background: var(--card-bg);
 }
 
 .cart-footer {
   margin-top: 14px;
-  background: #fff;
+  background: var(--card-bg);
   padding: 20px;
   border-radius: var(--app-radius);
-  border: 1px solid var(--app-border);
+  border: 1px solid var(--card-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -408,19 +409,19 @@ onMounted(() => {
 }
 
 .total-line .label {
-  color: #606266;
+  color: var(--text-color-secondary);
   font-size: 14px;
 }
 
 .total-line .price {
   font-size: 24px;
-  color: #f56c6c;
+  color: var(--danger-color);
   font-weight: 800;
 }
 
 .total-hint {
   font-size: 12px;
-  color: #909399;
+  color: var(--text-color-secondary);
 }
 
 .cart-item {
@@ -428,7 +429,8 @@ onMounted(() => {
   align-items: center;
   gap: 16px;
   padding: 14px 12px;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid var(--border-color-lighter);
+  background: var(--card-bg);
 }
 
 .cart-item:last-child {
@@ -476,7 +478,7 @@ onMounted(() => {
   border-radius: 10px;
   overflow: hidden;
   flex-shrink: 0;
-  border: 1px solid #ebeef5;
+  border: 1px solid var(--border-color-lighter);
 }
 
 .item-image-fallback {
@@ -498,7 +500,7 @@ onMounted(() => {
   align-items: center;
   gap: 10px;
   font-weight: 600;
-  color: #303133;
+  color: var(--text-color-primary);
 }
 
 .item-name span {
@@ -509,12 +511,12 @@ onMounted(() => {
 
 .item-meta {
   font-size: 12px;
-  color: #909399;
+  color: var(--text-color-secondary);
 }
 
 .money {
   font-variant-numeric: tabular-nums;
-  color: #303133;
+  color: var(--text-color-primary);
 }
 
 .money.strong {
@@ -564,11 +566,11 @@ onMounted(() => {
 }
 
 .address-item-phone {
-  color: #606266;
+  color: var(--text-color-secondary);
 }
 
 .address-item-detail {
-  color: #606266;
+  color: var(--text-color-secondary);
   word-break: break-all;
 }
 
@@ -576,6 +578,6 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   padding: 16px 20px;
-  border-top: 1px solid #ebeef5;
+  border-top: 1px solid var(--border-color-lighter);
 }
 </style>

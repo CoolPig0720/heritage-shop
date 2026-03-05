@@ -774,12 +774,12 @@ onMounted(() => {
 .product-name {
   font-size: 14px;
   font-weight: 500;
-  color: #303133;
+  color: var(--text-color-primary);
 }
 
 .product-meta {
   font-size: 12px;
-  color: #909399;
+  color: var(--text-color-secondary);
 }
 
 .upload-row {
@@ -824,17 +824,17 @@ onMounted(() => {
   max-width: 100%;
   aspect-ratio: 1 / 1;
   margin-top: 8px;
-  border: 1px solid #ebeef5;
+  border: 1px solid var(--border-color-base);
   border-radius: 8px;
   overflow: hidden;
-  background: #fff;
+  background: var(--bg-base);
 }
 
 .qr-preview-image {
   width: 100%;
   height: 100%;
   display: block;
-  background: #fff;
+  background: var(--bg-base);
 }
 
 .model-preview {
@@ -843,7 +843,7 @@ onMounted(() => {
   aspect-ratio: 1 / 1;
   position: relative;
   margin-top: 8px;
-  border: 1px solid #ebeef5;
+  border: 1px solid var(--border-color-base);
   border-radius: 8px;
   overflow: hidden;
   background: radial-gradient(120% 120% at 50% 30%, #1f2937 0%, #0b1220 55%, #05070d 100%);
@@ -891,8 +891,8 @@ onMounted(() => {
   height: 56px;
   border-radius: 10px;
   overflow: hidden;
-  border: 1px solid #ebeef5;
-  background: #fff;
+  border: 1px solid var(--border-color-base);
+  background: var(--bg-base);
 }
 
 .image-actions {
@@ -910,11 +910,11 @@ onMounted(() => {
 }
 
 .image-actions :deep(.el-button.is-link:hover) {
-  background: #f2f6fc;
+  background: var(--bg-elevated);
 }
 
 .muted {
-  color: #909399;
+  color: var(--text-color-secondary);
 }
 
 :deep(.images-table) {
@@ -935,19 +935,19 @@ onMounted(() => {
 }
 
 :deep(.images-table .el-table__body tr > td.el-table__cell) {
-  background: #fff;
+  background: var(--bg-base);
 }
 
 :deep(.images-table .el-table__body tr:hover > td.el-table__cell) {
-  background: #fff;
+  background: var(--bg-base);
 }
 
 :deep(.images-table .el-table__body tr.row-is-cover > td.el-table__cell) {
-  background: #f5f7fa;
+  background: var(--bg-elevated);
 }
 
 :deep(.images-table .el-table__body tr.row-is-cover:hover > td.el-table__cell) {
-  background: #f5f7fa;
+  background: var(--bg-elevated);
 }
 
 :deep(.images-table .sort-input) {
@@ -955,21 +955,21 @@ onMounted(() => {
 }
 
 :deep(.images-table .el-table__header th) {
-  background-color: #f5f7fa;
-  color: #606266;
+  background-color: var(--table-header-bg);
+  color: var(--table-header-text);
   font-weight: 600;
 }
 
 :deep(.el-table__fixed-right-patch) {
-  background-color: #f5f7fa !important;
+  background-color: var(--table-header-bg) !important;
 }
 
 :deep(.el-table__fixed-right .el-table__header-wrapper) {
-  background-color: #f5f7fa !important;
+  background-color: var(--table-header-bg) !important;
 }
 
 :deep(.el-table__fixed-right .el-table__header th) {
-  background-color: #f5f7fa !important;
+  background-color: var(--table-header-bg) !important;
 }
 
 :deep(.el-table__fixed-right .el-table__header-wrapper th),
@@ -978,15 +978,15 @@ onMounted(() => {
 :deep(.el-table__fixed-right .el-table__fixed-header-wrapper),
 :deep(.el-table__fixed-right .el-table__fixed-header-wrapper th),
 :deep(.el-table__fixed-right .el-table__fixed-header-wrapper th.el-table__cell) {
-  background-color: #f5f7fa !important;
+  background-color: var(--table-header-bg) !important;
 }
 
 :deep(.el-table__row:hover) {
-  background-color: #f5f7fa;
+  background-color: var(--table-row-hover-bg);
 }
 
 :deep(.el-table__fixed-right .el-table__body tr.hover-row > td.el-table__cell) {
-  background-color: #f5f7fa;
+  background-color: var(--table-row-hover-bg);
 }
 
 :deep(.el-card__body) {

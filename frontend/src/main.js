@@ -8,6 +8,10 @@ import App from './App.vue'
 import router from './router'
 import './styles/main.scss'
 import { i18n, getElementLocale } from '@/i18n'
+import { initTheme } from '@/utils/theme'
+
+// 初始化主题（必须在应用挂载前执行）
+initTheme()
 
 const app = createApp(App)
 const pinia = createPinia()

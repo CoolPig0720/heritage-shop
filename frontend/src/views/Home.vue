@@ -330,7 +330,7 @@ onMounted(() => {
   text-align: center;
   font-size: 36px;
   font-weight: bold;
-  color: #303133;
+  color: var(--text-color-primary);
   margin-bottom: 50px;
   position: relative;
 }
@@ -356,7 +356,7 @@ onMounted(() => {
 
 .features-section {
   padding: 80px 0;
-  background: #f8f9fa;
+  background: var(--bg-page);
 }
 
 .features-grid {
@@ -366,11 +366,12 @@ onMounted(() => {
 }
 
 .feature-card {
-  background: #fff;
+  background: var(--card-bg);
   padding: 40px 30px;
   border-radius: 12px;
   text-align: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-light);
+  border: 1px solid var(--card-border);
   transition: all 0.3s;
 }
 
@@ -394,12 +395,12 @@ onMounted(() => {
 .feature-card h3 {
   font-size: 20px;
   margin-bottom: 12px;
-  color: #303133;
+  color: var(--text-color-primary);
 }
 
 .feature-card p {
   font-size: 14px;
-  color: #606266;
+  color: var(--text-color-secondary);
   line-height: 1.6;
 }
 
@@ -418,10 +419,11 @@ onMounted(() => {
 }
 
 .product-card {
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-light);
+  border: 1px solid var(--card-border);
   cursor: pointer;
   transition: all 0.3s;
 }
@@ -468,13 +470,13 @@ onMounted(() => {
 .product-name {
   font-size: 18px;
   margin-bottom: 8px;
-  color: #303133;
+  color: var(--text-color-primary);
   font-weight: 500;
 }
 
 .product-desc {
   font-size: 14px;
-  color: #909399;
+  color: var(--text-color-secondary);
   margin-bottom: 16px;
   line-height: 1.5;
 }
@@ -493,7 +495,7 @@ onMounted(() => {
 
 .heritage-section {
   padding: 80px 0;
-  background: #f8f9fa;
+  background: var(--bg-page);
 }
 
 .heritage-grid {

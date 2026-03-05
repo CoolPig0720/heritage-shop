@@ -626,14 +626,15 @@ onMounted(() => {
 <style scoped>
 .customize {
   min-height: calc(100vh - 60px);
-  background: linear-gradient(180deg, #f7f8ff 0%, #f6f7fb 40%, #f5f6fa 100%);
+  background: var(--bg-page);
   padding-bottom: 32px;
+  transition: background-color 0.3s ease;
 }
 
 .hero {
   background: radial-gradient(1200px 600px at 50% -20%, rgba(64, 158, 255, 0.35), rgba(64, 158, 255, 0) 60%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0));
-  border-bottom: 1px solid rgba(235, 238, 245, 0.8);
+    linear-gradient(180deg, var(--bg-elevated), transparent);
+  border-bottom: 1px solid var(--border-color-base);
   padding: 28px 20px 18px;
 }
 
@@ -649,13 +650,13 @@ onMounted(() => {
 .hero-title {
   font-size: 28px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-color-primary);
   letter-spacing: 0.2px;
 }
 
 .hero-subtitle {
   font-size: 14px;
-  color: rgba(17, 24, 39, 0.6);
+  color: var(--text-color-secondary);
 }
 
 .container {
@@ -675,10 +676,10 @@ onMounted(() => {
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(235, 238, 245, 0.9);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   border-radius: 14px;
-  box-shadow: 0 10px 30px rgba(17, 24, 39, 0.06);
+  box-shadow: var(--card-shadow);
   backdrop-filter: blur(6px);
 }
 
@@ -699,20 +700,20 @@ onMounted(() => {
 .card-title {
   font-size: 16px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-color-primary);
 }
 
 .card-desc {
   font-size: 12px;
-  color: rgba(17, 24, 39, 0.55);
+  color: var(--text-color-secondary);
 }
 
 .preview {
   margin-top: 16px;
-  border: 1px solid rgba(235, 238, 245, 0.9);
+  border: 1px solid var(--border-color-base);
   border-radius: 12px;
   padding: 10px;
-  background: rgba(249, 250, 251, 0.8);
+  background: var(--bg-elevated);
 }
 
 .preview-image {
@@ -730,7 +731,7 @@ onMounted(() => {
 .slider-value {
   width: 56px;
   text-align: right;
-  color: #606266;
+  color: var(--text-color-secondary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -742,12 +743,12 @@ onMounted(() => {
 
 .help-icon {
   font-size: 14px;
-  color: rgba(17, 24, 39, 0.45);
+  color: var(--text-color-secondary);
   cursor: pointer;
 }
 
 .help-icon:hover {
-  color: #409eff;
+  color: var(--color-primary);
 }
 
 .single-pane {
@@ -788,7 +789,7 @@ onMounted(() => {
   height: 100%;
   min-height: 360px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--bg-elevated);
 }
 
 .result-section {
@@ -815,7 +816,7 @@ onMounted(() => {
 .history-dialog-title {
   font-size: 16px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-color-primary);
   line-height: 1.2;
 }
 
@@ -823,7 +824,7 @@ onMounted(() => {
   flex: 1;
   min-width: 0;
   font-size: 12px;
-  color: rgba(17, 24, 39, 0.6);
+  color: var(--text-color-secondary);
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
@@ -847,16 +848,16 @@ onMounted(() => {
 }
 
 .history-row {
-  border: 1px solid rgba(235, 238, 245, 0.9);
+  border: 1px solid var(--border-color-base);
   border-radius: 14px;
-  background: rgba(249, 250, 251, 0.8);
+  background: var(--bg-elevated);
   padding: 16px;
 }
 
 .history-row-prompt {
   font-size: 15px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-color-primary);
   line-height: 1.35;
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -884,22 +885,22 @@ onMounted(() => {
 
 .history-img-label {
   font-size: 12px;
-  color: rgba(17, 24, 39, 0.65);
+  color: var(--text-color-secondary);
 }
 
 .history-row-image {
   width: 100%;
   height: 360px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--bg-base);
 }
 
 .history-image-placeholder {
   width: 100%;
   height: 360px;
   border-radius: 12px;
-  border: 1px dashed rgba(17, 24, 39, 0.18);
-  background: rgba(255, 255, 255, 0.5);
+  border: 1px dashed var(--border-color-base);
+  background: var(--bg-elevated);
 }
 
 .history-grid {
@@ -909,10 +910,10 @@ onMounted(() => {
 }
 
 .history-item {
-  border: 1px solid rgba(235, 238, 245, 0.9);
+  border: 1px solid var(--border-color-base);
   border-radius: 12px;
   overflow: hidden;
-  background: rgba(249, 250, 251, 0.8);
+  background: var(--bg-elevated);
 }
 
 .history-image {
@@ -929,7 +930,7 @@ onMounted(() => {
 
 .history-prompt {
   font-size: 13px;
-  color: #111827;
+  color: var(--text-color-primary);
   line-height: 1.35;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -939,11 +940,11 @@ onMounted(() => {
 
 .history-ref {
   font-size: 12px;
-  color: rgba(17, 24, 39, 0.6);
+  color: var(--text-color-secondary);
 }
 
 .history-ref.empty {
-  color: rgba(17, 24, 39, 0.4);
+  color: var(--text-color-placeholder);
 }
 
 .result-grid {

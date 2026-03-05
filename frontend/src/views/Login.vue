@@ -493,9 +493,9 @@ onMounted(() => {
   display: flex;
   width: 100%;
   max-width: 1000px;
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-medium);
   overflow: hidden;
 }
 
@@ -553,6 +553,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--card-bg);
 }
 
 .login-card {
@@ -572,13 +573,13 @@ onMounted(() => {
 .login-tools .lang-switch {
   cursor: pointer;
   user-select: none;
-  color: var(--el-text-color-regular);
+  color: var(--text-color-regular);
 }
 
 .login-card-title {
   font-size: 28px;
   font-weight: bold;
-  color: var(--el-text-color-primary);
+  color: var(--text-color-primary);
   text-align: center;
   margin-bottom: 40px;
 }
@@ -621,12 +622,12 @@ onMounted(() => {
   cursor: pointer;
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #dcdfe6;
+  border: 1px solid var(--border-color-base);
   transition: all 0.3s;
 }
 
 .captcha-image:hover {
-  border-color: #409EFF;
+  border-color: var(--primary-color);
   transform: scale(1.02);
 }
 
@@ -659,7 +660,7 @@ onMounted(() => {
 
 .remember-checkbox :deep(.el-checkbox__label) {
   font-size: 14px;
-  color: #606266;
+  color: var(--text-color-secondary);
 }
 
 .login-footer {
@@ -667,7 +668,7 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   margin-top: 30px;
-  color: #606266;
+  color: var(--text-color-secondary);
 }
 
 .footer-text {
@@ -675,7 +676,7 @@ onMounted(() => {
 }
 
 .footer-link {
-  color: #409EFF;
+  color: var(--primary-color);
   margin-left: 8px;
   font-weight: 500;
   text-decoration: none;
@@ -683,7 +684,7 @@ onMounted(() => {
 }
 
 .footer-link:hover {
-  color: #66b1ff;
+  color: var(--primary-color-light);
   text-decoration: underline;
 }
 

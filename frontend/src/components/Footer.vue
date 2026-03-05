@@ -33,10 +33,12 @@
 
 <style scoped>
 .footer {
-  background-color: #2c3e50;
-  color: #ecf0f1;
+  background-color: var(--bg-elevated);
+  color: var(--text-color-regular);
   padding: 40px 0 20px;
   margin-top: 40px;
+  border-top: 1px solid var(--border-color-base);
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .footer-container {
@@ -55,12 +57,12 @@
 .footer-section h3 {
   font-size: 18px;
   margin-bottom: 20px;
-  color: #3498db;
+  color: var(--primary-color);
 }
 
 .footer-section p {
   line-height: 1.8;
-  color: #bdc3c7;
+  color: var(--text-color-secondary);
 }
 
 .footer-section ul {
@@ -70,26 +72,27 @@
 
 .footer-section ul li {
   margin-bottom: 10px;
+  color: var(--text-color-secondary);
 }
 
 .footer-section ul li a {
-  color: #bdc3c7;
+  color: var(--text-color-secondary);
   transition: color 0.3s;
 }
 
 .footer-section ul li a:hover {
-  color: #3498db;
+  color: var(--primary-color);
 }
 
 .footer-bottom {
   text-align: center;
   margin-top: 40px;
   padding-top: 20px;
-  border-top: 1px solid #34495e;
+  border-top: 1px solid var(--border-color-base);
 }
 
 .footer-bottom p {
-  color: #7f8c8d;
+  color: var(--text-color-secondary);
   font-size: 14px;
 }
 </style>

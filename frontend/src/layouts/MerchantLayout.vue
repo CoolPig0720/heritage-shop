@@ -18,13 +18,16 @@ import Footer from '@/components/Footer.vue'
 <style scoped>
 .admin-shell {
   min-height: 100vh;
+  display: flex;
   flex-direction: column;
+  background-color: var(--bg-page);
 }
 
 .admin-content {
   flex: 1;
   padding-top: 60px;
-  background: var(--app-bg);
+  background: var(--bg-page);
   overflow-y: auto;
+  transition: background-color 0.3s ease;
 }
 </style>

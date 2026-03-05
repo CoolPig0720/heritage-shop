@@ -449,12 +449,12 @@ onMounted(() => {
 .user-name {
   font-size: 14px;
   font-weight: 500;
-  color: #303133;
+  color: var(--text-color-primary);
 }
 
 .user-account {
   font-size: 12px;
-  color: #909399;
+  color: var(--text-color-secondary);
 }
 
 .avatar-upload {
@@ -465,14 +465,6 @@ onMounted(() => {
 
 .avatar-uploader {
   display: inline-block;
-}
-
-:deep(.el-table__row.admin-row) {
-  background-color: #f0f0f0;
-}
-
-:deep(.el-table__row.admin-row:hover) {
-  background-color: #e0e0e0;
 }
 
 :deep(.el-tag) {

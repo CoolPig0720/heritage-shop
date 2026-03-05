@@ -273,7 +273,8 @@ const handleDownload = (url, filename) => {
 .product-detail {
   padding: 40px 20px;
   min-height: calc(100vh - 60px);
-  background: var(--app-bg);
+  background: var(--bg-page);
+  transition: background-color 0.3s ease;
 }
 
 .section-container {
@@ -283,9 +284,11 @@ const handleDownload = (url, filename) => {
 
 .detail-card {
   border-radius: var(--app-radius);
-  border: 1px solid var(--app-border);
+  border: 1px solid var(--card-border);
   overflow: hidden;
   margin-top: 14px;
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
 }
 
 .detail-card :deep(.el-card__body) {
@@ -294,14 +297,15 @@ const handleDownload = (url, filename) => {
 
 .detail-container {
   display: flex;
-  background: #fff;
-  border-bottom: 1px solid var(--app-border);
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border-color-base);
 }
 
 .detail-left {
   flex: 0 0 500px;
   width: 500px;
-  border-right: 1px solid var(--app-border);
+  border-right: 1px solid var(--border-color-base);
+  background: var(--card-bg);
 }
 
 .detail-left .el-image {
@@ -323,7 +327,7 @@ const handleDownload = (url, filename) => {
 .title {
   font-size: 28px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--text-color-primary);
   line-height: 1.3;
   margin-bottom: 16px;
 }
@@ -358,13 +362,13 @@ const handleDownload = (url, filename) => {
 
 .product-description-preview {
   margin-bottom: 24px;
-  color: #606266;
+  color: var(--text-color-secondary);
   line-height: 1.6;
 }
 
 .product-description-preview h3 {
   font-size: 16px;
-  color: #303133;
+  color: var(--text-color-primary);
   margin-bottom: 8px;
 }
 
@@ -403,7 +407,7 @@ const handleDownload = (url, filename) => {
 .product-actions {
   margin-top: auto;
   padding-top: 32px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--border-color-lighter);
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -413,19 +417,16 @@ const handleDownload = (url, filename) => {
   display: flex;
   align-items: center;
   gap: 16px;
-  background: #f7f9fc;
+  background: var(--bg-elevated);
   border-radius: 12px;
   padding: 10px 14px;
-  border: 1px solid #e6eef9;
+  border: 1px solid var(--border-color-base);
   width: fit-content;
-  --el-color-primary: #e0e6ef;
-  --el-input-focus-border-color: #e0e6ef;
-  --el-input-hover-border-color: #e0e6ef;
 }
 
 .quantity-selector .label {
   font-size: 14px;
-  color: #606266;
+  color: var(--text-color-secondary);
   font-weight: 600;
 }
 
@@ -461,15 +462,15 @@ const handleDownload = (url, filename) => {
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: #fff;
-  border: 1px solid #e0e6ef;
-  color: #5f6b7a;
+  background: var(--bg-base);
+  border: 1px solid var(--border-color-base);
+  color: var(--text-color-secondary);
 }
 
 .quantity-selector :deep(.el-input-number__decrease:hover),
 .quantity-selector :deep(.el-input-number__increase:hover) {
-  border-color: #e0e6ef;
-  color: #5f6b7a;
+  border-color: var(--color-primary);
+  color: var(--text-color-primary);
 }
 
 .quantity-selector :deep(.el-input-number__decrease:focus),
@@ -491,7 +492,7 @@ const handleDownload = (url, filename) => {
   height: 32px;
   line-height: 32px;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--text-color-primary);
 }
 
 .quantity-selector :deep(.el-input__wrapper.is-focus) {
@@ -551,7 +552,7 @@ const handleDownload = (url, filename) => {
 
 .description-content {
   padding: 20px 0;
-  color: #303133;
+  color: var(--text-color-primary);
   line-height: 1.8;
   font-size: 15px;
 }
@@ -579,7 +580,7 @@ const handleDownload = (url, filename) => {
 
 .section-title h3 {
   font-size: 18px;
-  color: #303133;
+  color: var(--text-color-primary);
   margin: 0;
 }
 
@@ -619,11 +620,11 @@ const handleDownload = (url, filename) => {
 }
 
 .trace-card {
-  background: #f8f9fa;
+  background: var(--bg-elevated);
   padding: 24px;
   border-radius: 12px;
   text-align: center;
-  border: 1px solid #ebeef5;
+  border: 1px solid var(--border-color-base);
 }
 
 .qr-container {
@@ -631,10 +632,10 @@ const handleDownload = (url, filename) => {
   width: 160px;
   height: 160px;
   margin: 0 auto 12px;
-  background: #fff;
+  background: var(--bg-base);
   padding: 8px;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: var(--shadow-light);
   cursor: pointer;
 }
 
@@ -667,7 +668,7 @@ const handleDownload = (url, filename) => {
 
 .trace-hint {
   font-size: 14px;
-  color: #606266;
+  color: var(--text-color-secondary);
   margin: 0;
 }
 
@@ -677,8 +678,8 @@ const handleDownload = (url, filename) => {
   align-items: center;
   width: 100%;
   height: 100%;
-  background: #f5f7fa;
-  color: #909399;
+  background: var(--bg-elevated);
+  color: var(--text-color-secondary);
   font-size: 24px;
 }
 
@@ -691,7 +692,7 @@ const handleDownload = (url, filename) => {
     flex: none;
     width: 100%;
     border-right: none;
-    border-bottom: 1px solid var(--app-border);
+    border-bottom: 1px solid var(--border-color-base);
   }
   
   .detail-left .el-image,

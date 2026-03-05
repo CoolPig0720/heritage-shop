@@ -13,9 +13,6 @@
           mode="horizontal"
           router
           :ellipsis="false"
-          background-color="#409EFF"
-          text-color="#fff"
-          active-text-color="#fff"
         >
           <el-menu-item index="/home">{{ $t('header.home') }}</el-menu-item>
           <el-menu-item index="/products">{{ $t('header.products') }}</el-menu-item>
@@ -24,12 +21,25 @@
         </el-menu>
       </div>
       <div class="header-right">
-        <el-switch
-          :model-value="dark"
-          :active-icon="Moon"
-          :inactive-icon="Sunny"
-          @change="handleToggleDark"
-        />
+        <el-dropdown @command="handleThemeChange" trigger="click">
+          <el-button circle :icon="themeIcon" class="theme-btn" />
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="light" :class="{ 'is-active': themeMode === 'light' }">
+                <el-icon><Sunny /></el-icon>
+                亮色模式
+              </el-dropdown-item>
+              <el-dropdown-item command="dark" :class="{ 'is-active': themeMode === 'dark' }">
+                <el-icon><Moon /></el-icon>
+                暗色模式
+              </el-dropdown-item>
+              <el-dropdown-item command="system" :class="{ 'is-active': themeMode === 'system' }">
+                <el-icon><Monitor /></el-icon>
+                跟随系统
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
 
         <el-dropdown @command="handleSetLang">
           <span class="lang-switch">{{ langLabel }}</span>
@@ -77,9 +87,9 @@ import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
 import { getProfile } from '@/api/auth'
-import { Moon, Sunny } from '@element-plus/icons-vue'
+import { Moon, Sunny, Monitor } from '@element-plus/icons-vue'
 import { i18n } from '@/i18n'
-import { toggleDark, isDark } from '@/utils/theme'
+import { getThemeMode, setThemeMode, isDark, initTheme, ThemeMode } from '@/utils/theme'
 import { setLang } from '@/utils/lang'
 
 const router = useRouter()
@@ -93,8 +103,16 @@ const canGoUsers = computed(() => role.value === 'ADMIN')
 const canGoProducts = computed(() => role.value === 'ADMIN' || role.value === 'MERCHANT')
 const canGoHeritageManage = computed(() => role.value === 'ADMIN')
 
+const themeMode = ref(getThemeMode())
 const dark = ref(isDark())
 const langLabel = computed(() => (i18n.global.locale.value === 'zh' ? '中文' : 'EN'))
+
+// 主题图标
+const themeIcon = computed(() => {
+  if (themeMode.value === ThemeMode.DARK) return Moon
+  if (themeMode.value === ThemeMode.LIGHT) return Sunny
+  return Monitor
+})
 
 const validateToken = async () => {
   if (userStore.token) {
@@ -118,6 +136,9 @@ const validateToken = async () => {
 
 onMounted(() => {
   validateToken()
+  initTheme()
+  themeMode.value = getThemeMode()
+  dark.value = isDark()
 })
 
 const goToLogin = () => {
@@ -162,8 +183,9 @@ const handleLogout = () => {
   router.push('/login')
 }
 
-const handleToggleDark = () => {
-  toggleDark()
+const handleThemeChange = (mode) => {
+  setThemeMode(mode)
+  themeMode.value = mode
   dark.value = isDark()
 }
 
@@ -179,9 +201,10 @@ const handleSetLang = (lang) => {
   left: 0;
   right: 0;
   height: 60px;
-  background-color: #409EFF;
+  background-color: var(--nav-bg);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   z-index: 1000;
+  transition: background-color 0.3s ease;
 }
 
 .header-container {
@@ -204,7 +227,7 @@ const handleSetLang = (lang) => {
 .header-left .logo {
   font-size: 24px;
   font-weight: bold;
-  color: #fff;
+  color: var(--nav-text);
   text-decoration: none;
 }
 
@@ -226,9 +249,20 @@ const handleSetLang = (lang) => {
   gap: 10px;
 }
 
+.theme-btn {
+  background: transparent;
+  border: none;
+  color: var(--nav-text);
+}
+
+.theme-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--nav-text);
+}
+
 .lang-switch {
   cursor: pointer;
-  color: #fff;
+  color: var(--nav-text);
   user-select: none;
 }
 
@@ -237,7 +271,7 @@ const handleSetLang = (lang) => {
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  color: #fff;
+  color: var(--nav-text);
 }
 
 .username {
@@ -246,10 +280,12 @@ const handleSetLang = (lang) => {
 
 :deep(.el-menu--horizontal) {
   border-bottom: none;
+  background-color: transparent;
 }
 
 :deep(.header-menu.el-menu--horizontal) {
   flex: 0 0 auto;
+  background-color: transparent;
 }
 
 :deep(.header-menu.el-menu--horizontal .el-menu-item) {
@@ -266,7 +302,7 @@ const handleSetLang = (lang) => {
 
 :deep(.header-menu.el-menu--horizontal .el-menu-item:not(.is-disabled):hover) {
   background-color: rgba(255, 255, 255, 0.15);
-  color: #fff !important;
+  color: var(--nav-text-hover) !important;
 }
 
 :deep(.header-menu.el-menu--horizontal .el-menu-item::after) {
@@ -274,9 +310,18 @@ const handleSetLang = (lang) => {
 }
 
 :deep(.header-menu.el-menu--horizontal .el-menu-item.is-active) {
-  background-color: rgba(255, 255, 255, 0.25);
-  color: #fff !important;
+  background-color: var(--nav-active-bg);
+  color: var(--nav-text-hover) !important;
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* 暗色模式下菜单样式调整 */
+html.dark .header-menu.el-menu--horizontal .el-menu-item {
+  color: var(--nav-text) !important;
+}
+
+html.dark .header-menu.el-menu--horizontal .el-menu-item:hover {
+  background-color: var(--nav-active-bg);
 }
 </style>

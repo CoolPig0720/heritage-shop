@@ -18,10 +18,13 @@ import Footer from '@/components/Footer.vue'
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background-color: var(--bg-page);
+  transition: background-color 0.3s ease;
 }
 
 .main-content {
   flex: 1;
   padding-top: 60px;
+  background-color: var(--bg-page);
 }
 </style>

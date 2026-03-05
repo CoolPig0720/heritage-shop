@@ -709,18 +709,20 @@ onMounted(() => {
 .profile {
   padding: 40px 20px;
   min-height: calc(100vh - 60px);
-  background: var(--app-bg);
+  background: var(--bg-page);
+  transition: background-color 0.3s ease;
 }
 
 .profile-container {
   max-width: 900px;
   margin: 0 auto;
-  background: #fff;
+  background: var(--card-bg);
   padding: 32px 40px;
   border-radius: var(--app-radius);
-  border: 1px solid var(--app-border);
-  min-height: 600px; /* Prevent jumping */
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--card-border);
+  min-height: 600px;
+  box-shadow: var(--card-shadow);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 /* Info Layout */
@@ -736,7 +738,7 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   flex-shrink: 0;
-  border-right: 1px solid var(--app-border);
+  border-right: 1px solid var(--border-color-base);
   padding-right: 40px;
 }
 
@@ -754,15 +756,15 @@ onMounted(() => {
   overflow: hidden;
   margin-bottom: 16px;
   cursor: pointer;
-  border: 4px solid #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 4px solid var(--card-bg);
+  box-shadow: 0 4px 12px var(--shadow-color);
 }
 
 .profile-avatar {
   width: 100%;
   height: 100%;
   font-size: 36px;
-  background: #409EFF;
+  background: var(--primary-color);
 }
 
 .avatar-mask {
@@ -794,8 +796,8 @@ onMounted(() => {
 
 .user-role-badge {
   padding: 4px 12px;
-  background: #ecf5ff;
-  color: #409EFF;
+  background: var(--btn-plain-primary-bg);
+  color: var(--btn-plain-primary-text);
   border-radius: 99px;
   font-size: 13px;
   font-weight: 500;
@@ -805,17 +807,17 @@ onMounted(() => {
 .section-title {
   font-size: 18px;
   font-weight: 600;
-  color: #303133;
+  color: var(--text-color-primary);
   margin-bottom: 24px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 1px solid var(--border-color-lighter);
 }
 
 /* Forms */
 .compact-form :deep(.el-form-item__label),
 .single-column-form :deep(.el-form-item__label) {
   font-weight: 500;
-  color: #606266;
+  color: var(--text-color-regular);
   padding-bottom: 8px;
 }
 
@@ -860,7 +862,7 @@ onMounted(() => {
   justify-content: flex-end;
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid var(--app-border);
+  border-top: 1px solid var(--border-color-base);
 }
 
 .address-item {
@@ -869,13 +871,14 @@ onMounted(() => {
   align-items: center;
   gap: 12px;
   padding: 16px;
-  border: 1px solid var(--app-border);
+  border: 1px solid var(--border-color-base);
   border-radius: var(--app-radius);
+  background: var(--card-bg);
   transition: all 0.2s;
 }
 
 .address-item:hover {
-  border-color: #409EFF;
+  border-color: var(--primary-color);
   box-shadow: 0 2px 12px rgba(64, 158, 255, 0.1);
 }
 
@@ -894,14 +897,15 @@ onMounted(() => {
 .address-item-name {
   font-weight: 600;
   font-size: 15px;
+  color: var(--text-color-primary);
 }
 
 .address-item-phone {
-  color: #606266;
+  color: var(--text-color-secondary);
 }
 
 .address-item-detail {
-  color: #606266;
+  color: var(--text-color-secondary);
   word-break: break-all;
   line-height: 1.5;
 }
@@ -911,6 +915,63 @@ onMounted(() => {
   gap: 8px;
   align-items: center;
   flex-shrink: 0;
+}
+
+.address-item-actions .el-button {
+  min-width: 60px;
+  font-weight: 500;
+}
+
+.address-item-actions .el-button--primary.is-plain {
+  color: #409EFF !important;
+  background-color: rgba(64, 158, 255, 0.1) !important;
+  border-color: rgba(64, 158, 255, 0.4) !important;
+}
+
+.address-item-actions .el-button--primary.is-plain:hover {
+  background-color: rgba(64, 158, 255, 0.2) !important;
+  border-color: #409EFF !important;
+}
+
+.address-item-actions .el-button--danger.is-plain {
+  color: #F56C6C !important;
+  background-color: rgba(245, 108, 108, 0.1) !important;
+  border-color: rgba(245, 108, 108, 0.4) !important;
+}
+
+.address-item-actions .el-button--danger.is-plain:hover {
+  background-color: rgba(245, 108, 108, 0.2) !important;
+  border-color: #F56C6C !important;
+}
+
+.address-item-actions .el-button--success.is-plain {
+  color: #67C23A !important;
+  background-color: rgba(103, 194, 58, 0.1) !important;
+  border-color: rgba(103, 194, 58, 0.4) !important;
+}
+
+.address-item-actions .el-button--success.is-plain:hover {
+  background-color: rgba(103, 194, 58, 0.2) !important;
+  border-color: #67C23A !important;
+}
+
+/* Dark mode button enhancements */
+html.dark .address-item-actions .el-button--primary.is-plain {
+  color: #79BBFF !important;
+  background-color: rgba(64, 158, 255, 0.15) !important;
+  border-color: rgba(64, 158, 255, 0.5) !important;
+}
+
+html.dark .address-item-actions .el-button--danger.is-plain {
+  color: #F89898 !important;
+  background-color: rgba(245, 108, 108, 0.15) !important;
+  border-color: rgba(245, 108, 108, 0.5) !important;
+}
+
+html.dark .address-item-actions .el-button--success.is-plain {
+  color: #95D475 !important;
+  background-color: rgba(103, 194, 58, 0.15) !important;
+  border-color: rgba(103, 194, 58, 0.5) !important;
 }
 
 /* Responsive */
@@ -923,7 +984,7 @@ onMounted(() => {
   .info-left {
     width: 100%;
     border-right: none;
-    border-bottom: 1px solid var(--app-border);
+    border-bottom: 1px solid var(--border-color-base);
     padding-right: 0;
     padding-bottom: 20px;
   }
