@@ -422,9 +422,89 @@ const getStatusClass = (status) => {
   gap: 12px;
 }
 
-.orders-tabs {
-  flex: 1;
-  min-width: 0;
+/* 暗色模式下的工具栏样式 */
+html.dark .orders-toolbar {
+  background: #2d2d2d;
+  border-color: #444;
+}
+
+/* 工具栏整体背景 - 更微妙 */
+.orders-toolbar {
+  background: rgba(245, 247, 250, 0.6) !important; /* 更透明 */
+  backdrop-filter: blur(10px); /* 添加模糊效果 */
+}
+
+html.dark .orders-toolbar {
+  background: rgba(45, 45, 45, 0.6) !important; /* 暗色模式下也更透明 */
+  backdrop-filter: blur(10px);
+}
+
+/* 强制重写 tab 样式 */
+.orders-tabs :deep(.el-tabs__nav-wrap) {
+  background-color: transparent !important;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.orders-tabs :deep(.el-tabs__item) {
+  transition: all 0.3s ease !important;
+  border-radius: 6px !important;
+  margin: 0 !important;  /* 移除margin */
+  padding: 0 16px !important;  /* 统一padding */
+  color: #606266 !important;
+  font-weight: normal !important;
+  position: relative !important;
+  border: none !important;
+  background: transparent !important;
+  height: 40px !important;  /* 统一高度 */
+  line-height: 40px !important;  /* 垂直居中 */
+}
+
+/* 暗色模式下的 tab 文字颜色 */
+html.dark .orders-tabs :deep(.el-tabs__item) {
+  color: #c0c4cc !important;
+}
+
+/* 激活状态的 tab - 更微妙的样式 */
+.orders-tabs :deep(.el-tabs__item.is-active) {
+  color: #409eff !important;
+  font-weight: 500 !important;
+  background-color: rgba(64, 158, 255, 0.05) !important; /* 降低透明度 */
+}
+
+/* 暗色模式下激活 tab */
+html.dark .orders-tabs :deep(.el-tabs__item.is-active) {
+  color: #409eff !important;
+  background-color: rgba(64, 158, 255, 0.08) !important; /* 暗色模式下稍深一点 */
+}
+
+/* hover 状态 */
+.orders-tabs :deep(.el-tabs__item:hover) {
+  color: #409eff !important;
+  background-color: rgba(64, 158, 255, 0.03) !important;
+}
+
+/* 暗色模式下 hover */
+html.dark .orders-tabs :deep(.el-tabs__item:hover) {
+  background-color: rgba(64, 158, 255, 0.05) !important;
+}
+
+/* 底部指示线 - 修复宽度问题 */
+.orders-tabs :deep(.el-tabs__active-bar) {
+  display: none !important;
+}
+
+.orders-tabs :deep(.el-tabs__item.is-active)::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;  /* 改为从左侧开始 */
+  transform: none !important;  /* 移除transform */
+  width: 100% !important;  /* 全宽 */
+  height: 1px !important;
+  background-color: #409eff !important;
+  border-radius: 1px !important;
+  opacity: 0.7 !important;
 }
 
 .orders-tabs :deep(.el-tabs__header) {
@@ -455,6 +535,21 @@ const getStatusClass = (status) => {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
+/* 暗色模式下的卡片样式 */
+html.dark .order-card {
+  border-color: #444;
+  background-color: #2d2d2d;
+}
+
+html.dark .order-card :deep(.el-card__header) {
+  background-color: #333;
+  border-color: #444;
+}
+
+html.dark .order-card :deep(.el-card__body) {
+  background-color: #2d2d2d;
+}
+
 .order-card:hover {
   transform: translateY(-1px);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
@@ -483,9 +578,18 @@ const getStatusClass = (status) => {
   white-space: nowrap;
 }
 
+/* 暗色模式下的文字颜色 */
+html.dark .order-no {
+  color: #e5eaf3;
+}
+
 .order-time {
   font-size: 12px;
   color: #909399;
+}
+
+html.dark .order-time {
+  color: #a3a6ad;
 }
 
 .order-meta {
@@ -507,11 +611,19 @@ const getStatusClass = (status) => {
   flex-shrink: 0;
 }
 
+html.dark .meta-label {
+  color: #a3a6ad;
+}
+
 .meta-value {
   flex: 1;
   color: #606266;
   font-size: 12px;
   word-break: break-all;
+}
+
+html.dark .meta-value {
+  color: #c0c4cc;
 }
 
 .order-items {
@@ -577,12 +689,20 @@ const getStatusClass = (status) => {
   font-variant-numeric: tabular-nums;
 }
 
+html.dark .item-subtotal {
+  color: #f56c6c;
+}
+
 .order-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding-top: 12px;
   border-top: 1px solid #ebeef5;
+}
+
+html.dark .order-footer {
+  border-color: #444;
 }
 
 .order-total {
@@ -596,11 +716,19 @@ const getStatusClass = (status) => {
   color: #909399;
 }
 
+html.dark .total-label {
+  color: #a3a6ad;
+}
+
 .total-value {
   font-size: 18px;
   color: #303133;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
+}
+
+html.dark .total-value {
+  color: #e5eaf3;
 }
 
 .order-actions {

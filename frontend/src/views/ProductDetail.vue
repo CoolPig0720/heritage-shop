@@ -26,19 +26,19 @@
                   <span class="price">{{ product.price }}</span>
                 </div>
                 <el-tag :type="product.status === 1 ? 'success' : 'info'" effect="plain" class="status-tag">
-                  {{ product.status === 1 ? '上架销售中' : '已下架' }}
+                  {{ product.status === 1 ? '在售' : '已下架' }}
                 </el-tag>
               </div>
             </div>
 
             <div class="product-description-preview">
-              <h3>商品简介</h3>
-              <p>{{ product.description }}</p>
+              <h3>商品描述</h3>
+              <p><TransText :text="product.description" /></p>
             </div>
 
             <div class="digital-assets-buttons">
               <el-button v-if="product.traceQrUrl" @click="qrDialogVisible = true">
-                <el-icon><View /></el-icon> 查看溯源二维码
+                <el-icon><View /></el-icon> 查看溯源码
               </el-button>
               <el-button v-if="product.model3dUrl" @click="modelDialogVisible = true">
                 <el-icon><View /></el-icon> 查看3D模型
@@ -60,7 +60,7 @@
       </el-card>
 
       <!-- Traceability QR Code Dialog -->
-      <el-dialog v-model="qrDialogVisible" title="商品溯源信息" width="600px" align-center>
+      <el-dialog v-model="qrDialogVisible" title="溯源信息" width="600px" align-center>
         <div class="dialog-content">
           <div class="qr-display">
              <el-image :src="product.traceQrUrl" fit="contain" class="qr-dialog-image" />
@@ -78,7 +78,7 @@
       </el-dialog>
 
       <!-- 3D Model Dialog -->
-      <el-dialog v-model="modelDialogVisible" title="3D 模型预览" width="800px" align-center class="model-dialog">
+      <el-dialog v-model="modelDialogVisible" title="3D模型" width="800px" align-center class="model-dialog">
         <div class="dialog-content">
           <model-viewer
             class="model3d-viewer"
@@ -93,7 +93,7 @@
             @load="handleModelLoad"
             @error="handleModelError"
           />
-          <div v-if="modelViewerLoading" class="model3d-loading">模型加载中...</div>
+          <div v-if="modelViewerLoading" class="model3d-loading">加载中...</div>
           <div v-if="modelViewerError" class="model3d-error">{{ modelViewerError }}</div>
         </div>
         <template #footer>

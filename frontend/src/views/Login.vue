@@ -3,20 +3,20 @@
     <div class="login-wrapper">
       <div class="login-left">
         <div class="login-left-content">
-          <h1 class="login-title">{{ $t('login.title') }}</h1>
-          <p class="login-subtitle">{{ $t('login.subtitle') }}</p>
+          <h1 class="login-title">非遗商城</h1>
+          <p class="login-subtitle">传承非遗文化，定制专属记忆</p>
           <div class="login-features">
             <div class="feature-item">
               <el-icon :size="30"><User /></el-icon>
-              <span>{{ $t('login.featureSafe') }}</span>
+              <span>安全登录</span>
             </div>
             <div class="feature-item">
               <el-icon :size="30"><Lock /></el-icon>
-              <span>{{ $t('login.featurePrivacy') }}</span>
+              <span>隐私保护</span>
             </div>
             <div class="feature-item">
               <el-icon :size="30"><ShoppingCart /></el-icon>
-              <span>{{ $t('login.featureShop') }}</span>
+              <span>畅快购物</span>
             </div>
           </div>
         </div>
@@ -36,14 +36,14 @@
               <span class="lang-switch">{{ langLabel }}</span>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item command="zh">{{ $t('header.langZh') }}</el-dropdown-item>
-                  <el-dropdown-item command="en">{{ $t('header.langEn') }}</el-dropdown-item>
+                  <el-dropdown-item command="zh">中文</el-dropdown-item>
+                  <el-dropdown-item command="en">EN</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
           </div>
 
-          <h2 class="login-card-title">{{ isLogin ? $t('login.cardLoginTitle') : $t('login.cardRegisterTitle') }}</h2>
+          <h2 class="login-card-title">{{ isLogin ? '登录' : '注册' }}</h2>
           
           <el-form 
             v-if="isLogin"
@@ -55,7 +55,7 @@
             <el-form-item prop="account">
               <el-input
                 v-model="loginForm.account"
-                :placeholder="$t('login.accountPlaceholder')"
+                placeholder="请输入账号"
                 prefix-icon="User"
                 size="large"
                 clearable
@@ -66,7 +66,7 @@
               <el-input
                 v-model="loginForm.password"
                 type="password"
-                :placeholder="$t('login.passwordPlaceholder')"
+                placeholder="请输入密码"
                 prefix-icon="Lock"
                 size="large"
                 show-password
@@ -78,7 +78,7 @@
               <div class="captcha-wrapper">
                 <el-input
                   v-model="loginForm.captcha"
-                  :placeholder="$t('login.captchaPlaceholder')"
+                  placeholder="请输入验证码"
                   prefix-icon="Key"
                   size="large"
                   clearable
@@ -99,7 +99,7 @@
                 size="large"
                 class="login-button"
               >
-                {{ $t('login.login') }}
+                登录
               </el-button>
             </el-form-item>
           </el-form>
@@ -192,18 +192,18 @@
                 size="large"
                 class="login-button"
               >
-                {{ $t('login.register') }}
+                注册
               </el-button>
             </el-form-item>
           </el-form>
           
           <div class="login-footer">
             <el-checkbox v-model="rememberPassword" class="remember-checkbox">
-              {{ $t('login.remember') }}
+              记住密码
             </el-checkbox>
-            <span class="footer-text">{{ isLogin ? $t('login.noAccount') : $t('login.hasAccount') }}</span>
+            <span class="footer-text">{{ isLogin ? '还没有账号？' : '已有账号？' }}</span>
             <a href="javascript:void(0)" @click="toggleMode" class="footer-link">
-              {{ isLogin ? $t('login.switchToRegister') : $t('login.switchToLogin') }}
+              {{ isLogin ? '立即注册' : '立即登录' }}
             </a>
           </div>
         </div>

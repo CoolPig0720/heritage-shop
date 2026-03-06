@@ -9,6 +9,7 @@ import router from './router'
 import './styles/main.scss'
 import { i18n, getElementLocale } from '@/i18n'
 import { initTheme } from '@/utils/theme'
+import TransText from '@/components/TransText.vue'
 
 // 初始化主题（必须在应用挂载前执行）
 initTheme()
@@ -19,6 +20,9 @@ const pinia = createPinia()
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
+
+// 全局注册翻译组件
+app.component('TransText', TransText)
 
 app.use(pinia)
 app.use(router)

@@ -3,7 +3,7 @@
     <div class="header-container">
       <div class="header-left">
         <router-link to="/" class="logo">
-          <span>{{ $t('header.brand') }}</span>
+          <span>非遗商城</span>
         </router-link>
       </div>
       <div class="header-center">
@@ -14,10 +14,10 @@
           router
           :ellipsis="false"
         >
-          <el-menu-item index="/home">{{ $t('header.home') }}</el-menu-item>
-          <el-menu-item index="/products">{{ $t('header.products') }}</el-menu-item>
-          <el-menu-item index="/heritage">{{ $t('header.heritage') }}</el-menu-item>
-          <el-menu-item index="/customize">{{ $t('header.customize') }}</el-menu-item>
+          <el-menu-item index="/home">首页</el-menu-item>
+          <el-menu-item index="/products">商品列表</el-menu-item>
+          <el-menu-item index="/heritage">非遗文化</el-menu-item>
+          <el-menu-item index="/customize">智能定制</el-menu-item>
         </el-menu>
       </div>
       <div class="header-right">
@@ -45,8 +45,8 @@
           <span class="lang-switch">{{ langLabel }}</span>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item command="zh">{{ $t('header.langZh') }}</el-dropdown-item>
-              <el-dropdown-item command="en">{{ $t('header.langEn') }}</el-dropdown-item>
+              <el-dropdown-item command="zh">中文</el-dropdown-item>
+              <el-dropdown-item command="en">EN</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -61,20 +61,20 @@
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item @click="goToProfile">{{ $t('header.profile') }}</el-dropdown-item>
-                <el-dropdown-item @click="goToCart">{{ $t('header.cart') }}</el-dropdown-item>
-                <el-dropdown-item @click="goToOrders">{{ $t('header.orders') }}</el-dropdown-item>
-                <el-dropdown-item v-if="canGoUsers" @click="goToUsers" :divided="true">{{ $t('header.users') }}</el-dropdown-item>
-                <el-dropdown-item v-if="canGoProducts" @click="goToManageProducts" :divided="!canGoUsers">{{ $t('header.manageProducts') }}</el-dropdown-item>
-                <el-dropdown-item v-if="canGoHeritageManage" @click="goToManageHeritage">{{ $t('header.manageHeritage') }}</el-dropdown-item>
-                <el-dropdown-item divided @click="handleLogout">{{ $t('header.logout') }}</el-dropdown-item>
+                <el-dropdown-item @click="goToProfile">个人中心</el-dropdown-item>
+                <el-dropdown-item @click="goToCart">购物车</el-dropdown-item>
+                <el-dropdown-item @click="goToOrders">我的订单</el-dropdown-item>
+                <el-dropdown-item v-if="canGoUsers" @click="goToUsers" :divided="true">用户管理</el-dropdown-item>
+                <el-dropdown-item v-if="canGoProducts" @click="goToManageProducts" :divided="!canGoUsers">商品管理</el-dropdown-item>
+                <el-dropdown-item v-if="canGoHeritageManage" @click="goToManageHeritage">非遗管理</el-dropdown-item>
+                <el-dropdown-item divided @click="handleLogout">退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
         </template>
         <template v-else>
-          <el-button type="primary" @click="goToLogin">{{ $t('header.login') }}</el-button>
-          <el-button @click="goToRegister">{{ $t('header.register') }}</el-button>
+          <el-button type="primary" @click="goToLogin">登录</el-button>
+          <el-button @click="goToRegister">注册</el-button>
         </template>
       </div>
     </div>
@@ -82,7 +82,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
@@ -91,6 +91,7 @@ import { Moon, Sunny, Monitor } from '@element-plus/icons-vue'
 import { i18n } from '@/i18n'
 import { getThemeMode, setThemeMode, isDark, initTheme, ThemeMode } from '@/utils/theme'
 import { setLang } from '@/utils/lang'
+import { translatePageToEnglish, restorePageToChinese } from '@/utils/autoTranslate'
 
 const router = useRouter()
 const route = useRoute()
@@ -106,6 +107,31 @@ const canGoHeritageManage = computed(() => role.value === 'ADMIN')
 const themeMode = ref(getThemeMode())
 const dark = ref(isDark())
 const langLabel = computed(() => (i18n.global.locale.value === 'zh' ? '中文' : 'EN'))
+
+// 监听语言变化，自动翻译页面
+watch(() => i18n.global.locale.value, async (newLang, oldLang) => {
+  if (newLang !== oldLang) {
+    if (newLang === 'en') {
+      // 切换到英文时，自动翻译页面
+      try {
+        await translatePageToEnglish()
+        ElMessage.success('页面已自动翻译为英文')
+      } catch (error) {
+        console.error('自动翻译失败:', error)
+        ElMessage.error('自动翻译失败')
+      }
+    } else {
+      // 切换到中文时，恢复原始中文文本
+      try {
+        await restorePageToChinese()
+        ElMessage.info('已恢复为中文')
+      } catch (error) {
+        console.error('中文恢复失败:', error)
+        ElMessage.error('中文恢复失败')
+      }
+    }
+  }
+})
 
 // 主题图标
 const themeIcon = computed(() => {

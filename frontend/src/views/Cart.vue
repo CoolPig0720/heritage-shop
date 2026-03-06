@@ -10,10 +10,10 @@
           <template #header>
             <div class="cart-card-header">
               <div class="header-left">
-                <div class="header-title">商品清单</div>
-                <div class="header-subtitle">已选 {{ selectedCount }} 件</div>
+                <div class="header-title">购物车</div>
+                <div class="header-subtitle">已选择 {{ selectedCount }} 件</div>
               </div>
-              <el-button size="small" :loading="loading || updating" @click="fetchCart">刷新</el-button>
+              <el-button size="small" :loading="loading || updating" @click="fetchCart">重置</el-button>
             </div>
             <div class="cart-table-header">
               <div class="col product">商品</div>
@@ -39,10 +39,10 @@
                 </el-image>
                 <div class="item-info">
                   <div class="item-name">
-                    <span>{{ item.productName }}</span>
+                    <span><TransText :text="item.productName" /></span>
                     <el-tag v-if="item.disabled" size="small" type="info">已下架</el-tag>
                   </div>
-                  <div class="item-meta">商品ID：{{ item.productId }}</div>
+                  <div class="item-meta">ID：{{ item.productId }}</div>
                 </div>
               </div>
 
@@ -87,15 +87,15 @@
         <div class="cart-footer">
           <div class="total">
             <div class="total-line">
-              <span class="label">合计</span>
+              <span class="label">总计</span>
               <span class="price">¥{{ totalPrice }}</span>
             </div>
-            <div class="total-hint">仅计算已选商品</div>
+            <div class="total-hint">已选择</div>
           </div>
           <el-button type="primary" :loading="creatingOrder" :disabled="selectedCount === 0" @click="checkout">去结算</el-button>
         </div>
       </div>
-      <el-empty v-else description="购物车为空" />
+      <el-empty v-else description="购物车空空如也" />
     </div>
 
     <el-dialog v-model="addressDialogVisible" title="选择收货地址" width="640px">

@@ -2,8 +2,8 @@
   <div class="customize">
     <div class="hero">
       <div class="hero-inner">
-        <div class="hero-title">智能定制</div>
-        <div class="hero-subtitle">AI 助力，打造专属非遗产品</div>
+        <div class="hero-title">非遗智能定制</div>
+        <div class="hero-subtitle">上传图片，AI智能生成个性化定制方案</div>
         <div class="hero-actions">
           <el-button @click="openHistoryDialog">历史记录</el-button>
         </div>
@@ -16,8 +16,8 @@
         <div class="customize-content">
           <div class="card upload-section">
             <div class="card-header">
-              <div class="card-title">上传参考图</div>
-              <div class="card-desc">支持jpg/jpeg/png/bmp/webp，长宽≤5000</div>
+              <div class="card-title">上传图片</div>
+              <div class="card-desc">支持 jpg、png、bmp、webp 格式，最大 10MB</div>
             </div>
             <el-upload
               class="upload"
@@ -32,10 +32,10 @@
               :on-exceed="handleExceed"
             >
               <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
-              <div class="el-upload__text">拖拽图片到此处或 <em>点击上传</em></div>
+              <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
               <template #tip>
                 <div class="el-upload__tip">
-                  支持jpg、jpeg、png、bmp、webp，图片长宽≤5000，base64编码后≤8MB
+                  支持 jpg、png、bmp、webp 格式，最大 10MB
                 </div>
               </template>
             </el-upload>
@@ -47,17 +47,17 @@
 
           <div class="card options-section">
             <div class="card-header">
-              <div class="card-title">图生图参数</div>
-              <div class="card-desc">调节生成自由度、尺寸与数量</div>
+              <div class="card-title">生成参数</div>
+              <div class="card-desc">调整参数以获得更好的生成效果</div>
             </div>
             <el-form :model="img2imgForm" label-width="110px" class="form">
               <el-form-item>
                 <template #label>
                   <span class="form-label" @click.prevent>
-                    画质增强
+                    高清增强
                     <el-tooltip placement="top" effect="dark">
                       <template #content>
-                        开启后将增强生成图的清晰度与画质细节，生成耗时可能增加。
+                        增强图像清晰度，提升细节表现
                       </template>
                       <el-icon class="help-icon" @click.prevent.stop><QuestionFilled /></el-icon>
                     </el-tooltip>
@@ -72,7 +72,7 @@
                     面部优化
                     <el-tooltip placement="top" effect="dark">
                       <template #content>
-                        对生成结果中的人脸区域进行细节优化。适合人像场景，耗时可能增加。
+                        优化面部细节，使人物更加自然
                       </template>
                       <el-icon class="help-icon" @click.prevent.stop><QuestionFilled /></el-icon>
                     </el-tooltip>

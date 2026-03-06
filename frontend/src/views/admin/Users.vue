@@ -7,7 +7,7 @@
         <div class="search-filters">
           <el-input
             v-model="searchName"
-            placeholder="按名称筛选"
+            placeholder="按用户名搜索"
             class="search-input"
             clearable
             @clear="handleSearch"
@@ -53,7 +53,7 @@
                 {{ row.name?.charAt(0) || 'U' }}
               </el-avatar>
               <div class="user-details">
-                <div class="user-name">{{ row.name }}</div>
+                <div class="user-name"><TransText :text="row.name" /></div>
                 <div class="user-account">账号：{{ row.account }}</div>
               </div>
             </div>

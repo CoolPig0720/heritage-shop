@@ -9,18 +9,18 @@
       <el-card class="detail-card" shadow="never">
         <div class="header">
           <div class="title-area">
-            <h1 class="title">{{ detail.name || '项目详情' }}</h1>
+            <h1 class="title"><TransText :text="detail.name" :enabled="!!detail.name" />{{ !detail.name ? '项目详情' : '' }}</h1>
             <div class="meta">
-              <el-tag v-if="detail.categoryName" type="info">{{ detail.categoryName }}</el-tag>
-              <span v-if="detail.applyUnit" class="meta-item">申报单位或地区：{{ detail.applyUnit }}</span>
-              <span v-if="detail.protectUnit" class="meta-item">保护单位：{{ detail.protectUnit }}</span>
+              <el-tag v-if="detail.categoryName" type="info"><TransText :text="detail.categoryName" /></el-tag>
+              <span v-if="detail.applyUnit" class="meta-item">申报单位或地区：<TransText :text="detail.applyUnit" /></span>
+              <span v-if="detail.protectUnit" class="meta-item">保护单位：<TransText :text="detail.protectUnit" /></span>
             </div>
           </div>
         </div>
 
         <div v-if="detail.description" class="block">
-          <h3 class="block-title">项目介绍</h3>
-          <div class="text">{{ detail.description }}</div>
+          <h3 class="block-title">项目简介</h3>
+          <div class="text"><TransText :text="detail.description" /></div>
         </div>
 
         <div v-if="detail.id" class="block">

@@ -185,7 +185,7 @@
             <div class="certificate-status-wrapper" v-if="isCertified || certificateInfo">
               <el-alert
                 v-if="isCertified"
-                :title="`认证状态：${certificateStatusText}`"
+                :title="`认证状态：${certificateStatusText}`""
                 type="success"
                 :closable="false"
                 show-icon

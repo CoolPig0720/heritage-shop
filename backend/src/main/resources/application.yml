@@ -57,3 +57,5 @@ file:
   upload:
     path: uploads
   public-base-url: ${PUBLIC_BASE_URL:}
+
+

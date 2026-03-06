@@ -2,8 +2,8 @@
   <div class="home">
     <div class="banner">
       <div class="banner-content">
-        <h1 class="banner-title">非遗产品智能定制商城</h1>
-        <p class="banner-subtitle">传承千年文化，定制专属非遗</p>
+        <h1 class="banner-title">非遗商城</h1>
+        <p class="banner-subtitle">传承非遗文化，定制专属记忆</p>
         <div class="banner-buttons">
           <el-button type="primary" size="large" @click="goToProducts" class="banner-btn">
             <el-icon><ShoppingCart /></el-icon>
@@ -19,35 +19,35 @@
     
     <div class="features-section">
       <div class="section-container">
-        <h2 class="section-title">我们的特色</h2>
+        <h2 class="section-title">特色功能</h2>
         <div class="features-grid">
           <div class="feature-card">
             <div class="feature-icon">
               <el-icon :size="40"><Star /></el-icon>
             </div>
-            <h3>非遗精品</h3>
-            <p>精选全国优质非遗产品，传承传统工艺</p>
+            <h3>非遗传承</h3>
+            <p>精选国家级非遗项目，传承传统文化</p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">
               <el-icon :size="40"><MagicStick /></el-icon>
             </div>
-            <h3>智能定制</h3>
-            <p>AI辅助设计，打造独一无二的专属产品</p>
+            <h3>AI定制</h3>
+            <p>智能生成个性化定制方案</p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">
               <el-icon :size="40"><Trophy /></el-icon>
             </div>
             <h3>品质保证</h3>
-            <p>严格品控，确保每件产品都是精品</p>
+            <p>严选优质非遗产品，品质保障</p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">
               <el-icon :size="40"><Van /></el-icon>
             </div>
             <h3>快速配送</h3>
-            <p>全国包邮，安全快捷的物流服务</p>
+            <p>全国配送，安全送达</p>
           </div>
         </div>
       </div>
@@ -66,8 +66,8 @@
               <div class="product-badge">推荐</div>
             </div>
             <div class="product-info">
-              <h3 class="product-name">{{ product.name }}</h3>
-              <p class="product-desc">{{ product.description || '暂无描述' }}</p>
+              <h3 class="product-name"><TransText :text="product.name" /></h3>
+              <p class="product-desc"><TransText :text="product.description" :enabled="!!product.description" />{{ !product.description ? '暂无描述' : '' }}</p>
               <div class="product-footer">
                 <span class="price">¥{{ product.price }}</span>
               </div>
@@ -83,8 +83,8 @@
     <div class="heritage-section">
       <div class="section-container">
         <div class="section-header">
-          <h2 class="section-title">非遗文化</h2>
-          <el-button type="primary" link @click="goToHeritage">了解更多 <el-icon><ArrowRight /></el-icon></el-button>
+          <h2 class="section-title">非遗项目</h2>
+          <el-button type="primary" link @click="goToHeritage">查看全部 <el-icon><ArrowRight /></el-icon></el-button>
         </div>
         <div v-loading="heritageLoading" class="heritage-grid">
           <div v-for="item in heritageItems" :key="item.id" class="heritage-card" @click="goToHeritage">
@@ -92,16 +92,16 @@
               <div class="heritage-icon">
                 <el-icon :size="34"><CollectionTag /></el-icon>
               </div>
-              <div class="heritage-title">{{ item.name }}</div>
+              <div class="heritage-title"><TransText :text="item.name" /></div>
             </div>
             <div class="heritage-info">
-              <p>{{ item.description }}</p>
-              <div class="heritage-meta">{{ item.meta }}</div>
+              <p><TransText :text="item.description" /></p>
+              <div class="heritage-meta"><TransText :text="item.meta" /></div>
             </div>
           </div>
         </div>
         <div v-if="!heritageLoading && heritageItems.length === 0" class="empty">
-          <el-empty description="暂无非遗分类" />
+          <el-empty description="暂无数据" />
         </div>
       </div>
     </div>

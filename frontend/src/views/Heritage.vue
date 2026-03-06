@@ -9,7 +9,7 @@
         <div class="filter-row">
           <el-select
             v-model="selectedCategoryId"
-            placeholder="类型"
+            placeholder="分类"
             clearable
             filterable
             style="width: 240px"
@@ -22,7 +22,7 @@
 
           <el-input
             v-model="keyword"
-            placeholder="关键词：项目名称"
+            placeholder="项目名称"
             clearable
             style="width: 320px"
             @keyup.enter="handleSearch"
@@ -37,11 +37,11 @@
 
         <el-table v-loading="loading" :data="records" style="width: 100%">
           <el-table-column label="序号" width="90" :index="indexMethod" type="index" />
-          <el-table-column prop="categoryName" label="类型" width="180" />
+          <el-table-column prop="categoryName" label="分类" width="180" />
           <el-table-column label="项目名称" min-width="220">
             <template #default="{ row }">
               <el-link type="primary" :underline="false" @click="goProject(row.id)">
-                {{ row.name }}
+                <TransText :text="row.name" />
               </el-link>
             </template>
           </el-table-column>
@@ -49,19 +49,27 @@
             <template #default="{ row }">
               <template v-if="row.inheritors && row.inheritors.length > 0">
                 <span v-for="(p, idx) in row.inheritors" :key="p.id">
-                  <el-link type="primary" :underline="false" @click="goInheritor(p.id)">{{ p.name }}</el-link>
+                  <el-link type="primary" :underline="false" @click="goInheritor(p.id)"><TransText :text="p.name" /></el-link>
                   <span v-if="idx < row.inheritors.length - 1">、</span>
                 </span>
               </template>
-              <span v-else>暂无</span>
+              <span v-else>暂无数据</span>
             </template>
           </el-table-column>
-          <el-table-column prop="applyUnit" label="申报单位或地区" min-width="180" show-overflow-tooltip />
-          <el-table-column prop="protectUnit" label="保护单位" min-width="180" show-overflow-tooltip />
+          <el-table-column prop="applyUnit" label="申报单位或地区" min-width="180" show-overflow-tooltip>
+            <template #default="{ row }">
+              <TransText :text="row.applyUnit" />
+            </template>
+          </el-table-column>
+          <el-table-column prop="protectUnit" label="保护单位" min-width="180" show-overflow-tooltip>
+            <template #default="{ row }">
+              <TransText :text="row.protectUnit" />
+            </template>
+          </el-table-column>
           <el-table-column label="操作" width="100" align="right" header-align="right">
             <template #default="{ row }">
               <div class="row-actions row-actions--right">
-                <el-button type="primary" plain round size="small" @click="goProject(row.id)">查看</el-button>
+                <el-button type="primary" plain round size="small" @click="goProject(row.id)">查看详情</el-button>
               </div>
             </template>
           </el-table-column>
