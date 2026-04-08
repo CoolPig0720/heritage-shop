@@ -46,7 +46,6 @@ jwt:
 #     secret-key: ${TENCENTCLOUD_SECRET_KEY:}
 #     region: ${TENCENTCLOUD_REGION:ap-guangzhou}
 #     endpoint: ${TENCENTCLOUD_ENDPOINT:aiart.tencentcloudapi.com}
-# 百度翻译API配置
 
 knife4j:
   enable: true
