@@ -13,7 +13,12 @@
                 <div class="header-title">购物车</div>
                 <div class="header-subtitle">已选择 {{ selectedCount }} 件</div>
               </div>
-              <el-button size="small" :loading="loading || updating" @click="fetchCart">重置</el-button>
+              <el-button
+                size="small"
+                :loading="loading || updating"
+                @click="fetchCart"
+                >重置</el-button
+              >
             </div>
             <div class="cart-table-header">
               <div class="col product">商品</div>
@@ -25,22 +30,37 @@
           </template>
 
           <div class="cart-list">
-            <div v-for="item in pagedCartItems" :key="item.id" class="cart-item" :class="{ disabled: item.disabled }">
+            <div
+              v-for="item in pagedCartItems"
+              :key="item.id"
+              class="cart-item"
+              :class="{ disabled: item.disabled }"
+            >
               <div class="col product">
                 <el-checkbox
                   v-model="item.selected"
                   :disabled="updating || item.disabled"
                   @change="(val) => handleToggleSelected(item, val)"
                 />
-                <el-image class="item-image" :src="item.coverImageUrl || PLACEHOLDER_IMAGE" fit="cover">
+                <el-image
+                  class="item-image"
+                  :src="item.coverImageUrl || PLACEHOLDER_IMAGE"
+                  fit="cover"
+                >
                   <template #error>
-                    <img class="item-image-fallback" :src="PLACEHOLDER_IMAGE" alt="" />
+                    <img
+                      class="item-image-fallback"
+                      :src="PLACEHOLDER_IMAGE"
+                      alt=""
+                    />
                   </template>
                 </el-image>
                 <div class="item-info">
                   <div class="item-name">
                     <span><TransText :text="item.productName" /></span>
-                    <el-tag v-if="item.disabled" size="small" type="info">已下架</el-tag>
+                    <el-tag v-if="item.disabled" size="small" type="info"
+                      >已下架</el-tag
+                    >
                   </div>
                   <div class="item-meta">ID：{{ item.productId }}</div>
                 </div>
@@ -63,17 +83,26 @@
               </div>
 
               <div class="col subtotal">
-                <span class="money strong">¥{{ formatMoney(itemSubtotal(item)) }}</span>
+                <span class="money strong"
+                  >¥{{ formatMoney(itemSubtotal(item)) }}</span
+                >
               </div>
 
               <div class="col ops">
-                <el-button type="danger" size="small" plain round :loading="updating" @click="removeItem(item)">
+                <el-button
+                  type="danger"
+                  size="small"
+                  plain
+                  round
+                  :loading="updating"
+                  @click="removeItem(item)"
+                >
                   <el-icon><Delete /></el-icon>
                   删除
                 </el-button>
               </div>
             </div>
-            
+
             <div class="pagination-container">
               <AppPagination
                 v-model:current-page="cartCurrentPage"
@@ -92,17 +121,29 @@
             </div>
             <div class="total-hint">已选择</div>
           </div>
-          <el-button type="primary" :loading="creatingOrder" :disabled="selectedCount === 0" @click="checkout">去结算</el-button>
+          <el-button
+            type="primary"
+            :loading="creatingOrder"
+            :disabled="selectedCount === 0"
+            @click="checkout"
+            >去结算</el-button
+          >
         </div>
       </div>
       <el-empty v-else description="购物车空空如也" />
     </div>
 
-    <el-dialog v-model="addressDialogVisible" title="选择收货地址" width="640px">
+    <el-dialog
+      v-model="addressDialogVisible"
+      title="选择收货地址"
+      width="640px"
+    >
       <el-skeleton v-if="addressLoading" :rows="5" animated />
 
       <el-empty v-else-if="addresses.length === 0" description="暂无地址">
-        <el-button type="primary" @click="goManageAddress">去添加地址</el-button>
+        <el-button type="primary" @click="goManageAddress"
+          >去添加地址</el-button
+        >
       </el-empty>
 
       <div v-else class="address-list">
@@ -112,10 +153,19 @@
               <div class="address-item-main">
                 <div class="address-item-title">
                   <span class="address-item-name">{{ addr.receiverName }}</span>
-                  <span class="address-item-phone">{{ addr.receiverPhone }}</span>
-                  <el-tag v-if="addr.isDefault === 1" type="success" size="small">默认</el-tag>
+                  <span class="address-item-phone">{{
+                    addr.receiverPhone
+                  }}</span>
+                  <el-tag
+                    v-if="addr.isDefault === 1"
+                    type="success"
+                    size="small"
+                    >默认</el-tag
+                  >
                 </div>
-                <div class="address-item-detail">{{ formatAddressLine(addr) }}</div>
+                <div class="address-item-detail">
+                  {{ formatAddressLine(addr) }}
+                </div>
               </div>
             </el-radio>
           </div>
@@ -124,191 +174,211 @@
 
       <template #footer>
         <el-button @click="addressDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="creatingOrder" :disabled="!selectedAddressId" @click="submitOrder">提交订单</el-button>
+        <el-button
+          type="primary"
+          :loading="creatingOrder"
+          :disabled="!selectedAddressId"
+          @click="submitOrder"
+          >提交订单</el-button
+        >
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Delete } from '@element-plus/icons-vue'
-import AppPagination from '@/components/AppPagination.vue'
-import { deleteCartItem, listCartItems, updateCartItemQuantity, updateCartItemSelected } from '@/api/cart'
-import { createOrder } from '@/api/order'
-import { listAddresses } from '@/api/auth'
+import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { Delete } from "@element-plus/icons-vue";
+import AppPagination from "@/components/AppPagination.vue";
+import {
+  deleteCartItem,
+  listCartItems,
+  updateCartItemQuantity,
+  updateCartItemSelected,
+} from "@/api/cart";
+import { createOrder } from "@/api/order";
+import { listAddresses } from "@/api/auth";
+import { getImageUrl } from "@/config/api.js";
 
 const PLACEHOLDER_IMAGE =
-  'data:image/svg+xml;charset=utf-8,' +
+  "data:image/svg+xml;charset=utf-8," +
   encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
       <rect width="600" height="400" fill="#f5f7fa"/>
       <path d="M160 280l80-100 70 80 60-60 110 140H160z" fill="#dcdfe6"/>
       <circle cx="240" cy="160" r="28" fill="#dcdfe6"/>
       <text x="300" y="330" text-anchor="middle" font-size="18" fill="#909399">暂无图片</text>
-    </svg>`
-  )
+    </svg>`,
+  );
 
-const router = useRouter()
+const router = useRouter();
 
-const loading = ref(false)
-const updating = ref(false)
-const cartItems = ref([])
-const cartCurrentPage = ref(1)
-const cartPageSize = ref(5)
+const loading = ref(false);
+const updating = ref(false);
+const cartItems = ref([]);
+const cartCurrentPage = ref(1);
+const cartPageSize = ref(5);
 
 const pagedCartItems = computed(() => {
-  const start = (cartCurrentPage.value - 1) * cartPageSize.value
-  const end = start + cartPageSize.value
-  return cartItems.value.slice(start, end)
-})
+  const start = (cartCurrentPage.value - 1) * cartPageSize.value;
+  const end = start + cartPageSize.value;
+  return cartItems.value.slice(start, end);
+});
 
-const addressDialogVisible = ref(false)
-const addressLoading = ref(false)
-const addresses = ref([])
-const selectedAddressId = ref(null)
-const creatingOrder = ref(false)
+const addressDialogVisible = ref(false);
+const addressLoading = ref(false);
+const addresses = ref([]);
+const selectedAddressId = ref(null);
+const creatingOrder = ref(false);
 
 const normalizeUrl = (url) => {
-  if (!url) return ''
-  if (url.startsWith('http')) return url
-  return `http://localhost:8080${url}`
-}
+  return getImageUrl(url);
+};
 
 const formatAddressLine = (item) => {
-  const region = item.regionNamePath || `${item.province || ''}${item.city || ''}${item.district || ''}`
-  return `${region}${item.detailAddress || ''}`
-}
+  const region =
+    item.regionNamePath ||
+    `${item.province || ""}${item.city || ""}${item.district || ""}`;
+  return `${region}${item.detailAddress || ""}`;
+};
 
 const fetchCart = async () => {
-  loading.value = true
+  loading.value = true;
   try {
-    const res = await listCartItems()
+    const res = await listCartItems();
     cartItems.value = (res.data || []).map((it) => ({
       ...it,
       disabled: it.productStatus !== 1,
       selected: it.selected === 1 && it.productStatus === 1,
-      coverImageUrl: normalizeUrl(it.coverImageUrl)
-    }))
+      coverImageUrl: normalizeUrl(it.coverImageUrl),
+    }));
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const formatMoney = (v) => {
-  const n = Number(v || 0)
-  if (Number.isNaN(n)) return '0.00'
-  return n.toFixed(2)
-}
+  const n = Number(v || 0);
+  if (Number.isNaN(n)) return "0.00";
+  return n.toFixed(2);
+};
 
 const itemSubtotal = (item) => {
-  return Number(item?.price || 0) * Number(item?.quantity || 0)
-}
+  return Number(item?.price || 0) * Number(item?.quantity || 0);
+};
 
 const selectedCount = computed(() => {
-  return cartItems.value.filter((i) => i.selected).reduce((acc, i) => acc + Number(i.quantity || 0), 0)
-})
+  return cartItems.value
+    .filter((i) => i.selected)
+    .reduce((acc, i) => acc + Number(i.quantity || 0), 0);
+});
 
 const totalPrice = computed(() => {
   return cartItems.value
     .filter((item) => item.selected)
-    .reduce((total, item) => total + Number(item.price || 0) * Number(item.quantity || 0), 0)
-    .toFixed(2)
-})
+    .reduce(
+      (total, item) =>
+        total + Number(item.price || 0) * Number(item.quantity || 0),
+      0,
+    )
+    .toFixed(2);
+});
 
 const handleToggleSelected = async (item, val) => {
-  if (item.disabled) return
-  const prev = item.selected
-  item.selected = val
-  updating.value = true
+  if (item.disabled) return;
+  const prev = item.selected;
+  item.selected = val;
+  updating.value = true;
   try {
-    await updateCartItemSelected(item.id, { selected: item.selected ? 1 : 0 })
+    await updateCartItemSelected(item.id, { selected: item.selected ? 1 : 0 });
   } catch (e) {
-    item.selected = prev
+    item.selected = prev;
   } finally {
-    updating.value = false
+    updating.value = false;
   }
-}
+};
 
 const handleQuantityChange = async (item, val) => {
-  if (item.disabled) return
-  const nextQty = Number(val || 1)
-  const prevQty = item.quantity
-  item.quantity = nextQty
-  updating.value = true
+  if (item.disabled) return;
+  const nextQty = Number(val || 1);
+  const prevQty = item.quantity;
+  item.quantity = nextQty;
+  updating.value = true;
   try {
-    await updateCartItemQuantity(item.id, { quantity: item.quantity })
+    await updateCartItemQuantity(item.id, { quantity: item.quantity });
   } catch (e) {
-    item.quantity = prevQty
+    item.quantity = prevQty;
   } finally {
-    updating.value = false
+    updating.value = false;
   }
-}
+};
 
 const removeItem = async (item) => {
   try {
-    await ElMessageBox.confirm('确认删除该商品吗？', '提示', { type: 'warning' })
-    updating.value = true
-    await deleteCartItem(item.id)
-    ElMessage.success('商品已删除')
-    await fetchCart()
+    await ElMessageBox.confirm("确认删除该商品吗？", "提示", {
+      type: "warning",
+    });
+    updating.value = true;
+    await deleteCartItem(item.id);
+    ElMessage.success("商品已删除");
+    await fetchCart();
   } catch (e) {
-    if (e !== 'cancel') {
-      ElMessage.error('删除失败')
+    if (e !== "cancel") {
+      ElMessage.error("删除失败");
     }
   } finally {
-    updating.value = false
+    updating.value = false;
   }
-}
+};
 
 const openAddressDialog = async () => {
-  addressDialogVisible.value = true
-  addressLoading.value = true
+  addressDialogVisible.value = true;
+  addressLoading.value = true;
   try {
-    const res = await listAddresses()
-    addresses.value = res.data || []
-    const defaultOne = addresses.value.find((a) => a.isDefault === 1)
-    selectedAddressId.value = defaultOne?.id || addresses.value[0]?.id || null
+    const res = await listAddresses();
+    addresses.value = res.data || [];
+    const defaultOne = addresses.value.find((a) => a.isDefault === 1);
+    selectedAddressId.value = defaultOne?.id || addresses.value[0]?.id || null;
   } finally {
-    addressLoading.value = false
+    addressLoading.value = false;
   }
-}
+};
 
 const checkout = async () => {
-  const selected = cartItems.value.filter((i) => i.selected)
+  const selected = cartItems.value.filter((i) => i.selected);
   if (selected.length === 0) {
-    ElMessage.warning('请先选择要结算的商品')
-    return
+    ElMessage.warning("请先选择要结算的商品");
+    return;
   }
-  await openAddressDialog()
-}
+  await openAddressDialog();
+};
 
 const submitOrder = async () => {
-  if (!selectedAddressId.value) return
-  creatingOrder.value = true
+  if (!selectedAddressId.value) return;
+  creatingOrder.value = true;
   try {
-    await createOrder({ addressId: selectedAddressId.value })
-    ElMessage.success('下单成功')
-    addressDialogVisible.value = false
-    await fetchCart()
-    router.push('/orders')
+    await createOrder({ addressId: selectedAddressId.value });
+    ElMessage.success("下单成功");
+    addressDialogVisible.value = false;
+    await fetchCart();
+    router.push("/orders");
   } catch (e) {
-    ElMessage.error('下单失败')
+    ElMessage.error("下单失败");
   } finally {
-    creatingOrder.value = false
+    creatingOrder.value = false;
   }
-}
+};
 
 const goManageAddress = () => {
-  addressDialogVisible.value = false
-  router.push('/profile')
-}
+  addressDialogVisible.value = false;
+  router.push("/profile");
+};
 
 onMounted(() => {
-  fetchCart()
-})
+  fetchCart();
+});
 </script>
 
 <style scoped>
@@ -538,10 +608,12 @@ onMounted(() => {
 }
 
 .address-item {
-  border: 1px solid #EBEEF5;
+  border: 1px solid #ebeef5;
   border-radius: 8px;
   padding: 12px;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .address-item:hover {

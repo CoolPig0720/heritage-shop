@@ -5,7 +5,12 @@
         <h1 class="banner-title">非遗商城</h1>
         <p class="banner-subtitle">传承非遗文化，定制专属记忆</p>
         <div class="banner-buttons">
-          <el-button type="primary" size="large" @click="goToProducts" class="banner-btn">
+          <el-button
+            type="primary"
+            size="large"
+            @click="goToProducts"
+            class="banner-btn"
+          >
             <el-icon><ShoppingCart /></el-icon>
             浏览商品
           </el-button>
@@ -16,7 +21,7 @@
         </div>
       </div>
     </div>
-    
+
     <div class="features-section">
       <div class="section-container">
         <h2 class="section-title">特色功能</h2>
@@ -52,22 +57,34 @@
         </div>
       </div>
     </div>
-    
+
     <div class="products-section">
       <div class="section-container">
         <div class="section-header">
           <h2 class="section-title">热门商品</h2>
-          <el-button type="primary" link @click="goToProducts">查看更多 <el-icon><ArrowRight /></el-icon></el-button>
+          <el-button type="primary" link @click="goToProducts"
+            >查看更多 <el-icon><ArrowRight /></el-icon
+          ></el-button>
         </div>
         <div v-loading="productsLoading" class="product-grid">
-          <div v-for="product in products" :key="product.id" class="product-card" @click="goToDetail(product.id)">
+          <div
+            v-for="product in products"
+            :key="product.id"
+            class="product-card"
+            @click="goToDetail(product.id)"
+          >
             <div class="product-image">
               <img :src="getCover(product)" :alt="product.name" />
               <div class="product-badge">推荐</div>
             </div>
             <div class="product-info">
               <h3 class="product-name"><TransText :text="product.name" /></h3>
-              <p class="product-desc"><TransText :text="product.description" :enabled="!!product.description" />{{ !product.description ? '暂无描述' : '' }}</p>
+              <p class="product-desc">
+                <TransText
+                  :text="product.description"
+                  :enabled="!!product.description"
+                />{{ !product.description ? "暂无描述" : "" }}
+              </p>
               <div class="product-footer">
                 <span class="price">¥{{ product.price }}</span>
               </div>
@@ -79,15 +96,22 @@
         </div>
       </div>
     </div>
-    
+
     <div class="heritage-section">
       <div class="section-container">
         <div class="section-header">
           <h2 class="section-title">非遗项目</h2>
-          <el-button type="primary" link @click="goToHeritage">查看全部 <el-icon><ArrowRight /></el-icon></el-button>
+          <el-button type="primary" link @click="goToHeritage"
+            >查看全部 <el-icon><ArrowRight /></el-icon
+          ></el-button>
         </div>
         <div v-loading="heritageLoading" class="heritage-grid">
-          <div v-for="item in heritageItems" :key="item.id" class="heritage-card" @click="goToHeritage">
+          <div
+            v-for="item in heritageItems"
+            :key="item.id"
+            class="heritage-card"
+            @click="goToHeritage"
+          >
             <div class="heritage-cover">
               <div class="heritage-icon">
                 <el-icon :size="34"><CollectionTag /></el-icon>
@@ -100,31 +124,11 @@
             </div>
           </div>
         </div>
-        <div v-if="!heritageLoading && heritageItems.length === 0" class="empty">
+        <div
+          v-if="!heritageLoading && heritageItems.length === 0"
+          class="empty"
+        >
           <el-empty description="暂无数据" />
-        </div>
-      </div>
-    </div>
-    
-    <div class="stats-section">
-      <div class="section-container">
-        <div class="stats-grid">
-          <div class="stat-item">
-            <div class="stat-number">{{ products.length }}</div>
-            <div class="stat-label">推荐商品</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number">{{ categoryCount }}</div>
-            <div class="stat-label">非遗分类</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number">{{ projectTotal }}</div>
-            <div class="stat-label">非遗项目</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number">{{ myAiRecordTotal }}</div>
-            <div class="stat-label">我的生图记录</div>
-          </div>
         </div>
       </div>
     </div>
@@ -132,123 +136,136 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { CollectionTag, ShoppingCart, MagicStick, Star, Trophy, Van, ArrowRight } from '@element-plus/icons-vue'
-import { getRecommendProducts } from '@/api/shop'
-import { getHeritageCategoryTree, pageHeritageProjects } from '@/api/heritage'
-import { pageAiImageRecords } from '@/api/aiImage'
+import { computed, onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import {
+  CollectionTag,
+  ShoppingCart,
+  MagicStick,
+  Star,
+  Trophy,
+  Van,
+  ArrowRight,
+} from "@element-plus/icons-vue";
+import { getRecommendProducts } from "@/api/shop";
+import { getHeritageCategoryTree, pageHeritageProjects } from "@/api/heritage";
+import { pageAiImageRecords } from "@/api/aiImage";
+import { getImageUrl } from "@/config/api.js";
 
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
-const productsLoading = ref(false)
-const products = ref([])
+const productsLoading = ref(false);
+const products = ref([]);
 
-const heritageLoading = ref(false)
-const heritageCategories = ref([])
+const heritageLoading = ref(false);
+const heritageCategories = ref([]);
 const heritageItems = computed(() => {
-  const root = Array.isArray(heritageCategories.value) ? heritageCategories.value : []
+  const root = Array.isArray(heritageCategories.value)
+    ? heritageCategories.value
+    : [];
   return root.slice(0, 4).map((x) => {
-    const name = (x?.name ?? '').toString() || '未命名分类'
-    const childCount = Array.isArray(x?.children) ? x.children.length : 0
-    const desc = childCount > 0 ? `包含 ${childCount} 个子类` : '点击了解更多'
-    const meta = childCount > 0 ? '更多分类内容' : '更多非遗内容'
-    return { id: x?.id ?? name, name, description: desc, meta }
-  })
-})
+    const name = (x?.name ?? "").toString() || "未命名分类";
+    const childCount = Array.isArray(x?.children) ? x.children.length : 0;
+    const desc = childCount > 0 ? `包含 ${childCount} 个子类` : "点击了解更多";
+    const meta = childCount > 0 ? "更多分类内容" : "更多非遗内容";
+    return { id: x?.id ?? name, name, description: desc, meta };
+  });
+});
 
-const projectTotal = ref(0)
-const myAiRecordTotal = ref(0)
+const projectTotal = ref(0);
+const myAiRecordTotal = ref(0);
 
 const PLACEHOLDER_IMAGE =
-  'data:image/svg+xml;charset=utf-8,' +
+  "data:image/svg+xml;charset=utf-8," +
   encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
       <rect width="600" height="400" fill="#f5f7fa"/>
       <path d="M160 280l80-100 70 80 60-60 110 140H160z" fill="#dcdfe6"/>
       <circle cx="240" cy="160" r="28" fill="#dcdfe6"/>
       <text x="300" y="330" text-anchor="middle" font-size="18" fill="#909399">暂无图片</text>
-    </svg>`
-  )
+    </svg>`,
+  );
 
 const normalizeUrl = (url) => {
-  if (!url) return ''
-  if (url.startsWith('http')) return url
-  return `http://localhost:8080${url}`
-}
+  return getImageUrl(url);
+};
 
 const getCover = (product) => {
-  const url = normalizeUrl(product?.coverImageUrl)
-  return url || PLACEHOLDER_IMAGE
-}
+  const url = normalizeUrl(product?.coverImageUrl);
+  return url || PLACEHOLDER_IMAGE;
+};
 
 const flattenCategories = (nodes, out = []) => {
-  const list = Array.isArray(nodes) ? nodes : []
+  const list = Array.isArray(nodes) ? nodes : [];
   list.forEach((n) => {
-    out.push(n)
+    out.push(n);
     if (Array.isArray(n?.children) && n.children.length > 0) {
-      flattenCategories(n.children, out)
+      flattenCategories(n.children, out);
     }
-  })
-  return out
-}
+  });
+  return out;
+};
 
-const categoryCount = computed(() => flattenCategories(heritageCategories.value).length)
+const categoryCount = computed(
+  () => flattenCategories(heritageCategories.value).length,
+);
 
 const loadHomeData = async () => {
-  productsLoading.value = true
-  heritageLoading.value = true
+  productsLoading.value = true;
+  heritageLoading.value = true;
   try {
     const results = await Promise.allSettled([
       getRecommendProducts({ count: 8 }),
       getHeritageCategoryTree(),
       pageHeritageProjects({ page: 1, size: 1 }),
-      pageAiImageRecords({ page: 1, size: 1 })
-    ])
+      pageAiImageRecords({ page: 1, size: 1 }),
+    ]);
 
-    const [productRes, categoryRes, projectRes, aiRecordRes] = results.map((r) =>
-      r.status === 'fulfilled' ? r.value : null
-    )
+    const [productRes, categoryRes, projectRes, aiRecordRes] = results.map(
+      (r) => (r.status === "fulfilled" ? r.value : null),
+    );
 
-    products.value = Array.isArray(productRes?.data) ? productRes.data : []
-    heritageCategories.value = Array.isArray(categoryRes?.data) ? categoryRes.data : []
+    products.value = Array.isArray(productRes?.data) ? productRes.data : [];
+    heritageCategories.value = Array.isArray(categoryRes?.data)
+      ? categoryRes.data
+      : [];
 
-    const projData = projectRes?.data || {}
-    projectTotal.value = Number(projData.total ?? 0)
+    const projData = projectRes?.data || {};
+    projectTotal.value = Number(projData.total ?? 0);
 
-    const aiData = aiRecordRes?.data || {}
-    myAiRecordTotal.value = Number(aiData.total ?? 0)
+    const aiData = aiRecordRes?.data || {};
+    myAiRecordTotal.value = Number(aiData.total ?? 0);
   } catch (e) {
-    products.value = []
-    heritageCategories.value = []
-    projectTotal.value = 0
-    myAiRecordTotal.value = 0
+    products.value = [];
+    heritageCategories.value = [];
+    projectTotal.value = 0;
+    myAiRecordTotal.value = 0;
   } finally {
-    productsLoading.value = false
-    heritageLoading.value = false
+    productsLoading.value = false;
+    heritageLoading.value = false;
   }
-}
+};
 
 const goToProducts = () => {
-  router.push('/products')
-}
+  router.push("/products");
+};
 
 const goToCustomize = () => {
-  router.push('/customize')
-}
+  router.push("/customize");
+};
 
 const goToHeritage = () => {
-  router.push('/heritage')
-}
+  router.push("/heritage");
+};
 
 const goToDetail = (id) => {
-  router.push({ path: `/product/${id}`, query: { from: route.fullPath } })
-}
+  router.push({ path: `/product/${id}`, query: { from: route.fullPath } });
+};
 
 onMounted(() => {
-  loadHomeData()
-})
+  loadHomeData();
+});
 </script>
 
 <style scoped>
@@ -267,13 +284,14 @@ onMounted(() => {
 }
 
 .banner::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.1)" d="M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,213.3C672,192,768,128,864,128C960,128,1056,192,1152,208C1248,224,1344,192,1392,176L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.1)" d="M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,213.3C672,192,768,128,864,128C960,128,1056,192,1152,208C1248,224,1344,192,1392,176L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>')
+    no-repeat bottom;
   background-size: cover;
 }
 
@@ -336,7 +354,7 @@ onMounted(() => {
 }
 
 .section-title::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -15px;
   left: 50%;
@@ -489,7 +507,7 @@ onMounted(() => {
 
 .price {
   font-size: 24px;
-  color: #F56C6C;
+  color: #f56c6c;
   font-weight: bold;
 }
 
@@ -522,7 +540,12 @@ onMounted(() => {
   height: 160px;
   padding: 18px;
   color: #fff;
-  background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 60%),
+  background:
+    radial-gradient(
+      circle at 20% 20%,
+      rgba(255, 255, 255, 0.35) 0%,
+      rgba(255, 255, 255, 0) 60%
+    ),
     linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   flex-direction: column;
@@ -615,34 +638,34 @@ onMounted(() => {
   .banner-title {
     font-size: 36px;
   }
-  
+
   .banner-subtitle {
     font-size: 20px;
   }
-  
+
   .banner-buttons {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .banner-btn {
     width: 200px;
   }
-  
+
   .section-title {
     font-size: 28px;
   }
-  
+
   .features-grid,
   .product-grid,
   .heritage-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .stat-number {
     font-size: 36px;
   }
-  
+
   .stat-label {
     font-size: 16px;
   }

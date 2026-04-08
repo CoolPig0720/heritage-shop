@@ -25,6 +25,8 @@
         <knife4j.version>4.3.0</knife4j.version>
         <mybatis-plus.version>3.5.5</mybatis-plus.version>
         <tencentcloud.sdk.version>3.1.1408</tencentcloud.sdk.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
     
     <dependencies>
@@ -121,6 +123,11 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                    <systemPropertyVariables>
+                        <file.encoding>UTF-8</file.encoding>
+                        <sun.stdout.encoding>UTF-8</sun.stdout.encoding>
+                        <sun.stderr.encoding>UTF-8</sun.stderr.encoding>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
         </plugins>

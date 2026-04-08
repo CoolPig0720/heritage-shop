@@ -25,15 +25,24 @@
           <el-button circle :icon="themeIcon" class="theme-btn" />
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item command="light" :class="{ 'is-active': themeMode === 'light' }">
+              <el-dropdown-item
+                command="light"
+                :class="{ 'is-active': themeMode === 'light' }"
+              >
                 <el-icon><Sunny /></el-icon>
                 亮色模式
               </el-dropdown-item>
-              <el-dropdown-item command="dark" :class="{ 'is-active': themeMode === 'dark' }">
+              <el-dropdown-item
+                command="dark"
+                :class="{ 'is-active': themeMode === 'dark' }"
+              >
                 <el-icon><Moon /></el-icon>
                 暗色模式
               </el-dropdown-item>
-              <el-dropdown-item command="system" :class="{ 'is-active': themeMode === 'system' }">
+              <el-dropdown-item
+                command="system"
+                :class="{ 'is-active': themeMode === 'system' }"
+              >
                 <el-icon><Monitor /></el-icon>
                 跟随系统
               </el-dropdown-item>
@@ -55,19 +64,39 @@
           <el-dropdown>
             <span class="user-info">
               <el-avatar :size="32" :src="userStore.userInfo.avatar || ''">
-                {{ userStore.userInfo.name?.charAt(0) || 'U' }}
+                {{ userStore.userInfo.name?.charAt(0) || "U" }}
               </el-avatar>
               <span class="username">{{ userStore.userInfo.name }}</span>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item @click="goToProfile">个人中心</el-dropdown-item>
+                <el-dropdown-item @click="goToProfile"
+                  >个人中心</el-dropdown-item
+                >
                 <el-dropdown-item @click="goToCart">购物车</el-dropdown-item>
-                <el-dropdown-item @click="goToOrders">我的订单</el-dropdown-item>
-                <el-dropdown-item v-if="canGoUsers" @click="goToUsers" :divided="true">用户管理</el-dropdown-item>
-                <el-dropdown-item v-if="canGoProducts" @click="goToManageProducts" :divided="!canGoUsers">商品管理</el-dropdown-item>
-                <el-dropdown-item v-if="canGoHeritageManage" @click="goToManageHeritage">非遗管理</el-dropdown-item>
-                <el-dropdown-item divided @click="handleLogout">退出登录</el-dropdown-item>
+                <el-dropdown-item @click="goToOrders"
+                  >我的订单</el-dropdown-item
+                >
+                <el-dropdown-item
+                  v-if="canGoUsers"
+                  @click="goToUsers"
+                  :divided="true"
+                  >用户管理</el-dropdown-item
+                >
+                <el-dropdown-item
+                  v-if="canGoProducts"
+                  @click="goToManageProducts"
+                  :divided="!canGoUsers"
+                  >商品管理</el-dropdown-item
+                >
+                <el-dropdown-item
+                  v-if="canGoHeritageManage"
+                  @click="goToManageHeritage"
+                  >非遗管理</el-dropdown-item
+                >
+                <el-dropdown-item divided @click="handleLogout"
+                  >退出登录</el-dropdown-item
+                >
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -82,142 +111,159 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useUserStore } from '@/stores/user'
-import { ElMessage } from 'element-plus'
-import { getProfile } from '@/api/auth'
-import { Moon, Sunny, Monitor } from '@element-plus/icons-vue'
-import { i18n } from '@/i18n'
-import { getThemeMode, setThemeMode, isDark, initTheme, ThemeMode } from '@/utils/theme'
-import { setLang } from '@/utils/lang'
-import { translatePageToEnglish, restorePageToChinese } from '@/utils/autoTranslate'
+import { computed, onMounted, ref, watch } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import { useUserStore } from "@/stores/user";
+import { ElMessage } from "element-plus";
+import { getProfile } from "@/api/auth";
+import { Moon, Sunny, Monitor } from "@element-plus/icons-vue";
+import { i18n } from "@/i18n";
+import {
+  getThemeMode,
+  setThemeMode,
+  isDark,
+  initTheme,
+  ThemeMode,
+} from "@/utils/theme";
+import { setLang } from "@/utils/lang";
+import {
+  translatePageToEnglish,
+  restorePageToChinese,
+} from "@/utils/autoTranslate";
+import { getAvatarUrl } from "@/config/api.js";
 
-const router = useRouter()
-const route = useRoute()
-const userStore = useUserStore()
+const router = useRouter();
+const route = useRoute();
+const userStore = useUserStore();
 
-const activeMenu = computed(() => route.path)
+const activeMenu = computed(() => route.path);
 
-const role = computed(() => userStore.userInfo?.role)
-const canGoUsers = computed(() => role.value === 'ADMIN')
-const canGoProducts = computed(() => role.value === 'ADMIN' || role.value === 'MERCHANT')
-const canGoHeritageManage = computed(() => role.value === 'ADMIN')
+const role = computed(() => userStore.userInfo?.role);
+const canGoUsers = computed(() => role.value === "ADMIN");
+const canGoProducts = computed(
+  () => role.value === "ADMIN" || role.value === "MERCHANT",
+);
+const canGoHeritageManage = computed(() => role.value === "ADMIN");
 
-const themeMode = ref(getThemeMode())
-const dark = ref(isDark())
-const langLabel = computed(() => (i18n.global.locale.value === 'zh' ? '中文' : 'EN'))
+const themeMode = ref(getThemeMode());
+const dark = ref(isDark());
+const langLabel = computed(() =>
+  i18n.global.locale.value === "zh" ? "中文" : "EN",
+);
 
 // 监听语言变化，自动翻译页面
-watch(() => i18n.global.locale.value, async (newLang, oldLang) => {
-  if (newLang !== oldLang) {
-    if (newLang === 'en') {
-      // 切换到英文时，自动翻译页面
-      try {
-        await translatePageToEnglish()
-        ElMessage.success('页面已自动翻译为英文')
-      } catch (error) {
-        console.error('自动翻译失败:', error)
-        ElMessage.error('自动翻译失败')
-      }
-    } else {
-      // 切换到中文时，恢复原始中文文本
-      try {
-        await restorePageToChinese()
-        ElMessage.info('已恢复为中文')
-      } catch (error) {
-        console.error('中文恢复失败:', error)
-        ElMessage.error('中文恢复失败')
+watch(
+  () => i18n.global.locale.value,
+  async (newLang, oldLang) => {
+    if (newLang !== oldLang) {
+      if (newLang === "en") {
+        // 切换到英文时，自动翻译页面
+        try {
+          await translatePageToEnglish();
+          ElMessage.success("页面已自动翻译为英文");
+        } catch (error) {
+          console.error("自动翻译失败:", error);
+          ElMessage.error("自动翻译失败");
+        }
+      } else {
+        // 切换到中文时，恢复原始中文文本
+        try {
+          await restorePageToChinese();
+          ElMessage.info("已恢复为中文");
+        } catch (error) {
+          console.error("中文恢复失败:", error);
+          ElMessage.error("中文恢复失败");
+        }
       }
     }
-  }
-})
+  },
+);
 
 // 主题图标
 const themeIcon = computed(() => {
-  if (themeMode.value === ThemeMode.DARK) return Moon
-  if (themeMode.value === ThemeMode.LIGHT) return Sunny
-  return Monitor
-})
+  if (themeMode.value === ThemeMode.DARK) return Moon;
+  if (themeMode.value === ThemeMode.LIGHT) return Sunny;
+  return Monitor;
+});
 
 const validateToken = async () => {
   if (userStore.token) {
     try {
-      const res = await getProfile()
+      const res = await getProfile();
       if (res.code === 200) {
-        const avatar = res.data.avatar
+        const avatar = res.data.avatar;
         const userInfo = {
           ...res.data,
-          avatar: avatar?.startsWith('http') ? avatar : `http://localhost:8080${avatar}`
-        }
-        userStore.setUserInfo(userInfo)
+          avatar: getAvatarUrl(avatar),
+        };
+        userStore.setUserInfo(userInfo);
       } else {
-        userStore.logout()
+        userStore.logout();
       }
     } catch (error) {
-      userStore.logout()
+      userStore.logout();
     }
   }
-}
+};
 
 onMounted(() => {
-  validateToken()
-  initTheme()
-  themeMode.value = getThemeMode()
-  dark.value = isDark()
-})
+  validateToken();
+  initTheme();
+  themeMode.value = getThemeMode();
+  dark.value = isDark();
+});
 
 const goToLogin = () => {
-  router.push('/login')
-}
+  router.push("/login");
+};
 
 const goToRegister = () => {
-  router.push('/login')
-}
+  router.push("/login");
+};
 
 const goToProfile = () => {
-  router.push('/profile')
-}
+  router.push("/profile");
+};
 
 const goToCart = () => {
-  router.push('/cart')
-}
+  router.push("/cart");
+};
 
 const goToOrders = () => {
-  router.push('/orders')
-}
+  router.push("/orders");
+};
 
 const goToUsers = () => {
-  router.push('/manage/users')
-}
+  router.push("/manage/users");
+};
 
 const goToManageProducts = () => {
-  if (role.value === 'MERCHANT') {
-    router.push('/merchant/products')
-    return
+  if (role.value === "MERCHANT") {
+    router.push("/merchant/products");
+    return;
   }
-  router.push('/manage/products')
-}
+  router.push("/manage/products");
+};
 
 const goToManageHeritage = () => {
-  router.push('/manage/heritage')
-}
+  router.push("/manage/heritage");
+};
 
 const handleLogout = () => {
-  userStore.logout()
-  ElMessage.success(i18n.global.t('common.logoutSuccess'))
-  router.push('/login')
-}
+  userStore.logout();
+  ElMessage.success(i18n.global.t("common.logoutSuccess"));
+  router.push("/login");
+};
 
 const handleThemeChange = (mode) => {
-  setThemeMode(mode)
-  themeMode.value = mode
-  dark.value = isDark()
-}
+  setThemeMode(mode);
+  themeMode.value = mode;
+  dark.value = isDark();
+};
 
 const handleSetLang = (lang) => {
-  setLang(lang)
-}
+  setLang(lang);
+};
 </script>
 
 <style scoped>

@@ -9,11 +9,21 @@
       <el-card class="detail-card" shadow="never">
         <div class="header">
           <div class="title-area">
-            <h1 class="title"><TransText :text="detail.name" :enabled="!!detail.name" />{{ !detail.name ? '项目详情' : '' }}</h1>
+            <h1 class="title">
+              <TransText :text="detail.name" :enabled="!!detail.name" />{{
+                !detail.name ? "项目详情" : ""
+              }}
+            </h1>
             <div class="meta">
-              <el-tag v-if="detail.categoryName" type="info"><TransText :text="detail.categoryName" /></el-tag>
-              <span v-if="detail.applyUnit" class="meta-item">申报单位或地区：<TransText :text="detail.applyUnit" /></span>
-              <span v-if="detail.protectUnit" class="meta-item">保护单位：<TransText :text="detail.protectUnit" /></span>
+              <el-tag v-if="detail.categoryName" type="info"
+                ><TransText :text="detail.categoryName"
+              /></el-tag>
+              <span v-if="detail.applyUnit" class="meta-item"
+                >申报单位或地区：<TransText :text="detail.applyUnit"
+              /></span>
+              <span v-if="detail.protectUnit" class="meta-item"
+                >保护单位：<TransText :text="detail.protectUnit"
+              /></span>
             </div>
           </div>
         </div>
@@ -179,175 +189,188 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Delete } from '@element-plus/icons-vue'
-import { createAdminHeritageProjectMedia, deleteAdminHeritageProjectMedia, getHeritageProjectDetail } from '@/api/heritage'
-import { useUserStore } from '@/stores/user'
+import { computed, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { Delete } from "@element-plus/icons-vue";
+import {
+  createAdminHeritageProjectMedia,
+  deleteAdminHeritageProjectMedia,
+  getHeritageProjectDetail,
+} from "@/api/heritage";
+import { useUserStore } from "@/stores/user";
+import { UPLOAD_URL, getImageUrl } from "@/config/api.js";
 
-const route = useRoute()
-const router = useRouter()
-const userStore = useUserStore()
+const route = useRoute();
+const router = useRouter();
+const userStore = useUserStore();
 
-const fromManage = computed(() => route.query?.from === 'manage')
-const backLabel = computed(() => (fromManage.value ? '非遗管理' : '非遗文化'))
-const backTo = computed(() => (fromManage.value ? '/manage/heritage' : '/heritage'))
+const fromManage = computed(() => route.query?.from === "manage");
+const backLabel = computed(() => (fromManage.value ? "非遗管理" : "非遗文化"));
+const backTo = computed(() =>
+  fromManage.value ? "/manage/heritage" : "/heritage",
+);
 
-const canManageMedia = computed(() => fromManage.value && userStore.userInfo?.role === 'ADMIN')
+const canManageMedia = computed(
+  () => fromManage.value && userStore.userInfo?.role === "ADMIN",
+);
 
-const loading = ref(false)
+const loading = ref(false);
 const detail = ref({
   id: null,
   categoryId: null,
-  categoryName: '',
-  name: '',
-  description: '',
-  applyUnit: '',
-  protectUnit: '',
+  categoryName: "",
+  name: "",
+  description: "",
+  applyUnit: "",
+  protectUnit: "",
   medias: [],
-  inheritors: []
-})
+  inheritors: [],
+});
 
 const normalizeUrl = (url) => {
-  if (!url) return ''
-  if (url.startsWith('http')) return url
-  return `http://localhost:8080${url}`
-}
+  return getImageUrl(url);
+};
 
-const uploadUrl = 'http://localhost:8080/api/file/upload'
+const uploadUrl = UPLOAD_URL;
 const uploadHeaders = computed(() => {
-  const token = userStore.token || localStorage.getItem('token')
-  if (!token) return {}
-  return { Authorization: `Bearer ${token}` }
-})
+  const token = userStore.token || localStorage.getItem("token");
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` };
+});
 
 const displayImages = computed(() =>
-  (detail.value.medias || []).filter((m) => m?.mediaType === 'DISPLAY_IMAGE')
-)
+  (detail.value.medias || []).filter((m) => m?.mediaType === "DISPLAY_IMAGE"),
+);
 const processImages = computed(() =>
-  (detail.value.medias || []).filter((m) => m?.mediaType === 'PROCESS_IMAGE')
-)
-const videos = computed(() => (detail.value.medias || []).filter((m) => m?.mediaType === 'VIDEO'))
+  (detail.value.medias || []).filter((m) => m?.mediaType === "PROCESS_IMAGE"),
+);
+const videos = computed(() =>
+  (detail.value.medias || []).filter((m) => m?.mediaType === "VIDEO"),
+);
 
-const displayImagesPreview = computed(() => displayImages.value.map((m) => normalizeUrl(m.mediaUrl)))
-const processImagesPreview = computed(() => processImages.value.map((m) => normalizeUrl(m.mediaUrl)))
+const displayImagesPreview = computed(() =>
+  displayImages.value.map((m) => normalizeUrl(m.mediaUrl)),
+);
+const processImagesPreview = computed(() =>
+  processImages.value.map((m) => normalizeUrl(m.mediaUrl)),
+);
 
 const beforeUploadImage = (file) => {
-  if (!file?.type?.startsWith('image/')) {
-    ElMessage.error('请上传图片文件')
-    return false
+  if (!file?.type?.startsWith("image/")) {
+    ElMessage.error("请上传图片文件");
+    return false;
   }
-  const maxSizeMb = 10
+  const maxSizeMb = 10;
   if (file.size > maxSizeMb * 1024 * 1024) {
-    ElMessage.error(`图片大小不能超过 ${maxSizeMb}MB`)
-    return false
+    ElMessage.error(`图片大小不能超过 ${maxSizeMb}MB`);
+    return false;
   }
-  return true
-}
+  return true;
+};
 
 const beforeUploadVideo = (file) => {
-  if (!file?.type?.startsWith('video/')) {
-    ElMessage.error('请上传视频文件')
-    return false
+  if (!file?.type?.startsWith("video/")) {
+    ElMessage.error("请上传视频文件");
+    return false;
   }
-  const maxSizeMb = 200
+  const maxSizeMb = 200;
   if (file.size > maxSizeMb * 1024 * 1024) {
-    ElMessage.error(`视频大小不能超过 ${maxSizeMb}MB`)
-    return false
+    ElMessage.error(`视频大小不能超过 ${maxSizeMb}MB`);
+    return false;
   }
-  return true
-}
+  return true;
+};
 
 const handleUploadSuccess = (mediaType) => async (response) => {
   if (response?.code !== 200) {
-    ElMessage.error(response?.message || '上传失败')
-    return
+    ElMessage.error(response?.message || "上传失败");
+    return;
   }
-  const mediaUrl = response?.data || ''
-  if (!detail.value.id) return
+  const mediaUrl = response?.data || "";
+  if (!detail.value.id) return;
 
   try {
     await createAdminHeritageProjectMedia(detail.value.id, {
       mediaType,
       mediaUrl,
-      sortOrder: 0
-    })
-    ElMessage.success('上传成功')
-    loadDetail(detail.value.id)
+      sortOrder: 0,
+    });
+    ElMessage.success("上传成功");
+    loadDetail(detail.value.id);
   } catch (e) {
-    ElMessage.error('保存失败')
+    ElMessage.error("保存失败");
   }
-}
+};
 
 const deleteMedia = (media) => {
-  if (!canManageMedia.value || !media?.id) return
-  ElMessageBox.confirm('确定要删除该资源吗？', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
+  if (!canManageMedia.value || !media?.id) return;
+  ElMessageBox.confirm("确定要删除该资源吗？", "提示", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
   })
     .then(async () => {
       try {
-        await deleteAdminHeritageProjectMedia(media.id)
-        ElMessage.success('删除成功')
-        loadDetail(detail.value.id)
+        await deleteAdminHeritageProjectMedia(media.id);
+        ElMessage.success("删除成功");
+        loadDetail(detail.value.id);
       } catch (e) {
-        ElMessage.error('删除失败')
+        ElMessage.error("删除失败");
       }
     })
-    .catch(() => {})
-}
+    .catch(() => {});
+};
 
 const loadDetail = async (id) => {
-  if (!id) return
-  loading.value = true
+  if (!id) return;
+  loading.value = true;
   try {
-    const res = await getHeritageProjectDetail(id)
-    const data = res.data || {}
+    const res = await getHeritageProjectDetail(id);
+    const data = res.data || {};
     detail.value = {
       ...detail.value,
       ...data,
       medias: Array.isArray(data.medias) ? data.medias : [],
-      inheritors: Array.isArray(data.inheritors) ? data.inheritors : []
-    }
+      inheritors: Array.isArray(data.inheritors) ? data.inheritors : [],
+    };
   } catch (e) {
-    ElMessage.error('获取项目详情失败')
+    ElMessage.error("获取项目详情失败");
     detail.value = {
       id: null,
       categoryId: null,
-      categoryName: '',
-      name: '',
-      description: '',
-      applyUnit: '',
-      protectUnit: '',
+      categoryName: "",
+      name: "",
+      description: "",
+      applyUnit: "",
+      protectUnit: "",
       medias: [],
-      inheritors: []
-    }
+      inheritors: [],
+    };
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const goInheritor = (id) => {
-  const path = `/heritage/inheritors/${id}`
+  const path = `/heritage/inheritors/${id}`;
   if (fromManage.value) {
-    router.push({ path, query: { from: 'manage' } })
-    return
+    router.push({ path, query: { from: "manage" } });
+    return;
   }
-  router.push({ path, query: { from: route.fullPath } })
-}
+  router.push({ path, query: { from: route.fullPath } });
+};
 
 onMounted(() => {
-  loadDetail(route.params.id)
-})
+  loadDetail(route.params.id);
+});
 
 watch(
   () => route.params.id,
   (id) => {
-    loadDetail(id)
-  }
-)
+    loadDetail(id);
+  },
+);
 </script>
 
 <style scoped>

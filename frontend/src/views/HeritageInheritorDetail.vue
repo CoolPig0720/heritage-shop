@@ -8,13 +8,23 @@
 
       <el-card class="detail-card" shadow="never">
         <div class="top">
-          <el-avatar :size="96" :src="normalizeUrl(detail.photo)" class="avatar" />
+          <el-avatar
+            :size="96"
+            :src="normalizeUrl(detail.photo)"
+            class="avatar"
+          />
           <div class="info">
-            <h1 class="name">{{ detail.name || '传承人详情' }}</h1>
+            <h1 class="name">{{ detail.name || "传承人详情" }}</h1>
             <div class="meta">
-              <el-tag v-if="detail.gender" type="info">{{ detail.gender }}</el-tag>
-              <el-tag v-if="detail.nation" type="info">{{ detail.nation }}</el-tag>
-              <span v-if="detail.birthDate" class="meta-item">{{ detail.birthDate }}</span>
+              <el-tag v-if="detail.gender" type="info">{{
+                detail.gender
+              }}</el-tag>
+              <el-tag v-if="detail.nation" type="info">{{
+                detail.nation
+              }}</el-tag>
+              <span v-if="detail.birthDate" class="meta-item">{{
+                detail.birthDate
+              }}</span>
             </div>
           </div>
         </div>
@@ -30,17 +40,33 @@
             <el-table-column prop="id" label="ID" width="90" />
             <el-table-column label="项目名称" min-width="200">
               <template #default="{ row }">
-                <el-link type="primary" :underline="false" @click="goProject(row.id)">
+                <el-link
+                  type="primary"
+                  :underline="false"
+                  @click="goProject(row.id)"
+                >
                   {{ row.name }}
                 </el-link>
               </template>
             </el-table-column>
             <el-table-column prop="categoryName" label="分类" width="160" />
-            <el-table-column prop="applyUnit" label="申报单位或地区" min-width="160" show-overflow-tooltip />
-            <el-table-column prop="protectUnit" label="保护单位" min-width="160" show-overflow-tooltip />
+            <el-table-column
+              prop="applyUnit"
+              label="申报单位或地区"
+              min-width="160"
+              show-overflow-tooltip
+            />
+            <el-table-column
+              prop="protectUnit"
+              label="保护单位"
+              min-width="160"
+              show-overflow-tooltip
+            />
             <el-table-column label="操作" width="100">
               <template #default="{ row }">
-                <el-button link type="primary" @click="goProject(row.id)">查看</el-button>
+                <el-button link type="primary" @click="goProject(row.id)"
+                  >查看</el-button
+                >
               </template>
             </el-table-column>
           </el-table>
@@ -53,83 +79,84 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { getHeritageInheritorDetail } from '@/api/heritage'
+import { computed, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
+import { getHeritageInheritorDetail } from "@/api/heritage";
+import { getImageUrl } from "@/config/api.js";
 
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
-const fromManage = computed(() => route.query?.from === 'manage')
-const backLabel = computed(() => (fromManage.value ? '非遗管理' : '非遗文化'))
-const backTo = computed(() => (fromManage.value ? '/manage/heritage' : '/heritage'))
+const fromManage = computed(() => route.query?.from === "manage");
+const backLabel = computed(() => (fromManage.value ? "非遗管理" : "非遗文化"));
+const backTo = computed(() =>
+  fromManage.value ? "/manage/heritage" : "/heritage",
+);
 
-const loading = ref(false)
+const loading = ref(false);
 const detail = ref({
   id: null,
-  name: '',
-  gender: '',
-  birthDate: '',
-  nation: '',
-  photo: '',
-  description: '',
-  projects: []
-})
+  name: "",
+  gender: "",
+  birthDate: "",
+  nation: "",
+  photo: "",
+  description: "",
+  projects: [],
+});
 
 const normalizeUrl = (url) => {
-  if (!url) return ''
-  if (url.startsWith('http')) return url
-  return `http://localhost:8080${url}`
-}
+  return getImageUrl(url);
+};
 
 const loadDetail = async (id) => {
-  if (!id) return
-  loading.value = true
+  if (!id) return;
+  loading.value = true;
   try {
-    const res = await getHeritageInheritorDetail(id)
-    const data = res.data || {}
+    const res = await getHeritageInheritorDetail(id);
+    const data = res.data || {};
     detail.value = {
       ...detail.value,
       ...data,
-      projects: Array.isArray(data.projects) ? data.projects : []
-    }
+      projects: Array.isArray(data.projects) ? data.projects : [],
+    };
   } catch (e) {
-    ElMessage.error('获取传承人详情失败')
+    ElMessage.error("获取传承人详情失败");
     detail.value = {
       id: null,
-      name: '',
-      gender: '',
-      birthDate: '',
-      nation: '',
-      photo: '',
-      description: '',
-      projects: []
-    }
+      name: "",
+      gender: "",
+      birthDate: "",
+      nation: "",
+      photo: "",
+      description: "",
+      projects: [],
+    };
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const goProject = (id) => {
-  const path = `/heritage/projects/${id}`
+  const path = `/heritage/projects/${id}`;
   if (fromManage.value) {
-    router.push({ path, query: { from: 'manage' } })
-    return
+    router.push({ path, query: { from: "manage" } });
+    return;
   }
-  router.push({ path, query: { from: route.fullPath } })
-}
+  router.push({ path, query: { from: route.fullPath } });
+};
 
 onMounted(() => {
-  loadDetail(route.params.id)
-})
+  loadDetail(route.params.id);
+});
 
 watch(
   () => route.params.id,
   (id) => {
-    loadDetail(id)
-  }
-)
+    loadDetail(id);
+  },
+);
 </script>
 
 <style scoped>

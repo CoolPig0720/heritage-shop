@@ -1,7 +1,7 @@
 <template>
   <div class="products">
     <h1 class="page-title">商品管理</h1>
-    
+
     <el-card class="table-card">
       <div class="table-header">
         <el-input
@@ -21,7 +21,7 @@
           添加商品
         </el-button>
       </div>
-      
+
       <el-table v-loading="loading" :data="products" style="width: 100%">
         <el-table-column label="序号" width="80" align="center">
           <template #default="{ $index }">
@@ -31,18 +31,22 @@
         <el-table-column label="商品信息" min-width="280" align="center">
           <template #default="{ row }">
             <div class="product-info-cell">
-              <el-image :src="getCoverUrl(row)" fit="cover" class="product-cover" />
+              <el-image
+                :src="getCoverUrl(row)"
+                fit="cover"
+                class="product-cover"
+              />
               <div class="product-details">
                 <div class="product-name">{{ row.name }}</div>
-                <div class="product-meta">商家：{{ row.merchantName || '-' }}</div>
+                <div class="product-meta">
+                  商家：{{ row.merchantName || "-" }}
+                </div>
               </div>
             </div>
           </template>
         </el-table-column>
         <el-table-column prop="price" label="价格" width="120" align="center">
-          <template #default="{ row }">
-            ¥{{ row.price }}
-          </template>
+          <template #default="{ row }"> ¥{{ row.price }} </template>
         </el-table-column>
         <el-table-column prop="status" label="状态" width="100" align="center">
           <template #default="{ row }">
@@ -52,11 +56,16 @@
               :inactive-value="0"
               active-text="上架"
               inactive-text="下架"
-              @change="val => handleStatusChange(row, val)"
+              @change="(val) => handleStatusChange(row, val)"
             />
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="180" align="center">
+        <el-table-column
+          prop="createTime"
+          label="创建时间"
+          width="180"
+          align="center"
+        >
           <template #default="{ row }">
             {{ formatTime(row.createTime) }}
           </template>
@@ -64,11 +73,23 @@
         <el-table-column label="操作" width="200" align="center">
           <template #default="{ row }">
             <div class="row-actions">
-              <el-button type="primary" plain round size="small" @click="handleEdit(row)">
+              <el-button
+                type="primary"
+                plain
+                round
+                size="small"
+                @click="handleEdit(row)"
+              >
                 <el-icon><Edit /></el-icon>
                 编辑
               </el-button>
-              <el-button type="danger" plain round size="small" @click="handleDelete(row)">
+              <el-button
+                type="danger"
+                plain
+                round
+                size="small"
+                @click="handleDelete(row)"
+              >
                 <el-icon><Delete /></el-icon>
                 删除
               </el-button>
@@ -76,7 +97,7 @@
           </template>
         </el-table-column>
       </el-table>
-      
+
       <AppPagination
         v-model:current-page="currentPage"
         v-model:page-size="pageSize"
@@ -93,11 +114,21 @@
       top="3vh"
       class="product-edit-dialog"
     >
-      <el-form ref="formRef" class="product-edit-form" :model="form" :rules="rules" label-width="90px">
+      <el-form
+        ref="formRef"
+        class="product-edit-form"
+        :model="form"
+        :rules="rules"
+        label-width="90px"
+      >
         <el-row :gutter="10" class="form-grid">
           <el-col :xs="24" :md="15">
             <el-form-item label="商品名称" prop="name">
-              <el-input v-model="form.name" placeholder="请输入商品名称" class="name-input" />
+              <el-input
+                v-model="form.name"
+                placeholder="请输入商品名称"
+                class="name-input"
+              />
             </el-form-item>
           </el-col>
           <el-col :xs="24" :md="9">
@@ -125,7 +156,11 @@
           </el-col>
           <el-col :xs="24" :md="9">
             <el-form-item label="溯源码" prop="traceCode">
-              <el-input v-model="form.traceCode" placeholder="可选" class="tracecode-input" />
+              <el-input
+                v-model="form.traceCode"
+                placeholder="可选"
+                class="tracecode-input"
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -152,10 +187,19 @@
                 >
                   <el-button size="small" type="primary">上传二维码</el-button>
                 </el-upload>
-                <el-button v-if="form.traceQrUrl" size="small" @click="clearTraceQr">删除</el-button>
+                <el-button
+                  v-if="form.traceQrUrl"
+                  size="small"
+                  @click="clearTraceQr"
+                  >删除</el-button
+                >
               </div>
               <div v-if="form.traceQrUrl" class="qr-preview">
-                <el-image class="qr-preview-image" :src="normalizeUrl(form.traceQrUrl)" fit="contain" />
+                <el-image
+                  class="qr-preview-image"
+                  :src="normalizeUrl(form.traceQrUrl)"
+                  fit="contain"
+                />
               </div>
             </el-form-item>
           </el-col>
@@ -170,19 +214,29 @@
                   :before-upload="beforeUploadModel"
                   :on-success="handleModelSuccess"
                 >
-                  <el-button size="small" type="primary">上传 3D 模型</el-button>
+                  <el-button size="small" type="primary"
+                    >上传 3D 模型</el-button
+                  >
                 </el-upload>
 
                 <div v-if="form.model3dUrl" class="asset-preview">
-                  <el-button size="small" @click="downloadFile(form.model3dUrl)">下载</el-button>
-                  <el-button size="small" @click="modelPreviewVisible = !modelPreviewVisible">
-                    {{ modelPreviewVisible ? '收起预览' : '预览' }}
+                  <el-button size="small" @click="downloadFile(form.model3dUrl)"
+                    >下载</el-button
+                  >
+                  <el-button
+                    size="small"
+                    @click="modelPreviewVisible = !modelPreviewVisible"
+                  >
+                    {{ modelPreviewVisible ? "收起预览" : "预览" }}
                   </el-button>
                   <el-button size="small" @click="clearModel">删除</el-button>
                 </div>
               </div>
 
-              <div v-if="form.model3dUrl && modelPreviewVisible" class="model-preview">
+              <div
+                v-if="form.model3dUrl && modelPreviewVisible"
+                class="model-preview"
+              >
                 <model-viewer
                   class="model-preview-viewer"
                   :src="normalizeUrl(form.model3dUrl)"
@@ -196,8 +250,12 @@
                   @load="handleModelPreviewLoad"
                   @error="handleModelPreviewError"
                 />
-                <div v-if="modelPreviewLoading" class="model-preview-loading">模型加载中...</div>
-                <div v-if="modelPreviewError" class="model-preview-error">{{ modelPreviewError }}</div>
+                <div v-if="modelPreviewLoading" class="model-preview-loading">
+                  模型加载中...
+                </div>
+                <div v-if="modelPreviewError" class="model-preview-error">
+                  {{ modelPreviewError }}
+                </div>
               </div>
             </el-form-item>
           </el-col>
@@ -217,7 +275,12 @@
               >
                 <el-button size="small" type="primary">上传图片</el-button>
               </el-upload>
-              <el-button size="small" :loading="imagesLoading" @click="fetchProductImages">刷新</el-button>
+              <el-button
+                size="small"
+                :loading="imagesLoading"
+                @click="fetchProductImages"
+                >刷新</el-button
+              >
             </div>
 
             <el-table
@@ -232,12 +295,22 @@
             >
               <el-table-column label="预览" width="92" align="center">
                 <template #default="{ row }">
-                  <el-image class="image-thumb" :src="normalizeUrl(row.imageUrl)" fit="cover" />
+                  <el-image
+                    class="image-thumb"
+                    :src="normalizeUrl(row.imageUrl)"
+                    fit="cover"
+                  />
                 </template>
               </el-table-column>
               <el-table-column label="封面" width="92" align="center">
                 <template #default="{ row }">
-                  <el-tag v-if="row.isCover === 1" type="success" size="small" effect="light">封面</el-tag>
+                  <el-tag
+                    v-if="row.isCover === 1"
+                    type="success"
+                    size="small"
+                    effect="light"
+                    >封面</el-tag
+                  >
                   <span v-else class="muted">—</span>
                 </template>
               </el-table-column>
@@ -256,12 +329,30 @@
               <el-table-column label="操作" min-width="240" align="center">
                 <template #default="{ row }">
                   <div class="image-actions">
-                    <el-button link size="small" :disabled="row.isCover === 1" @click="setCoverImage(row)">
+                    <el-button
+                      link
+                      size="small"
+                      :disabled="row.isCover === 1"
+                      @click="setCoverImage(row)"
+                    >
                       设为封面
                     </el-button>
-                    <el-button link size="small" @click="saveImageRow(row)">保存</el-button>
-                    <el-button link size="small" @click="downloadFile(row.imageUrl)">下载</el-button>
-                    <el-button link size="small" type="danger" @click="deleteImageRow(row)">删除</el-button>
+                    <el-button link size="small" @click="saveImageRow(row)"
+                      >保存</el-button
+                    >
+                    <el-button
+                      link
+                      size="small"
+                      @click="downloadFile(row.imageUrl)"
+                      >下载</el-button
+                    >
+                    <el-button
+                      link
+                      size="small"
+                      type="danger"
+                      @click="deleteImageRow(row)"
+                      >删除</el-button
+                    >
                   </div>
                 </template>
               </el-table-column>
@@ -272,17 +363,19 @@
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="handleSubmit">保存</el-button>
+        <el-button type="primary" :loading="saving" @click="handleSubmit"
+          >保存</el-button
+        >
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
-import { Search, Plus, Edit, Delete } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import AppPagination from '@/components/AppPagination.vue'
+import { computed, nextTick, onMounted, reactive, ref, watch } from "vue";
+import { Search, Plus, Edit, Delete } from "@element-plus/icons-vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+import AppPagination from "@/components/AppPagination.vue";
 import {
   addProductImages,
   createProduct,
@@ -292,455 +385,468 @@ import {
   pageProducts,
   updateProduct,
   updateProductImage,
-  updateProductStatus
-} from '@/api/product'
-import { useUserStore } from '@/stores/user'
+  updateProductStatus,
+} from "@/api/product";
+import { useUserStore } from "@/stores/user";
+import { UPLOAD_URL, getImageUrl } from "@/config/api.js";
 
-const userStore = useUserStore()
+const userStore = useUserStore();
 
-const searchKeyword = ref('')
-const currentPage = ref(1)
-const pageSize = ref(5)
-const total = ref(0)
-const loading = ref(false)
+const searchKeyword = ref("");
+const currentPage = ref(1);
+const pageSize = ref(5);
+const total = ref(0);
+const loading = ref(false);
 
-const products = ref([])
+const products = ref([]);
 
-const dialogVisible = ref(false)
-const saving = ref(false)
-const isEdit = ref(false)
-const formRef = ref()
+const dialogVisible = ref(false);
+const saving = ref(false);
+const isEdit = ref(false);
+const formRef = ref();
 const form = reactive({
   id: null,
-  name: '',
-  description: '',
+  name: "",
+  description: "",
   price: null,
   status: 1,
-  traceCode: '',
-  traceQrUrl: '',
-  model3dUrl: ''
-})
+  traceCode: "",
+  traceQrUrl: "",
+  model3dUrl: "",
+});
 
 const rules = {
-  name: [{ required: true, message: '商品名称不能为空', trigger: 'blur' }],
-  description: [{ required: true, message: '商品描述不能为空', trigger: 'blur' }]
-}
+  name: [{ required: true, message: "商品名称不能为空", trigger: "blur" }],
+  description: [
+    { required: true, message: "商品描述不能为空", trigger: "blur" },
+  ],
+};
 
-const dialogTitle = computed(() => (isEdit.value ? '编辑商品' : '添加商品'))
+const dialogTitle = computed(() => (isEdit.value ? "编辑商品" : "添加商品"));
 
-const uploadUrl = 'http://localhost:8080/api/file/upload'
+const uploadUrl = UPLOAD_URL;
 const uploadHeaders = computed(() => ({
-  Authorization: `Bearer ${userStore.token}`
-}))
+  Authorization: `Bearer ${userStore.token}`,
+}));
 
 const normalizeUrl = (url) => {
-  if (!url) return ''
-  if (url.startsWith('http')) return url
-  return `http://localhost:8080${url}`
-}
+  return getImageUrl(url);
+};
 
 const downloadFile = (url) => {
-  const resolvedUrl = normalizeUrl(url)
-  if (!resolvedUrl) return
-  window.open(resolvedUrl, '_blank')
-}
+  const resolvedUrl = normalizeUrl(url);
+  if (!resolvedUrl) return;
+  window.open(resolvedUrl, "_blank");
+};
 
 const PLACEHOLDER_IMAGE =
-  'data:image/svg+xml;charset=utf-8,' +
+  "data:image/svg+xml;charset=utf-8," +
   encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
       <rect width="600" height="400" fill="#f5f7fa"/>
       <path d="M160 280l80-100 70 80 60-60 110 140H160z" fill="#dcdfe6"/>
       <circle cx="240" cy="160" r="28" fill="#dcdfe6"/>
       <text x="300" y="330" text-anchor="middle" font-size="18" fill="#909399">暂无图片</text>
-    </svg>`
-  )
+    </svg>`,
+  );
 
 const getCoverUrl = (row) => {
-  const url = normalizeUrl(row?.coverImageUrl)
-  return url || PLACEHOLDER_IMAGE
-}
+  const url = normalizeUrl(row?.coverImageUrl);
+  return url || PLACEHOLDER_IMAGE;
+};
 
 const formatTime = (time) => {
-  if (!time) return ''
-  return new Date(time).toLocaleString('zh-CN')
-}
+  if (!time) return "";
+  return new Date(time).toLocaleString("zh-CN");
+};
 
 const getFileName = (url) => {
-  if (!url) return ''
-  const parts = url.split('/')
-  return parts[parts.length - 1] || url
-}
+  if (!url) return "";
+  const parts = url.split("/");
+  return parts[parts.length - 1] || url;
+};
 
 const beforeUploadTraceQr = (file) => {
-  if (!file?.type?.startsWith('image/')) {
-    ElMessage.error('请上传图片文件')
-    return false
+  if (!file?.type?.startsWith("image/")) {
+    ElMessage.error("请上传图片文件");
+    return false;
   }
-  const maxSizeMb = 5
+  const maxSizeMb = 5;
   if (file.size > maxSizeMb * 1024 * 1024) {
-    ElMessage.error(`图片大小不能超过 ${maxSizeMb}MB`)
-    return false
+    ElMessage.error(`图片大小不能超过 ${maxSizeMb}MB`);
+    return false;
   }
-  return true
-}
+  return true;
+};
 
 const beforeUploadModel = (file) => {
-  const name = (file?.name || '').toLowerCase()
-  const is3d = name.endsWith('.glb') || name.endsWith('.gltf')
+  const name = (file?.name || "").toLowerCase();
+  const is3d = name.endsWith(".glb") || name.endsWith(".gltf");
   if (!is3d) {
-    ElMessage.error('请上传 .glb 或 .gltf 文件')
-    return false
+    ElMessage.error("请上传 .glb 或 .gltf 文件");
+    return false;
   }
-  const maxSizeMb = 50
+  const maxSizeMb = 50;
   if (file.size > maxSizeMb * 1024 * 1024) {
-    ElMessage.error(`文件大小不能超过 ${maxSizeMb}MB`)
-    return false
+    ElMessage.error(`文件大小不能超过 ${maxSizeMb}MB`);
+    return false;
   }
-  return true
-}
+  return true;
+};
 
 const beforeUploadProductImage = (file) => {
-  if (!file?.type?.startsWith('image/')) {
-    ElMessage.error('请上传图片文件')
-    return false
+  if (!file?.type?.startsWith("image/")) {
+    ElMessage.error("请上传图片文件");
+    return false;
   }
-  const maxSizeMb = 5
+  const maxSizeMb = 5;
   if (file.size > maxSizeMb * 1024 * 1024) {
-    ElMessage.error(`图片大小不能超过 ${maxSizeMb}MB`)
-    return false
+    ElMessage.error(`图片大小不能超过 ${maxSizeMb}MB`);
+    return false;
   }
-  return true
-}
+  return true;
+};
 
 const handleTraceQrSuccess = async (response) => {
   if (response?.code === 200) {
-    form.traceQrUrl = response.data || ''
+    form.traceQrUrl = response.data || "";
     if (isEdit.value && form.id) {
       try {
-        await updateProduct(form.id, { traceQrUrl: form.traceQrUrl })
-        ElMessage.success('上传并保存成功')
+        await updateProduct(form.id, { traceQrUrl: form.traceQrUrl });
+        ElMessage.success("上传并保存成功");
       } catch (e) {
-        ElMessage.success('上传成功')
-        ElMessage.error('保存溯源二维码失败')
+        ElMessage.success("上传成功");
+        ElMessage.error("保存溯源二维码失败");
       }
-      return
+      return;
     }
-    ElMessage.success('上传成功')
-    return
+    ElMessage.success("上传成功");
+    return;
   }
-  ElMessage.error(response?.message || '上传失败')
-}
+  ElMessage.error(response?.message || "上传失败");
+};
 
 const handleModelSuccess = async (response, uploadFile) => {
   if (response?.code === 200) {
-    form.model3dUrl = response.data || ''
-    uploadedModelName.value = uploadFile?.name || ''
-    modelPreviewVisible.value = true
+    form.model3dUrl = response.data || "";
+    uploadedModelName.value = uploadFile?.name || "";
+    modelPreviewVisible.value = true;
     if (isEdit.value && form.id) {
       try {
-        await updateProduct(form.id, { model3dUrl: form.model3dUrl })
-        ElMessage.success('上传并保存成功')
+        await updateProduct(form.id, { model3dUrl: form.model3dUrl });
+        ElMessage.success("上传并保存成功");
       } catch (e) {
-        ElMessage.success('上传成功')
-        ElMessage.error('保存 3D 模型失败')
+        ElMessage.success("上传成功");
+        ElMessage.error("保存 3D 模型失败");
       }
-      return
+      return;
     }
-    ElMessage.success('上传成功')
-    return
+    ElMessage.success("上传成功");
+    return;
   }
-  ElMessage.error(response?.message || '上传失败')
-}
+  ElMessage.error(response?.message || "上传失败");
+};
 
 const clearTraceQr = async () => {
-  form.traceQrUrl = ''
+  form.traceQrUrl = "";
   if (isEdit.value && form.id) {
     try {
-      await updateProduct(form.id, { traceQrUrl: '' })
-      ElMessage.success('已删除')
+      await updateProduct(form.id, { traceQrUrl: "" });
+      ElMessage.success("已删除");
     } catch (e) {
-      ElMessage.error('删除失败')
+      ElMessage.error("删除失败");
     }
   }
-}
+};
 
 const clearModel = async () => {
-  form.model3dUrl = ''
-  uploadedModelName.value = ''
-  modelPreviewVisible.value = false
-  modelPreviewLoading.value = false
-  modelPreviewError.value = ''
+  form.model3dUrl = "";
+  uploadedModelName.value = "";
+  modelPreviewVisible.value = false;
+  modelPreviewLoading.value = false;
+  modelPreviewError.value = "";
   if (isEdit.value && form.id) {
     try {
-      await updateProduct(form.id, { model3dUrl: '' })
-      ElMessage.success('已删除')
+      await updateProduct(form.id, { model3dUrl: "" });
+      ElMessage.success("已删除");
     } catch (e) {
-      ElMessage.error('删除失败')
+      ElMessage.error("删除失败");
     }
   }
-}
+};
 
-const productImages = ref([])
-const imagesLoading = ref(false)
-const getImageRowClass = ({ row }) => (Number(row?.isCover) === 1 ? 'row-is-cover' : '')
+const productImages = ref([]);
+const imagesLoading = ref(false);
+const getImageRowClass = ({ row }) =>
+  Number(row?.isCover) === 1 ? "row-is-cover" : "";
 
-const uploadedModelName = ref('')
-const modelPreviewVisible = ref(false)
-const modelPreviewLoading = ref(false)
-const modelPreviewError = ref('')
+const uploadedModelName = ref("");
+const modelPreviewVisible = ref(false);
+const modelPreviewLoading = ref(false);
+const modelPreviewError = ref("");
 const modelPosterUrl = computed(() => {
-  const cover = productImages.value?.find?.((img) => img?.isCover === 1)
-  const url = normalizeUrl(cover?.imageUrl)
-  return url || PLACEHOLDER_IMAGE
-})
+  const cover = productImages.value?.find?.((img) => img?.isCover === 1);
+  const url = normalizeUrl(cover?.imageUrl);
+  return url || PLACEHOLDER_IMAGE;
+});
 
 const handleModelPreviewLoad = () => {
-  modelPreviewLoading.value = false
-  modelPreviewError.value = ''
-}
+  modelPreviewLoading.value = false;
+  modelPreviewError.value = "";
+};
 
 const handleModelPreviewError = (e) => {
-  modelPreviewLoading.value = false
-  modelPreviewError.value = e?.detail?.message || e?.message || '模型加载失败'
-}
+  modelPreviewLoading.value = false;
+  modelPreviewError.value = e?.detail?.message || e?.message || "模型加载失败";
+};
 
 watch(
   () => dialogVisible.value,
   (open) => {
     if (!open) {
-      modelPreviewVisible.value = false
-      modelPreviewLoading.value = false
-      modelPreviewError.value = ''
+      modelPreviewVisible.value = false;
+      modelPreviewLoading.value = false;
+      modelPreviewError.value = "";
     }
-  }
-)
+  },
+);
 
 watch(
-  [() => dialogVisible.value, () => form.model3dUrl, () => modelPreviewVisible.value],
+  [
+    () => dialogVisible.value,
+    () => form.model3dUrl,
+    () => modelPreviewVisible.value,
+  ],
   async ([open, url, visible]) => {
     if (!open || !visible || !url) {
-      modelPreviewLoading.value = false
-      modelPreviewError.value = ''
-      return
+      modelPreviewLoading.value = false;
+      modelPreviewError.value = "";
+      return;
     }
-    modelPreviewLoading.value = true
-    modelPreviewError.value = ''
-    await nextTick()
-  }
-)
+    modelPreviewLoading.value = true;
+    modelPreviewError.value = "";
+    await nextTick();
+  },
+);
 
 const fetchProductImages = async () => {
-  if (!form.id) return
-  imagesLoading.value = true
+  if (!form.id) return;
+  imagesLoading.value = true;
   try {
-    const res = await listProductImages(form.id)
+    const res = await listProductImages(form.id);
     const list = (res.data || []).map((img) => ({
       ...img,
       isCover: Number(img?.isCover ?? 0),
-      sortOrder: Number(img?.sortOrder ?? 0)
-    }))
+      sortOrder: Number(img?.sortOrder ?? 0),
+    }));
 
-    let hasCover = false
+    let hasCover = false;
     productImages.value = list.map((img) => {
       if (img.isCover === 1) {
-        if (hasCover) return { ...img, isCover: 0 }
-        hasCover = true
-        return img
+        if (hasCover) return { ...img, isCover: 0 };
+        hasCover = true;
+        return img;
       }
-      return img
-    })
+      return img;
+    });
   } catch (e) {
-    productImages.value = []
+    productImages.value = [];
   } finally {
-    imagesLoading.value = false
+    imagesLoading.value = false;
   }
-}
+};
 
 const handleProductImageUploadSuccess = async (response) => {
   if (response?.code !== 200) {
-    ElMessage.error(response?.message || '上传失败')
-    return
+    ElMessage.error(response?.message || "上传失败");
+    return;
   }
-  const url = response.data
+  const url = response.data;
   if (!url) {
-    ElMessage.error('上传失败')
-    return
+    ElMessage.error("上传失败");
+    return;
   }
   try {
-    await addProductImages(form.id, { imageUrls: [url], setFirstAsCover: true })
-    ElMessage.success('上传成功')
-    await fetchProductImages()
+    await addProductImages(form.id, {
+      imageUrls: [url],
+      setFirstAsCover: true,
+    });
+    ElMessage.success("上传成功");
+    await fetchProductImages();
   } catch (e) {
-    ElMessage.error('保存图片失败')
+    ElMessage.error("保存图片失败");
   }
-}
+};
 
 const setCoverImage = async (row) => {
-  if (!row?.id) return
+  if (!row?.id) return;
   try {
-    const others = productImages.value.filter((img) => img?.id && img.id !== row.id && Number(img.isCover) === 1)
+    const others = productImages.value.filter(
+      (img) => img?.id && img.id !== row.id && Number(img.isCover) === 1,
+    );
     if (others.length) {
-      await Promise.all(others.map((img) => updateProductImage(img.id, { isCover: 0 })))
+      await Promise.all(
+        others.map((img) => updateProductImage(img.id, { isCover: 0 })),
+      );
     }
-    await updateProductImage(row.id, { isCover: 1 })
-    ElMessage.success('已设置封面')
-    await fetchProductImages()
+    await updateProductImage(row.id, { isCover: 1 });
+    ElMessage.success("已设置封面");
+    await fetchProductImages();
   } catch (e) {
-    ElMessage.error('设置封面失败')
+    ElMessage.error("设置封面失败");
   }
-}
+};
 
 const saveImageRow = async (row) => {
-  if (!row?.id) return
-  await updateProductImage(row.id, { sortOrder: row.sortOrder ?? 0 })
-  ElMessage.success('已保存')
-  await fetchProductImages()
-}
+  if (!row?.id) return;
+  await updateProductImage(row.id, { sortOrder: row.sortOrder ?? 0 });
+  ElMessage.success("已保存");
+  await fetchProductImages();
+};
 
 const deleteImageRow = async (row) => {
-  if (!row?.id) return
-  await ElMessageBox.confirm('确认删除该图片吗？', '提示', {
-    type: 'warning',
-    confirmButtonText: '删除',
-    cancelButtonText: '取消'
-  })
-  await deleteProductImage(row.id)
-  ElMessage.success('删除成功')
-  await fetchProductImages()
-}
+  if (!row?.id) return;
+  await ElMessageBox.confirm("确认删除该图片吗？", "提示", {
+    type: "warning",
+    confirmButtonText: "删除",
+    cancelButtonText: "取消",
+  });
+  await deleteProductImage(row.id);
+  ElMessage.success("删除成功");
+  await fetchProductImages();
+};
 
 const resetForm = () => {
-  form.id = null
-  form.name = ''
-  form.description = ''
-  form.price = null
-  form.status = 1
-  form.traceCode = ''
-  form.traceQrUrl = ''
-  form.model3dUrl = ''
-  productImages.value = []
-}
+  form.id = null;
+  form.name = "";
+  form.description = "";
+  form.price = null;
+  form.status = 1;
+  form.traceCode = "";
+  form.traceQrUrl = "";
+  form.model3dUrl = "";
+  productImages.value = [];
+};
 
 const fetchProducts = async () => {
-  loading.value = true
+  loading.value = true;
   try {
     const res = await pageProducts({
       page: currentPage.value,
       size: pageSize.value,
-      keyword: searchKeyword.value || undefined
-    })
-    products.value = res.data?.records || []
-    total.value = res.data?.total || 0
+      keyword: searchKeyword.value || undefined,
+    });
+    products.value = res.data?.records || [];
+    total.value = res.data?.total || 0;
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const handleSearch = async () => {
-  currentPage.value = 1
-  await fetchProducts()
-}
+  currentPage.value = 1;
+  await fetchProducts();
+};
 
 const handleCurrentChange = async (page) => {
-  currentPage.value = page
-  await fetchProducts()
-}
+  currentPage.value = page;
+  await fetchProducts();
+};
 
 const handleSizeChange = async (size) => {
-  pageSize.value = size
-  currentPage.value = 1
-  await fetchProducts()
-}
+  pageSize.value = size;
+  currentPage.value = 1;
+  await fetchProducts();
+};
 
 const handleAdd = async () => {
-  isEdit.value = false
-  resetForm()
-  dialogVisible.value = true
-  await nextTick()
-  formRef.value?.clearValidate()
-}
+  isEdit.value = false;
+  resetForm();
+  dialogVisible.value = true;
+  await nextTick();
+  formRef.value?.clearValidate();
+};
 
 const handleEdit = async (row) => {
-  isEdit.value = true
-  resetForm()
-  form.id = row.id
-  form.name = row.name || ''
-  form.description = row.description || ''
-  form.price = row.price ?? null
-  form.status = row.status ?? 1
-  form.traceCode = row.traceCode || ''
-  form.traceQrUrl = row.traceQrUrl || ''
-  form.model3dUrl = row.model3dUrl || ''
-  uploadedModelName.value = ''
-  modelPreviewVisible.value = false
-  dialogVisible.value = true
-  await nextTick()
-  formRef.value?.clearValidate()
-  await fetchProductImages()
-}
+  isEdit.value = true;
+  resetForm();
+  form.id = row.id;
+  form.name = row.name || "";
+  form.description = row.description || "";
+  form.price = row.price ?? null;
+  form.status = row.status ?? 1;
+  form.traceCode = row.traceCode || "";
+  form.traceQrUrl = row.traceQrUrl || "";
+  form.model3dUrl = row.model3dUrl || "";
+  uploadedModelName.value = "";
+  modelPreviewVisible.value = false;
+  dialogVisible.value = true;
+  await nextTick();
+  formRef.value?.clearValidate();
+  await fetchProductImages();
+};
 
 const handleSubmit = async () => {
-  if (!formRef.value) return
-  await formRef.value.validate()
-  saving.value = true
+  if (!formRef.value) return;
+  await formRef.value.validate();
+  saving.value = true;
   try {
     if (!isEdit.value) {
       const payload = {
         name: form.name,
-        description: form.description
-      }
+        description: form.description,
+      };
       if (form.price !== null && form.price !== undefined) {
-        payload.price = form.price
+        payload.price = form.price;
       }
-      await createProduct(payload)
-      ElMessage.success('添加成功')
+      await createProduct(payload);
+      ElMessage.success("添加成功");
     } else {
       const payload = {
         name: form.name,
         description: form.description,
-        status: form.status
-      }
+        status: form.status,
+      };
       if (form.price !== null && form.price !== undefined) {
-        payload.price = form.price
+        payload.price = form.price;
       }
-      if (form.traceCode !== undefined) payload.traceCode = form.traceCode
-      if (form.traceQrUrl !== undefined) payload.traceQrUrl = form.traceQrUrl
-      if (form.model3dUrl !== undefined) payload.model3dUrl = form.model3dUrl
-      await updateProduct(form.id, payload)
-      ElMessage.success('保存成功')
+      if (form.traceCode !== undefined) payload.traceCode = form.traceCode;
+      if (form.traceQrUrl !== undefined) payload.traceQrUrl = form.traceQrUrl;
+      if (form.model3dUrl !== undefined) payload.model3dUrl = form.model3dUrl;
+      await updateProduct(form.id, payload);
+      ElMessage.success("保存成功");
     }
-    dialogVisible.value = false
-    await fetchProducts()
+    dialogVisible.value = false;
+    await fetchProducts();
   } finally {
-    saving.value = false
+    saving.value = false;
   }
-}
+};
 
 const handleDelete = async (row) => {
-  await ElMessageBox.confirm(`确认删除商品「${row.name}」吗？`, '提示', {
-    type: 'warning',
-    confirmButtonText: '删除',
-    cancelButtonText: '取消'
-  })
-  await deleteProduct(row.id)
-  ElMessage.success('删除成功')
-  await fetchProducts()
-}
+  await ElMessageBox.confirm(`确认删除商品「${row.name}」吗？`, "提示", {
+    type: "warning",
+    confirmButtonText: "删除",
+    cancelButtonText: "取消",
+  });
+  await deleteProduct(row.id);
+  ElMessage.success("删除成功");
+  await fetchProducts();
+};
 
 const handleStatusChange = async (row, val) => {
-  const old = row.status === 1 ? 0 : 1
+  const old = row.status === 1 ? 0 : 1;
   try {
-    await updateProductStatus(row.id, { status: val })
-    ElMessage.success(val === 1 ? '已上架' : '已下架')
+    await updateProductStatus(row.id, { status: val });
+    ElMessage.success(val === 1 ? "已上架" : "已下架");
   } catch (e) {
-    row.status = old
+    row.status = old;
   }
-}
+};
 
 onMounted(() => {
-  fetchProducts()
-})
+  fetchProducts();
+});
 </script>
 
 <style scoped>
@@ -846,7 +952,12 @@ onMounted(() => {
   border: 1px solid var(--border-color-base);
   border-radius: 8px;
   overflow: hidden;
-  background: radial-gradient(120% 120% at 50% 30%, #1f2937 0%, #0b1220 55%, #05070d 100%);
+  background: radial-gradient(
+    120% 120% at 50% 30%,
+    #1f2937 0%,
+    #0b1220 55%,
+    #05070d 100%
+  );
 }
 
 .model-preview-viewer {
@@ -977,7 +1088,9 @@ onMounted(() => {
 :deep(.el-table__fixed-right .el-table__header th.el-table__cell),
 :deep(.el-table__fixed-right .el-table__fixed-header-wrapper),
 :deep(.el-table__fixed-right .el-table__fixed-header-wrapper th),
-:deep(.el-table__fixed-right .el-table__fixed-header-wrapper th.el-table__cell) {
+:deep(
+  .el-table__fixed-right .el-table__fixed-header-wrapper th.el-table__cell
+) {
   background-color: var(--table-header-bg) !important;
 }
 

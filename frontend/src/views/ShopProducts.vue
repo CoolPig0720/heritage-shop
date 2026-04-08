@@ -1,11 +1,6 @@
 <template>
   <div class="shop-products">
     <div class="section-container">
-      <div class="section-header">
-        <h2 class="section-title">商品列表</h2>
-        <el-button type="primary" :loading="loading" @click="refreshProducts">换一批</el-button>
-      </div>
-
       <el-card class="filter-card" shadow="never">
         <div class="filter-row">
           <el-input
@@ -17,9 +12,21 @@
 
           <div class="price-range">
             <span class="label">价格</span>
-            <el-input-number v-model="minPrice" :min="0" :precision="2" :step="10" controls-position="right" />
+            <el-input-number
+              v-model="minPrice"
+              :min="0"
+              :precision="2"
+              :step="10"
+              controls-position="right"
+            />
             <span class="separator">-</span>
-            <el-input-number v-model="maxPrice" :min="0" :precision="2" :step="10" controls-position="right" />
+            <el-input-number
+              v-model="maxPrice"
+              :min="0"
+              :precision="2"
+              :step="10"
+              controls-position="right"
+            />
           </div>
 
           <el-select v-model="sort" style="width: 140px" placeholder="排序">
@@ -28,11 +35,17 @@
             <el-option label="价格从高到低" value="priceDesc" />
           </el-select>
 
-          <el-switch v-model="hasImageOnly" active-text="仅看有图" inactive-text="全部" />
+          <el-switch
+            v-model="hasImageOnly"
+            active-text="仅看有图"
+            inactive-text="全部"
+          />
 
           <div class="filter-actions">
             <el-button @click="resetFilters">重置</el-button>
-            <span class="result-count">共 {{ filteredProducts.length }} 件</span>
+            <span class="result-count"
+              >共 {{ filteredProducts.length }} 件</span
+            >
           </div>
         </div>
       </el-card>
@@ -68,122 +81,121 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { getRecommendProducts } from '@/api/shop'
+import { computed, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { getRecommendProducts } from "@/api/shop";
+import { getImageUrl } from "@/config/api.js";
 
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
-const loading = ref(false)
-const products = ref([])
+const loading = ref(false);
+const products = ref([]);
 
-const keyword = ref('')
-const minPrice = ref(null)
-const maxPrice = ref(null)
-const sort = ref('default')
-const hasImageOnly = ref(false)
+const keyword = ref("");
+const minPrice = ref(null);
+const maxPrice = ref(null);
+const sort = ref("default");
+const hasImageOnly = ref(false);
 
 const PLACEHOLDER_IMAGE =
-  'data:image/svg+xml;charset=utf-8,' +
+  "data:image/svg+xml;charset=utf-8," +
   encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
       <rect width="600" height="400" fill="#f5f7fa"/>
       <path d="M160 280l80-100 70 80 60-60 110 140H160z" fill="#dcdfe6"/>
       <circle cx="240" cy="160" r="28" fill="#dcdfe6"/>
       <text x="300" y="330" text-anchor="middle" font-size="18" fill="#909399">暂无图片</text>
-    </svg>`
-  )
+    </svg>`,
+  );
 
 const normalizeUrl = (url) => {
-  if (!url) return ''
-  if (url.startsWith('http')) return url
-  return `http://localhost:8080${url}`
-}
+  return getImageUrl(url);
+};
 
 const refreshProducts = async () => {
-  loading.value = true
+  loading.value = true;
   try {
-    const res = await getRecommendProducts({ count: 50 })
-    products.value = res.data || []
+    const res = await getRecommendProducts({ count: 50 });
+    products.value = res.data || [];
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 watch([minPrice, maxPrice], ([min, max]) => {
-  if (min === null || min === undefined) return
-  if (max === null || max === undefined) return
-  const minNum = Number(min)
-  const maxNum = Number(max)
-  if (Number.isNaN(minNum) || Number.isNaN(maxNum)) return
+  if (min === null || min === undefined) return;
+  if (max === null || max === undefined) return;
+  const minNum = Number(min);
+  const maxNum = Number(max);
+  if (Number.isNaN(minNum) || Number.isNaN(maxNum)) return;
   if (minNum > maxNum) {
-    minPrice.value = maxNum
-    maxPrice.value = minNum
+    minPrice.value = maxNum;
+    maxPrice.value = minNum;
   }
-})
+});
 
 const filteredProducts = computed(() => {
-  let list = Array.isArray(products.value) ? [...products.value] : []
+  let list = Array.isArray(products.value) ? [...products.value] : [];
 
-  const kw = (keyword.value || '').trim().toLowerCase()
+  const kw = (keyword.value || "").trim().toLowerCase();
   if (kw) {
     list = list.filter((p) => {
-      const name = (p?.name || '').toString().toLowerCase()
-      const desc = (p?.description || '').toString().toLowerCase()
-      return name.includes(kw) || desc.includes(kw)
-    })
+      const name = (p?.name || "").toString().toLowerCase();
+      const desc = (p?.description || "").toString().toLowerCase();
+      return name.includes(kw) || desc.includes(kw);
+    });
   }
 
   if (hasImageOnly.value) {
-    list = list.filter((p) => !!normalizeUrl(p?.coverImageUrl))
+    list = list.filter((p) => !!normalizeUrl(p?.coverImageUrl));
   }
 
-  const min = minPrice.value
-  if (min !== null && min !== undefined && min !== '') {
-    const minNum = Number(min)
+  const min = minPrice.value;
+  if (min !== null && min !== undefined && min !== "") {
+    const minNum = Number(min);
     if (!Number.isNaN(minNum)) {
-      list = list.filter((p) => Number(p?.price ?? 0) >= minNum)
+      list = list.filter((p) => Number(p?.price ?? 0) >= minNum);
     }
   }
 
-  const max = maxPrice.value
-  if (max !== null && max !== undefined && max !== '') {
-    const maxNum = Number(max)
+  const max = maxPrice.value;
+  if (max !== null && max !== undefined && max !== "") {
+    const maxNum = Number(max);
     if (!Number.isNaN(maxNum)) {
-      list = list.filter((p) => Number(p?.price ?? 0) <= maxNum)
+      list = list.filter((p) => Number(p?.price ?? 0) <= maxNum);
     }
   }
 
-  if (sort.value === 'priceAsc') {
-    list.sort((a, b) => Number(a?.price ?? 0) - Number(b?.price ?? 0))
-  } else if (sort.value === 'priceDesc') {
-    list.sort((a, b) => Number(b?.price ?? 0) - Number(a?.price ?? 0))
+  if (sort.value === "priceAsc") {
+    list.sort((a, b) => Number(a?.price ?? 0) - Number(b?.price ?? 0));
+  } else if (sort.value === "priceDesc") {
+    list.sort((a, b) => Number(b?.price ?? 0) - Number(a?.price ?? 0));
   }
 
-  return list
-})
+  return list;
+});
 
 const resetFilters = () => {
-  keyword.value = ''
-  minPrice.value = null
-  maxPrice.value = null
-  sort.value = 'default'
-  hasImageOnly.value = false
-}
+  keyword.value = "";
+  minPrice.value = null;
+  maxPrice.value = null;
+  sort.value = "default";
+  hasImageOnly.value = false;
+};
 
 const goToDetail = (id) => {
-  router.push({ path: `/product/${id}`, query: { from: route.fullPath } })
-}
+  router.push({ path: `/product/${id}`, query: { from: route.fullPath } });
+};
 
 const getCover = (product) => {
-  const url = normalizeUrl(product?.coverImageUrl)
-  return url || PLACEHOLDER_IMAGE
-}
+  const url = normalizeUrl(product?.coverImageUrl);
+  return url || PLACEHOLDER_IMAGE;
+};
 
 onMounted(() => {
-  refreshProducts()
-})
+  refreshProducts();
+});
 </script>
 
 <style scoped>
@@ -261,7 +273,9 @@ onMounted(() => {
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
 }
 
@@ -317,7 +331,7 @@ onMounted(() => {
 .price {
   font-size: 18px;
   font-weight: bold;
-  color: #F56C6C;
+  color: #f56c6c;
 }
 
 .empty {

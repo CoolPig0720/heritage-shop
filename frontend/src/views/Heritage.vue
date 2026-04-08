@@ -1,10 +1,6 @@
 <template>
   <div class="heritage">
     <div class="section-container">
-      <div class="section-header">
-        <h2 class="section-title">非遗文化</h2>
-      </div>
-
       <el-card class="list-card table-card" shadow="never">
         <div class="filter-row">
           <el-select
@@ -17,7 +13,12 @@
             @change="handleTypeChange"
             @clear="handleTypeChange"
           >
-            <el-option v-for="opt in categoryOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+            <el-option
+              v-for="opt in categoryOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
           </el-select>
 
           <el-input
@@ -29,47 +30,108 @@
             @clear="handleSearch"
           />
 
-          <el-button type="primary" :loading="loading" @click="handleSearch">搜索</el-button>
+          <el-button type="primary" :loading="loading" @click="handleSearch"
+            >搜索</el-button
+          >
 
           <div class="filter-spacer" />
           <span class="result-count">共 {{ total }} 条</span>
         </div>
 
         <el-table v-loading="loading" :data="records" style="width: 100%">
-          <el-table-column label="序号" width="90" :index="indexMethod" type="index" />
-          <el-table-column prop="categoryName" label="分类" width="180" />
-          <el-table-column label="项目名称" min-width="220">
+          <el-table-column
+            label="序号"
+            width="90"
+            :index="indexMethod"
+            type="index"
+            align="center"
+            header-align="center"
+          />
+          <el-table-column
+            prop="categoryName"
+            label="分类"
+            width="180"
+            align="center"
+            header-align="center"
+          />
+          <el-table-column
+            label="项目名称"
+            min-width="220"
+            align="center"
+            header-align="center"
+          >
             <template #default="{ row }">
-              <el-link type="primary" :underline="false" @click="goProject(row.id)">
+              <el-link
+                type="primary"
+                :underline="false"
+                @click="goProject(row.id)"
+              >
                 <TransText :text="row.name" />
               </el-link>
             </template>
           </el-table-column>
-          <el-table-column label="传承人" min-width="160" show-overflow-tooltip>
+          <el-table-column
+            label="传承人"
+            min-width="160"
+            show-overflow-tooltip
+            align="center"
+            header-align="center"
+          >
             <template #default="{ row }">
               <template v-if="row.inheritors && row.inheritors.length > 0">
                 <span v-for="(p, idx) in row.inheritors" :key="p.id">
-                  <el-link type="primary" :underline="false" @click="goInheritor(p.id)"><TransText :text="p.name" /></el-link>
+                  <el-link
+                    type="primary"
+                    :underline="false"
+                    @click="goInheritor(p.id)"
+                    ><TransText :text="p.name"
+                  /></el-link>
                   <span v-if="idx < row.inheritors.length - 1">、</span>
                 </span>
               </template>
               <span v-else>暂无数据</span>
             </template>
           </el-table-column>
-          <el-table-column prop="applyUnit" label="申报单位或地区" min-width="180" show-overflow-tooltip>
+          <el-table-column
+            prop="applyUnit"
+            label="申报单位或地区"
+            min-width="180"
+            show-overflow-tooltip
+            align="center"
+            header-align="center"
+          >
             <template #default="{ row }">
               <TransText :text="row.applyUnit" />
             </template>
           </el-table-column>
-          <el-table-column prop="protectUnit" label="保护单位" min-width="180" show-overflow-tooltip>
+          <el-table-column
+            prop="protectUnit"
+            label="保护单位"
+            min-width="180"
+            show-overflow-tooltip
+            align="center"
+            header-align="center"
+          >
             <template #default="{ row }">
               <TransText :text="row.protectUnit" />
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="100" align="right" header-align="right">
+          <el-table-column
+            label="操作"
+            width="120"
+            align="center"
+            header-align="center"
+          >
             <template #default="{ row }">
-              <div class="row-actions row-actions--right">
-                <el-button type="primary" plain round size="small" @click="goProject(row.id)">查看详情</el-button>
+              <div class="row-actions">
+                <el-button
+                  type="primary"
+                  plain
+                  round
+                  size="small"
+                  @click="goProject(row.id)"
+                  >查看详情</el-button
+                >
               </div>
             </template>
           </el-table-column>
@@ -88,108 +150,114 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import AppPagination from '@/components/AppPagination.vue'
-import { getHeritageCategoryTree, pageHeritageProjects } from '@/api/heritage'
+import { computed, onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import AppPagination from "@/components/AppPagination.vue";
+import { getHeritageCategoryTree, pageHeritageProjects } from "@/api/heritage";
 
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
-const categoryLoading = ref(false)
-const categories = ref([])
-const selectedCategoryId = ref(null)
+const categoryLoading = ref(false);
+const categories = ref([]);
+const selectedCategoryId = ref(null);
 
-const loading = ref(false)
-const keyword = ref('')
-const page = ref(1)
-const size = ref(5)
-const total = ref(0)
-const records = ref([])
+const loading = ref(false);
+const keyword = ref("");
+const page = ref(1);
+const size = ref(5);
+const total = ref(0);
+const records = ref([]);
 
 const flattenCategories = (nodes, depth = 0, out = []) => {
-  const list = Array.isArray(nodes) ? nodes : []
+  const list = Array.isArray(nodes) ? nodes : [];
   list.forEach((n) => {
-    const name = (n?.name ?? '').toString()
-    const prefix = depth > 0 ? `${'—'.repeat(depth)} ` : ''
-    out.push({ value: n?.id, label: `${prefix}${name}` })
+    const name = (n?.name ?? "").toString();
+    const prefix = depth > 0 ? `${"—".repeat(depth)} ` : "";
+    out.push({ value: n?.id, label: `${prefix}${name}` });
     if (Array.isArray(n?.children) && n.children.length > 0) {
-      flattenCategories(n.children, depth + 1, out)
+      flattenCategories(n.children, depth + 1, out);
     }
-  })
-  return out
-}
+  });
+  return out;
+};
 
-const categoryOptions = computed(() => flattenCategories(categories.value))
+const categoryOptions = computed(() => flattenCategories(categories.value));
 
 const loadCategories = async () => {
-  categoryLoading.value = true
+  categoryLoading.value = true;
   try {
-    const res = await getHeritageCategoryTree()
-    categories.value = Array.isArray(res.data) ? res.data : []
+    const res = await getHeritageCategoryTree();
+    categories.value = Array.isArray(res.data) ? res.data : [];
   } catch (e) {
-    categories.value = []
+    categories.value = [];
   } finally {
-    categoryLoading.value = false
+    categoryLoading.value = false;
   }
-}
+};
 
 const loadProjects = async () => {
-  loading.value = true
+  loading.value = true;
   try {
     const params = {
       page: page.value,
-      size: size.value
-    }
-    const kw = (keyword.value || '').trim()
-    if (kw) params.keyword = kw
-    if (selectedCategoryId.value) params.categoryId = selectedCategoryId.value
+      size: size.value,
+    };
+    const kw = (keyword.value || "").trim();
+    if (kw) params.keyword = kw;
+    if (selectedCategoryId.value) params.categoryId = selectedCategoryId.value;
 
-    const res = await pageHeritageProjects(params)
-    const data = res.data || {}
-    records.value = Array.isArray(data.records) ? data.records : []
-    total.value = Number(data.total ?? 0)
+    const res = await pageHeritageProjects(params);
+    const data = res.data || {};
+    records.value = Array.isArray(data.records) ? data.records : [];
+    total.value = Number(data.total ?? 0);
   } catch (e) {
-    records.value = []
-    total.value = 0
+    records.value = [];
+    total.value = 0;
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const handleSearch = () => {
-  page.value = 1
-  loadProjects()
-}
+  page.value = 1;
+  loadProjects();
+};
 
 const handleTypeChange = () => {
-  page.value = 1
-  loadProjects()
-}
+  page.value = 1;
+  loadProjects();
+};
 
 const handleSizeChange = () => {
-  page.value = 1
-  loadProjects()
-}
+  page.value = 1;
+  loadProjects();
+};
 
 const handleCurrentChange = () => {
-  loadProjects()
-}
+  loadProjects();
+};
 
 const goProject = (id) => {
-  router.push({ path: `/heritage/projects/${id}`, query: { from: route.fullPath } })
-}
+  router.push({
+    path: `/heritage/projects/${id}`,
+    query: { from: route.fullPath },
+  });
+};
 
 const goInheritor = (id) => {
-  router.push({ path: `/heritage/inheritors/${id}`, query: { from: route.fullPath } })
-}
+  router.push({
+    path: `/heritage/inheritors/${id}`,
+    query: { from: route.fullPath },
+  });
+};
 
-const indexMethod = (index) => (page.value - 1) * size.value + index + 1
+const indexMethod = (index) => (page.value - 1) * size.value + index + 1;
 
 onMounted(async () => {
-  await loadCategories()
-  await loadProjects()
-})
+  await loadCategories();
+  await loadProjects();
+});
 </script>
 
 <style scoped>

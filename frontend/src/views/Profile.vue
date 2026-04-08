@@ -6,13 +6,17 @@
           <div class="info-layout">
             <div class="info-left">
               <div class="avatar-wrapper">
-                <el-avatar :size="100" :src="userInfo.avatar || ''" class="profile-avatar">
-                  {{ userInfo.name?.charAt(0) || 'U' }}
+                <el-avatar
+                  :size="100"
+                  :src="userInfo.avatar || ''"
+                  class="profile-avatar"
+                >
+                  {{ userInfo.name?.charAt(0) || "U" }}
                 </el-avatar>
                 <div class="avatar-mask">
                   <el-upload
                     class="avatar-uploader-trigger"
-                    action="http://localhost:8080/api/file/upload"
+                    :action="UPLOAD_URL"
                     :show-file-list="false"
                     :on-success="handleAvatarSuccess"
                     :before-upload="beforeAvatarUpload"
@@ -26,10 +30,16 @@
               </div>
               <div class="user-role-badge">{{ roleText }}</div>
             </div>
-            
+
             <div class="info-right">
               <h3 class="section-title">基本信息</h3>
-              <el-form :model="form" :rules="rules" ref="formRef" label-position="top" class="compact-form">
+              <el-form
+                :model="form"
+                :rules="rules"
+                ref="formRef"
+                label-position="top"
+                class="compact-form"
+              >
                 <el-row :gutter="20">
                   <el-col :span="12">
                     <el-form-item label="账号" prop="account">
@@ -42,22 +52,35 @@
                     </el-form-item>
                   </el-col>
                 </el-row>
-                
+
                 <el-row :gutter="20">
                   <el-col :span="12">
                     <el-form-item label="证件号" prop="certificateNumber">
-                      <el-input v-model="form.certificateNumber" disabled placeholder="未认证" />
+                      <el-input
+                        v-model="form.certificateNumber"
+                        disabled
+                        placeholder="未认证"
+                      />
                     </el-form-item>
                   </el-col>
                   <el-col :span="12">
                     <el-form-item label="注册时间">
-                      <el-input :value="formatTime(userInfo.registerTime)" disabled />
+                      <el-input
+                        :value="formatTime(userInfo.registerTime)"
+                        disabled
+                      />
                     </el-form-item>
                   </el-col>
                 </el-row>
 
                 <el-form-item style="margin-top: 10px">
-                  <el-button type="primary" @click="handleUpdateProfile" :loading="updating" class="submit-btn">保存修改</el-button>
+                  <el-button
+                    type="primary"
+                    @click="handleUpdateProfile"
+                    :loading="updating"
+                    class="submit-btn"
+                    >保存修改</el-button
+                  >
                 </el-form-item>
               </el-form>
             </div>
@@ -66,20 +89,38 @@
         <el-tab-pane label="收货地址" name="address">
           <div class="address-section">
             <div class="address-toolbar">
-              <el-button type="primary" @click="openAddAddress">新增地址</el-button>
+              <el-button type="primary" @click="openAddAddress"
+                >新增地址</el-button
+              >
             </div>
 
             <el-skeleton v-if="addressLoading" :rows="5" animated />
 
-            <el-empty v-else-if="addresses.length === 0" description="暂无地址" />
+            <el-empty
+              v-else-if="addresses.length === 0"
+              description="暂无地址"
+            />
 
             <div v-else class="address-list">
-              <div v-for="item in pagedAddresses" :key="item.id" class="address-item">
+              <div
+                v-for="item in pagedAddresses"
+                :key="item.id"
+                class="address-item"
+              >
                 <div class="address-item-main">
                   <div class="address-item-title">
-                    <span class="address-item-name">{{ item.receiverName }}</span>
-                    <span class="address-item-phone">{{ item.receiverPhone }}</span>
-                    <el-tag v-if="item.isDefault === 1" type="success" size="small">默认</el-tag>
+                    <span class="address-item-name">{{
+                      item.receiverName
+                    }}</span>
+                    <span class="address-item-phone">{{
+                      item.receiverPhone
+                    }}</span>
+                    <el-tag
+                      v-if="item.isDefault === 1"
+                      type="success"
+                      size="small"
+                      >默认</el-tag
+                    >
                   </div>
                   <div class="address-item-detail">
                     {{ formatAddressLine(item) }}
@@ -87,11 +128,23 @@
                 </div>
 
                 <div class="address-item-actions">
-                  <el-button size="small" type="primary" plain round @click="openEditAddress(item)">
+                  <el-button
+                    size="small"
+                    type="primary"
+                    plain
+                    round
+                    @click="openEditAddress(item)"
+                  >
                     <el-icon><Edit /></el-icon>
                     编辑
                   </el-button>
-                  <el-button size="small" type="danger" plain round @click="handleDeleteAddress(item)">
+                  <el-button
+                    size="small"
+                    type="danger"
+                    plain
+                    round
+                    @click="handleDeleteAddress(item)"
+                  >
                     <el-icon><Delete /></el-icon>
                     删除
                   </el-button>
@@ -107,7 +160,7 @@
                   </el-button>
                 </div>
               </div>
-              
+
               <div class="pagination-container">
                 <AppPagination
                   v-model:current-page="addressCurrentPage"
@@ -117,13 +170,29 @@
               </div>
             </div>
 
-            <el-dialog v-model="addressDialogVisible" :title="addressDialogTitle" width="520px" @closed="handleAddressDialogClosed">
-              <el-form ref="addressFormRef" :model="addressForm" :rules="addressRules" label-width="90px">
+            <el-dialog
+              v-model="addressDialogVisible"
+              :title="addressDialogTitle"
+              width="520px"
+              @closed="handleAddressDialogClosed"
+            >
+              <el-form
+                ref="addressFormRef"
+                :model="addressForm"
+                :rules="addressRules"
+                label-width="90px"
+              >
                 <el-form-item label="收货人" prop="receiverName">
-                  <el-input v-model="addressForm.receiverName" placeholder="请输入收货人姓名" />
+                  <el-input
+                    v-model="addressForm.receiverName"
+                    placeholder="请输入收货人姓名"
+                  />
                 </el-form-item>
                 <el-form-item label="手机号" prop="receiverPhone">
-                  <el-input v-model="addressForm.receiverPhone" placeholder="请输入收货人手机号" />
+                  <el-input
+                    v-model="addressForm.receiverPhone"
+                    placeholder="请输入收货人手机号"
+                  />
                 </el-form-item>
                 <el-form-item label="地区" prop="regionCodes">
                   <el-cascader
@@ -135,65 +204,145 @@
                   />
                 </el-form-item>
                 <el-form-item label="已选地区">
-                  <el-input :model-value="addressForm.regionNamePath" disabled />
+                  <el-input
+                    :model-value="addressForm.regionNamePath"
+                    disabled
+                  />
                 </el-form-item>
                 <el-form-item label="详细地址" prop="detailAddress">
-                  <el-input v-model="addressForm.detailAddress" placeholder="请输入详细地址" />
+                  <el-input
+                    v-model="addressForm.detailAddress"
+                    placeholder="请输入详细地址"
+                  />
                 </el-form-item>
                 <el-form-item>
-                  <el-checkbox v-model="addressForm.isDefault">设为默认地址</el-checkbox>
+                  <el-checkbox v-model="addressForm.isDefault"
+                    >设为默认地址</el-checkbox
+                  >
                 </el-form-item>
               </el-form>
               <template #footer>
-                <el-button @click="addressDialogVisible = false">取消</el-button>
-                <el-button type="primary" :loading="addressSaving" @click="submitAddress">保存</el-button>
+                <el-button @click="addressDialogVisible = false"
+                  >取消</el-button
+                >
+                <el-button
+                  type="primary"
+                  :loading="addressSaving"
+                  @click="submitAddress"
+                  >保存</el-button
+                >
               </template>
             </el-dialog>
           </div>
         </el-tab-pane>
         <el-tab-pane label="修改密码" name="password">
           <div class="password-section">
-            <el-form :model="passwordForm" :rules="passwordRules" ref="passwordFormRef" label-position="top" class="single-column-form">
+            <el-form
+              :model="passwordForm"
+              :rules="passwordRules"
+              ref="passwordFormRef"
+              label-position="top"
+              class="single-column-form"
+            >
               <el-form-item label="原密码" prop="oldPassword">
-                <el-input v-model="passwordForm.oldPassword" type="password" placeholder="请输入原密码" show-password />
+                <el-input
+                  v-model="passwordForm.oldPassword"
+                  type="password"
+                  placeholder="请输入原密码"
+                  show-password
+                />
               </el-form-item>
               <el-form-item label="新密码" prop="newPassword">
-                <el-input v-model="passwordForm.newPassword" type="password" placeholder="请输入新密码" show-password />
+                <el-input
+                  v-model="passwordForm.newPassword"
+                  type="password"
+                  placeholder="请输入新密码"
+                  show-password
+                />
               </el-form-item>
               <el-form-item label="确认密码" prop="confirmPassword">
-                <el-input v-model="passwordForm.confirmPassword" type="password" placeholder="请再次输入新密码" show-password />
+                <el-input
+                  v-model="passwordForm.confirmPassword"
+                  type="password"
+                  placeholder="请再次输入新密码"
+                  show-password
+                />
               </el-form-item>
               <el-form-item style="margin-top: 20px">
-                <el-button type="primary" @click="handleUpdatePassword" :loading="updatingPassword" class="submit-btn">修改密码</el-button>
+                <el-button
+                  type="primary"
+                  @click="handleUpdatePassword"
+                  :loading="updatingPassword"
+                  class="submit-btn"
+                  >修改密码</el-button
+                >
               </el-form-item>
             </el-form>
           </div>
         </el-tab-pane>
         <el-tab-pane label="实名认证" name="certificate">
           <div class="certificate-section">
-            <el-form :model="certificateForm" :rules="certificateRules" ref="certificateFormRef" label-position="top" class="single-column-form">
+            <el-form
+              :model="certificateForm"
+              :rules="certificateRules"
+              ref="certificateFormRef"
+              label-position="top"
+              class="single-column-form"
+            >
               <el-form-item label="证件号" prop="certificateNumber">
-                <el-input v-model="certificateForm.certificateNumber" placeholder="请输入证件号" :disabled="isCertified" />
+                <el-input
+                  v-model="certificateForm.certificateNumber"
+                  placeholder="请输入证件号"
+                  :disabled="isCertified"
+                />
               </el-form-item>
               <el-form-item label="真实姓名" prop="name">
-                <el-input v-model="certificateForm.name" placeholder="请输入真实姓名" :disabled="isCertified" />
+                <el-input
+                  v-model="certificateForm.name"
+                  placeholder="请输入真实姓名"
+                  :disabled="isCertified"
+                />
               </el-form-item>
               <el-form-item v-if="!isCertified" style="margin-top: 20px">
-                <el-button type="primary" @click="handleVerifyCertificate" :loading="verifying" class="submit-btn">提交认证</el-button>
+                <el-button
+                  type="primary"
+                  @click="handleVerifyCertificate"
+                  :loading="verifying"
+                  class="submit-btn"
+                  >提交认证</el-button
+                >
               </el-form-item>
             </el-form>
-            <div class="certificate-status-wrapper" v-if="isCertified || certificateInfo">
+            <div
+              class="certificate-status-wrapper"
+              v-if="isCertified || certificateInfo"
+            >
               <el-alert
                 v-if="isCertified"
-                :title="`认证状态：${certificateStatusText}`""
+                :title="`认证状态：${certificateStatusText}`"
                 type="success"
                 :closable="false"
                 show-icon
               />
-              <el-descriptions v-if="certificateInfo" :column="1" border style="margin-top: 20px">
-                <el-descriptions-item label="证件号">{{ certificateInfo.certificateNumber }}</el-descriptions-item>
-                <el-descriptions-item label="真实姓名">{{ certificateInfo.name }}</el-descriptions-item>
-                <el-descriptions-item label="角色">{{ certificateInfo.role === 'ADMIN' ? '管理员' : certificateInfo.role === 'MERCHANT' ? '商家' : '普通用户' }}</el-descriptions-item>
+              <el-descriptions
+                v-if="certificateInfo"
+                :column="1"
+                border
+                style="margin-top: 20px"
+              >
+                <el-descriptions-item label="证件号">{{
+                  certificateInfo.certificateNumber
+                }}</el-descriptions-item>
+                <el-descriptions-item label="真实姓名">{{
+                  certificateInfo.name
+                }}</el-descriptions-item>
+                <el-descriptions-item label="角色">{{
+                  certificateInfo.role === "ADMIN"
+                    ? "管理员"
+                    : certificateInfo.role === "MERCHANT"
+                      ? "商家"
+                      : "普通用户"
+                }}</el-descriptions-item>
               </el-descriptions>
             </div>
           </div>
@@ -204,332 +353,361 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, nextTick } from 'vue'
-import { useUserStore } from '@/stores/user'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import AppPagination from '@/components/AppPagination.vue'
-import { getProfile, updateProfile, updatePassword, verifyCertificate, getCertificateInfo, createAddress, updateAddress, deleteAddress, listAddresses, setDefaultAddress } from '@/api/auth'
-import { regionData, CodeToText, TextToCode } from 'element-china-area-data'
-import { Camera, Edit, Delete } from '@element-plus/icons-vue'
+import { ref, reactive, computed, onMounted, nextTick } from "vue";
+import { useUserStore } from "@/stores/user";
+import { ElMessage, ElMessageBox } from "element-plus";
+import AppPagination from "@/components/AppPagination.vue";
+import {
+  getProfile,
+  updateProfile,
+  updatePassword,
+  verifyCertificate,
+  getCertificateInfo,
+  createAddress,
+  updateAddress,
+  deleteAddress,
+  listAddresses,
+  setDefaultAddress,
+} from "@/api/auth";
+import { regionData, CodeToText, TextToCode } from "element-china-area-data";
+import { Camera, Edit, Delete } from "@element-plus/icons-vue";
+import { UPLOAD_URL, getAvatarUrl } from "@/config/api.js";
 
-const userStore = useUserStore()
+const userStore = useUserStore();
 
-const activeTab = ref('info')
-const formRef = ref(null)
-const passwordFormRef = ref(null)
-const certificateFormRef = ref(null)
-const addressFormRef = ref(null)
-const updating = ref(false)
-const updatingPassword = ref(false)
-const verifying = ref(false)
+const activeTab = ref("info");
+const formRef = ref(null);
+const passwordFormRef = ref(null);
+const certificateFormRef = ref(null);
+const addressFormRef = ref(null);
+const updating = ref(false);
+const updatingPassword = ref(false);
+const verifying = ref(false);
 
 const userInfo = reactive({
   id: null,
-  account: '',
-  name: '',
-  role: '',
-  avatar: '',
-  certificateNumber: '',
-  registerTime: null
-})
+  account: "",
+  name: "",
+  role: "",
+  avatar: "",
+  certificateNumber: "",
+  registerTime: null,
+});
 
 const form = reactive({
-  account: '',
-  name: '',
-  avatar: '',
-  certificateNumber: ''
-})
+  account: "",
+  name: "",
+  avatar: "",
+  certificateNumber: "",
+});
 
 const passwordForm = reactive({
-  oldPassword: '',
-  newPassword: '',
-  confirmPassword: ''
-})
+  oldPassword: "",
+  newPassword: "",
+  confirmPassword: "",
+});
 
 const certificateForm = reactive({
-  certificateNumber: '',
-  name: ''
-})
+  certificateNumber: "",
+  name: "",
+});
 
-const certificateInfo = ref(null)
-const isCertified = computed(() => !!userInfo.certificateNumber)
+const certificateInfo = ref(null);
+const isCertified = computed(() => !!userInfo.certificateNumber);
 const certificateStatusText = computed(() => {
   if (userInfo.certificateNumber) {
-    return '已认证'
+    return "已认证";
   }
-  return '未认证'
-})
+  return "未认证";
+});
 
 const roleText = computed(() => {
   const roleMap = {
-    'ADMIN': '管理员',
-    'MERCHANT': '商家',
-    'USER': '普通用户'
-  }
-  return roleMap[userInfo.role] || userInfo.role
-})
+    ADMIN: "管理员",
+    MERCHANT: "商家",
+    USER: "普通用户",
+  };
+  return roleMap[userInfo.role] || userInfo.role;
+});
 
 const uploadHeaders = computed(() => ({
-  'Authorization': `Bearer ${userStore.token}`
-}))
+  Authorization: `Bearer ${userStore.token}`,
+}));
 
 const rules = {
   name: [
-    { required: true, message: '请输入名称', trigger: 'blur' },
-    { min: 2, max: 20, message: '名称长度在2-20个字符', trigger: 'blur' }
-  ]
-}
+    { required: true, message: "请输入名称", trigger: "blur" },
+    { min: 2, max: 20, message: "名称长度在2-20个字符", trigger: "blur" },
+  ],
+};
 
 const validateConfirmPassword = (rule, value, callback) => {
   if (value !== passwordForm.newPassword) {
-    callback(new Error('两次输入的密码不一致'))
+    callback(new Error("两次输入的密码不一致"));
   } else {
-    callback()
+    callback();
   }
-}
+};
 
 const passwordRules = {
-  oldPassword: [
-    { required: true, message: '请输入原密码', trigger: 'blur' }
-  ],
+  oldPassword: [{ required: true, message: "请输入原密码", trigger: "blur" }],
   newPassword: [
-    { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '密码长度在6-20个字符', trigger: 'blur' }
+    { required: true, message: "请输入新密码", trigger: "blur" },
+    { min: 6, max: 20, message: "密码长度在6-20个字符", trigger: "blur" },
   ],
   confirmPassword: [
-    { required: true, message: '请再次输入新密码', trigger: 'blur' },
-    { validator: validateConfirmPassword, trigger: 'blur' }
-  ]
-}
+    { required: true, message: "请再次输入新密码", trigger: "blur" },
+    { validator: validateConfirmPassword, trigger: "blur" },
+  ],
+};
 
 const certificateRules = {
   certificateNumber: [
-    { required: true, message: '请输入证件号', trigger: 'blur' }
+    { required: true, message: "请输入证件号", trigger: "blur" },
   ],
   name: [
-    { required: true, message: '请输入真实姓名', trigger: 'blur' },
-    { min: 2, max: 20, message: '姓名长度在2-20个字符', trigger: 'blur' }
-  ]
-}
+    { required: true, message: "请输入真实姓名", trigger: "blur" },
+    { min: 2, max: 20, message: "姓名长度在2-20个字符", trigger: "blur" },
+  ],
+};
 
 const formatTime = (time) => {
-  if (!time) return ''
-  return new Date(time).toLocaleString('zh-CN')
-}
+  if (!time) return "";
+  return new Date(time).toLocaleString("zh-CN");
+};
 
-const addresses = ref([])
-const addressLoading = ref(false)
-const addressCurrentPage = ref(1)
-const addressPageSize = ref(5)
+const addresses = ref([]);
+const addressLoading = ref(false);
+const addressCurrentPage = ref(1);
+const addressPageSize = ref(5);
 
 const pagedAddresses = computed(() => {
-  const start = (addressCurrentPage.value - 1) * addressPageSize.value
-  const end = start + addressPageSize.value
-  return addresses.value.slice(start, end)
-})
+  const start = (addressCurrentPage.value - 1) * addressPageSize.value;
+  const end = start + addressPageSize.value;
+  return addresses.value.slice(start, end);
+});
 
-const addressDialogVisible = ref(false)
-const addressSaving = ref(false)
-const editingAddressId = ref(null)
-const addressDialogTitle = computed(() => (editingAddressId.value ? '编辑地址' : '新增地址'))
+const addressDialogVisible = ref(false);
+const addressSaving = ref(false);
+const editingAddressId = ref(null);
+const addressDialogTitle = computed(() =>
+  editingAddressId.value ? "编辑地址" : "新增地址",
+);
 
 const addressForm = reactive({
-  receiverName: '',
-  receiverPhone: '',
-  regionNamePath: '',
-  regionCodePath: '',
+  receiverName: "",
+  receiverPhone: "",
+  regionNamePath: "",
+  regionCodePath: "",
   regionDepth: 0,
-  province: '',
-  city: '',
-  district: '',
-  detailAddress: '',
+  province: "",
+  city: "",
+  district: "",
+  detailAddress: "",
   regionCodes: [],
-  isDefault: false
-})
+  isDefault: false,
+});
 
 const addressRules = {
-  receiverName: [{ required: true, message: '请输入收货人姓名', trigger: 'blur' }],
-  receiverPhone: [{ required: true, message: '请输入收货人手机号', trigger: 'blur' }],
+  receiverName: [
+    { required: true, message: "请输入收货人姓名", trigger: "blur" },
+  ],
+  receiverPhone: [
+    { required: true, message: "请输入收货人手机号", trigger: "blur" },
+  ],
   regionCodes: [
     {
       validator: (rule, value, callback) => {
         if (Array.isArray(value) && value.length > 0) {
-          callback()
-          return
+          callback();
+          return;
         }
         if (addressForm.regionNamePath) {
-          callback()
-          return
+          callback();
+          return;
         }
-        callback(new Error('请选择地区'))
+        callback(new Error("请选择地区"));
       },
-      trigger: 'change'
-    }
+      trigger: "change",
+    },
   ],
-  detailAddress: [{ required: true, message: '请输入详细地址', trigger: 'blur' }]
-}
+  detailAddress: [
+    { required: true, message: "请输入详细地址", trigger: "blur" },
+  ],
+};
 
-const regionOptions = regionData
+const regionOptions = regionData;
 
 const fetchUserInfo = async () => {
   try {
-    const res = await getProfile()
+    const res = await getProfile();
     if (res.code === 200) {
-      Object.assign(userInfo, res.data)
-      form.account = res.data.account
-      form.name = res.data.name
-      form.certificateNumber = res.data.certificateNumber
-      const avatar = res.data.avatar
-      form.avatar = avatar?.startsWith('http') ? avatar : `http://localhost:8080${avatar}`
-      userInfo.avatar = avatar?.startsWith('http') ? avatar : `http://localhost:8080${avatar}`
-      
+      Object.assign(userInfo, res.data);
+      form.account = res.data.account;
+      form.name = res.data.name;
+      form.certificateNumber = res.data.certificateNumber;
+      const avatar = res.data.avatar;
+      form.avatar = getAvatarUrl(avatar);
+      userInfo.avatar = getAvatarUrl(avatar);
+
       if (res.data.certificateNumber) {
-        await fetchCertificateInfo()
+        await fetchCertificateInfo();
       }
     }
   } catch (error) {
-    ElMessage.error('获取用户信息失败')
+    ElMessage.error("获取用户信息失败");
   }
-}
+};
 
 const fetchCertificateInfo = async () => {
   try {
-    const res = await getCertificateInfo()
+    const res = await getCertificateInfo();
     if (res.code === 200) {
-      certificateInfo.value = res.data
+      certificateInfo.value = res.data;
     }
   } catch (error) {
-    console.error('获取认证信息失败', error)
+    console.error("获取认证信息失败", error);
   }
-}
+};
 
 const fetchAddresses = async () => {
-  addressLoading.value = true
+  addressLoading.value = true;
   try {
-    const res = await listAddresses()
-    addresses.value = res.data || []
+    const res = await listAddresses();
+    addresses.value = res.data || [];
   } catch (error) {
-    ElMessage.error('获取地址失败')
+    ElMessage.error("获取地址失败");
   } finally {
-    addressLoading.value = false
+    addressLoading.value = false;
   }
-}
+};
 
 const resetAddressForm = () => {
-  addressForm.receiverName = ''
-  addressForm.receiverPhone = ''
-  addressForm.regionNamePath = ''
-  addressForm.regionCodePath = ''
-  addressForm.regionDepth = 0
-  addressForm.province = ''
-  addressForm.city = ''
-  addressForm.district = ''
-  addressForm.detailAddress = ''
-  addressForm.regionCodes = []
-  addressForm.isDefault = false
-}
+  addressForm.receiverName = "";
+  addressForm.receiverPhone = "";
+  addressForm.regionNamePath = "";
+  addressForm.regionCodePath = "";
+  addressForm.regionDepth = 0;
+  addressForm.province = "";
+  addressForm.city = "";
+  addressForm.district = "";
+  addressForm.detailAddress = "";
+  addressForm.regionCodes = [];
+  addressForm.isDefault = false;
+};
 
 const handleAddressDialogClosed = async () => {
-  resetAddressForm()
-  editingAddressId.value = null
-  await nextTick()
-  addressFormRef.value?.clearValidate()
-}
+  resetAddressForm();
+  editingAddressId.value = null;
+  await nextTick();
+  addressFormRef.value?.clearValidate();
+};
 
 const toRegionCodes = (province, city, district) => {
-  const p = TextToCode?.[province]
-  const pCode = p?.code
-  const c = p?.[city]
-  const cCode = c?.code
-  const d = c?.[district]
-  const dCode = d?.code
+  const p = TextToCode?.[province];
+  const pCode = p?.code;
+  const c = p?.[city];
+  const cCode = c?.code;
+  const d = c?.[district];
+  const dCode = d?.code;
   if (pCode && cCode && dCode) {
-    return [pCode, cCode, dCode]
+    return [pCode, cCode, dCode];
   }
-  return []
-}
+  return [];
+};
 
 const syncRegionText = () => {
-  const codes = addressForm.regionCodes
+  const codes = addressForm.regionCodes;
   if (Array.isArray(codes) && codes.length > 0) {
-    const names = codes.map((c) => CodeToText[c]).filter(Boolean)
-    addressForm.regionCodePath = codes.join('/')
-    addressForm.regionNamePath = names.join('/')
-    addressForm.regionDepth = names.length
-    addressForm.province = names[0] || ''
-    addressForm.city = names[1] || ''
-    addressForm.district = names[2] || ''
-    return
+    const names = codes.map((c) => CodeToText[c]).filter(Boolean);
+    addressForm.regionCodePath = codes.join("/");
+    addressForm.regionNamePath = names.join("/");
+    addressForm.regionDepth = names.length;
+    addressForm.province = names[0] || "";
+    addressForm.city = names[1] || "";
+    addressForm.district = names[2] || "";
+    return;
   }
 
-  addressForm.regionCodePath = ''
+  addressForm.regionCodePath = "";
   if (addressForm.regionNamePath) {
-    const parts = addressForm.regionNamePath.split('/').map((p) => p.trim()).filter(Boolean)
-    addressForm.regionNamePath = parts.join('/')
-    addressForm.regionDepth = parts.length
-    addressForm.province = parts[0] || ''
-    addressForm.city = parts[1] || ''
-    addressForm.district = parts[2] || ''
-    return
+    const parts = addressForm.regionNamePath
+      .split("/")
+      .map((p) => p.trim())
+      .filter(Boolean);
+    addressForm.regionNamePath = parts.join("/");
+    addressForm.regionDepth = parts.length;
+    addressForm.province = parts[0] || "";
+    addressForm.city = parts[1] || "";
+    addressForm.district = parts[2] || "";
+    return;
   }
 
-  addressForm.regionDepth = 0
-  addressForm.province = ''
-  addressForm.city = ''
-  addressForm.district = ''
-}
+  addressForm.regionDepth = 0;
+  addressForm.province = "";
+  addressForm.city = "";
+  addressForm.district = "";
+};
 
 const handleRegionChange = () => {
-  syncRegionText()
-}
+  syncRegionText();
+};
 
 const openAddAddress = () => {
-  editingAddressId.value = null
-  resetAddressForm()
-  addressDialogVisible.value = true
+  editingAddressId.value = null;
+  resetAddressForm();
+  addressDialogVisible.value = true;
   nextTick(() => {
-    addressFormRef.value?.clearValidate()
-  })
-}
+    addressFormRef.value?.clearValidate();
+  });
+};
 
 const openEditAddress = (item) => {
-  editingAddressId.value = item.id
-  addressForm.receiverName = item.receiverName || ''
-  addressForm.receiverPhone = item.receiverPhone || ''
-  addressForm.regionNamePath = item.regionNamePath || ''
-  addressForm.regionCodePath = item.regionCodePath || ''
-  addressForm.regionDepth = item.regionDepth || 0
-  addressForm.province = item.province || ''
-  addressForm.city = item.city || ''
-  addressForm.district = item.district || ''
-  addressForm.detailAddress = item.detailAddress || ''
+  editingAddressId.value = item.id;
+  addressForm.receiverName = item.receiverName || "";
+  addressForm.receiverPhone = item.receiverPhone || "";
+  addressForm.regionNamePath = item.regionNamePath || "";
+  addressForm.regionCodePath = item.regionCodePath || "";
+  addressForm.regionDepth = item.regionDepth || 0;
+  addressForm.province = item.province || "";
+  addressForm.city = item.city || "";
+  addressForm.district = item.district || "";
+  addressForm.detailAddress = item.detailAddress || "";
   if (addressForm.regionCodePath) {
-    addressForm.regionCodes = addressForm.regionCodePath.split('/').filter(Boolean)
+    addressForm.regionCodes = addressForm.regionCodePath
+      .split("/")
+      .filter(Boolean);
   } else {
-    addressForm.regionCodes = toRegionCodes(addressForm.province, addressForm.city, addressForm.district)
+    addressForm.regionCodes = toRegionCodes(
+      addressForm.province,
+      addressForm.city,
+      addressForm.district,
+    );
   }
-  syncRegionText()
-  addressForm.isDefault = item.isDefault === 1
-  addressDialogVisible.value = true
+  syncRegionText();
+  addressForm.isDefault = item.isDefault === 1;
+  addressDialogVisible.value = true;
   nextTick(() => {
-    addressFormRef.value?.clearValidate()
-  })
-}
+    addressFormRef.value?.clearValidate();
+  });
+};
 
 const formatAddressLine = (item) => {
-  const region = item.regionNamePath || `${item.province || ''}${item.city || ''}${item.district || ''}`
-  return `${region}${item.detailAddress || ''}`
-}
+  const region =
+    item.regionNamePath ||
+    `${item.province || ""}${item.city || ""}${item.district || ""}`;
+  return `${region}${item.detailAddress || ""}`;
+};
 
 const submitAddress = async () => {
-  if (!addressFormRef.value) return
+  if (!addressFormRef.value) return;
 
   await addressFormRef.value.validate(async (valid) => {
-    if (!valid) return
+    if (!valid) return;
 
-    addressSaving.value = true
+    addressSaving.value = true;
     try {
-      syncRegionText()
+      syncRegionText();
       const payload = {
         receiverName: addressForm.receiverName,
         receiverPhone: addressForm.receiverPhone,
@@ -537,172 +715,174 @@ const submitAddress = async () => {
         regionCodePath: addressForm.regionCodePath || null,
         regionDepth: addressForm.regionDepth || null,
         detailAddress: addressForm.detailAddress,
-        isDefault: addressForm.isDefault
-      }
+        isDefault: addressForm.isDefault,
+      };
 
       if (editingAddressId.value) {
-        await updateAddress(editingAddressId.value, payload)
+        await updateAddress(editingAddressId.value, payload);
         if (addressForm.isDefault) {
-          await setDefaultAddress(editingAddressId.value)
+          await setDefaultAddress(editingAddressId.value);
         }
-        ElMessage.success('地址更新成功')
+        ElMessage.success("地址更新成功");
       } else {
-        await createAddress(payload)
-        ElMessage.success('地址新增成功')
+        await createAddress(payload);
+        ElMessage.success("地址新增成功");
       }
 
-      addressDialogVisible.value = false
-      await fetchAddresses()
+      addressDialogVisible.value = false;
+      await fetchAddresses();
     } catch (error) {
-      ElMessage.error(error.response?.data?.message || '保存地址失败')
+      ElMessage.error(error.response?.data?.message || "保存地址失败");
     } finally {
-      addressSaving.value = false
+      addressSaving.value = false;
     }
-  })
-}
+  });
+};
 
 const handleDeleteAddress = async (item) => {
   try {
-    await ElMessageBox.confirm('确认删除该地址吗？', '提示', { type: 'warning' })
-    await deleteAddress(item.id)
-    ElMessage.success('删除成功')
-    await fetchAddresses()
+    await ElMessageBox.confirm("确认删除该地址吗？", "提示", {
+      type: "warning",
+    });
+    await deleteAddress(item.id);
+    ElMessage.success("删除成功");
+    await fetchAddresses();
   } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error('删除失败')
+    if (error !== "cancel") {
+      ElMessage.error("删除失败");
     }
   }
-}
+};
 
 const handleSetDefaultAddress = async (item) => {
   try {
-    await setDefaultAddress(item.id)
-    ElMessage.success('设置默认地址成功')
-    await fetchAddresses()
+    await setDefaultAddress(item.id);
+    ElMessage.success("设置默认地址成功");
+    await fetchAddresses();
   } catch (error) {
-    ElMessage.error('设置默认地址失败')
+    ElMessage.error("设置默认地址失败");
   }
-}
+};
 
 const beforeAvatarUpload = (file) => {
-  const isImage = file.type.startsWith('image/')
-  const isLt2M = file.size / 1024 / 1024 < 2
+  const isImage = file.type.startsWith("image/");
+  const isLt2M = file.size / 1024 / 1024 < 2;
 
   if (!isImage) {
-    ElMessage.error('只能上传图片文件')
-    return false
+    ElMessage.error("只能上传图片文件");
+    return false;
   }
   if (!isLt2M) {
-    ElMessage.error('图片大小不能超过2MB')
-    return false
+    ElMessage.error("图片大小不能超过2MB");
+    return false;
   }
-  return true
-}
+  return true;
+};
 
 const handleAvatarSuccess = async (response) => {
   if (response.code === 200) {
-    const avatarUrl = response.data.startsWith('http') ? response.data : `http://localhost:8080${response.data}`
-    form.avatar = avatarUrl
-    userInfo.avatar = avatarUrl
-    
+    const avatarUrl = getAvatarUrl(response.data);
+    form.avatar = avatarUrl;
+    userInfo.avatar = avatarUrl;
+
     try {
       await updateProfile({
         name: form.name,
-        avatar: avatarUrl
-      })
+        avatar: avatarUrl,
+      });
       userStore.setUserInfo({
         ...userStore.userInfo,
-        avatar: avatarUrl
-      })
-      ElMessage.success('头像上传成功')
+        avatar: avatarUrl,
+      });
+      ElMessage.success("头像上传成功");
     } catch (error) {
-      ElMessage.error('头像保存失败')
+      ElMessage.error("头像保存失败");
     }
   } else {
-    ElMessage.error(response.message || '头像上传失败')
+    ElMessage.error(response.message || "头像上传失败");
   }
-}
+};
 
 const handleUpdateProfile = async () => {
-  if (!formRef.value) return
+  if (!formRef.value) return;
 
   await formRef.value.validate(async (valid) => {
-    if (!valid) return
+    if (!valid) return;
 
-    updating.value = true
+    updating.value = true;
     try {
       await updateProfile({
         name: form.name,
-        avatar: form.avatar
-      })
+        avatar: form.avatar,
+      });
       userStore.setUserInfo({
         ...userStore.userInfo,
         name: form.name,
-        avatar: form.avatar
-      })
-      ElMessage.success('个人信息更新成功')
+        avatar: form.avatar,
+      });
+      ElMessage.success("个人信息更新成功");
     } catch (error) {
-      ElMessage.error('个人信息更新失败')
+      ElMessage.error("个人信息更新失败");
     } finally {
-      updating.value = false
+      updating.value = false;
     }
-  })
-}
+  });
+};
 
 const handleUpdatePassword = async () => {
-  if (!passwordFormRef.value) return
+  if (!passwordFormRef.value) return;
 
   await passwordFormRef.value.validate(async (valid) => {
-    if (!valid) return
+    if (!valid) return;
 
-    updatingPassword.value = true
+    updatingPassword.value = true;
     try {
       await updatePassword({
         oldPassword: passwordForm.oldPassword,
         newPassword: passwordForm.newPassword,
-        confirmPassword: passwordForm.confirmPassword
-      })
-      ElMessage.success('密码修改成功，请重新登录')
-      userStore.logout()
+        confirmPassword: passwordForm.confirmPassword,
+      });
+      ElMessage.success("密码修改成功，请重新登录");
+      userStore.logout();
       setTimeout(() => {
-        window.location.href = '/login'
-      }, 1500)
+        window.location.href = "/login";
+      }, 1500);
     } catch (error) {
-      ElMessage.error(error.response?.data?.message || '密码修改失败')
+      ElMessage.error(error.response?.data?.message || "密码修改失败");
     } finally {
-      updatingPassword.value = false
+      updatingPassword.value = false;
     }
-  })
-}
+  });
+};
 
 const handleVerifyCertificate = async () => {
-  if (!certificateFormRef.value) return
+  if (!certificateFormRef.value) return;
 
   await certificateFormRef.value.validate(async (valid) => {
-    if (!valid) return
+    if (!valid) return;
 
-    verifying.value = true
+    verifying.value = true;
     try {
       await verifyCertificate({
         certificateNumber: certificateForm.certificateNumber,
-        name: certificateForm.name
-      })
-      ElMessage.success('实名认证提交成功')
-      await fetchUserInfo()
-      certificateForm.certificateNumber = ''
-      certificateForm.name = ''
+        name: certificateForm.name,
+      });
+      ElMessage.success("实名认证提交成功");
+      await fetchUserInfo();
+      certificateForm.certificateNumber = "";
+      certificateForm.name = "";
     } catch (error) {
-      ElMessage.error(error.response?.data?.message || '实名认证失败')
+      ElMessage.error(error.response?.data?.message || "实名认证失败");
     } finally {
-      verifying.value = false
+      verifying.value = false;
     }
-  })
-}
+  });
+};
 
 onMounted(() => {
-  fetchUserInfo()
-  fetchAddresses()
-})
+  fetchUserInfo();
+  fetchAddresses();
+});
 </script>
 
 <style scoped>
@@ -722,7 +902,9 @@ onMounted(() => {
   border: 1px solid var(--card-border);
   min-height: 600px;
   box-shadow: var(--card-shadow);
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
 }
 
 /* Info Layout */
@@ -923,53 +1105,53 @@ onMounted(() => {
 }
 
 .address-item-actions .el-button--primary.is-plain {
-  color: #409EFF !important;
+  color: #409eff !important;
   background-color: rgba(64, 158, 255, 0.1) !important;
   border-color: rgba(64, 158, 255, 0.4) !important;
 }
 
 .address-item-actions .el-button--primary.is-plain:hover {
   background-color: rgba(64, 158, 255, 0.2) !important;
-  border-color: #409EFF !important;
+  border-color: #409eff !important;
 }
 
 .address-item-actions .el-button--danger.is-plain {
-  color: #F56C6C !important;
+  color: #f56c6c !important;
   background-color: rgba(245, 108, 108, 0.1) !important;
   border-color: rgba(245, 108, 108, 0.4) !important;
 }
 
 .address-item-actions .el-button--danger.is-plain:hover {
   background-color: rgba(245, 108, 108, 0.2) !important;
-  border-color: #F56C6C !important;
+  border-color: #f56c6c !important;
 }
 
 .address-item-actions .el-button--success.is-plain {
-  color: #67C23A !important;
+  color: #67c23a !important;
   background-color: rgba(103, 194, 58, 0.1) !important;
   border-color: rgba(103, 194, 58, 0.4) !important;
 }
 
 .address-item-actions .el-button--success.is-plain:hover {
   background-color: rgba(103, 194, 58, 0.2) !important;
-  border-color: #67C23A !important;
+  border-color: #67c23a !important;
 }
 
 /* Dark mode button enhancements */
 html.dark .address-item-actions .el-button--primary.is-plain {
-  color: #79BBFF !important;
+  color: #79bbff !important;
   background-color: rgba(64, 158, 255, 0.15) !important;
   border-color: rgba(64, 158, 255, 0.5) !important;
 }
 
 html.dark .address-item-actions .el-button--danger.is-plain {
-  color: #F89898 !important;
+  color: #f89898 !important;
   background-color: rgba(245, 108, 108, 0.15) !important;
   border-color: rgba(245, 108, 108, 0.5) !important;
 }
 
 html.dark .address-item-actions .el-button--success.is-plain {
-  color: #95D475 !important;
+  color: #95d475 !important;
   background-color: rgba(103, 194, 58, 0.15) !important;
   border-color: rgba(103, 194, 58, 0.5) !important;
 }
@@ -980,7 +1162,7 @@ html.dark .address-item-actions .el-button--success.is-plain {
     flex-direction: column;
     gap: 30px;
   }
-  
+
   .info-left {
     width: 100%;
     border-right: none;
@@ -988,7 +1170,7 @@ html.dark .address-item-actions .el-button--success.is-plain {
     padding-right: 0;
     padding-bottom: 20px;
   }
-  
+
   .profile-container {
     padding: 20px;
   }

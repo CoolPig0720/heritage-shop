@@ -1,25 +1,25 @@
 server:
-  port: 8080
+  port: 8081
 
 spring:
   application:
     name: heritage-shop
-  
+
   autoconfigure:
     exclude:
-  
+
   servlet:
     multipart:
       enabled: true
       max-file-size: 10MB
       max-request-size: 10MB
-  
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/develop?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://localhost:3306/heritage-shop?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: root
-    password: 13655218Cc.
-  
+    password: 13655218c
+
   data:
     redis:
       host: localhost
@@ -32,9 +32,9 @@ spring:
           max-wait: -1ms
           max-idle: 8
           min-idle: 0
-  
+
   profiles:
-    active: mock
+    active: local
 
 jwt:
   secret: heritage-shop-secret-key-2024
@@ -46,8 +46,8 @@ jwt:
 #     secret-key: ${TENCENTCLOUD_SECRET_KEY:}
 #     region: ${TENCENTCLOUD_REGION:ap-guangzhou}
 #     endpoint: ${TENCENTCLOUD_ENDPOINT:aiart.tencentcloudapi.com}
+# 百度翻译API配置
 
-    
 knife4j:
   enable: true
   setting:
@@ -57,5 +57,3 @@ file:
   upload:
     path: uploads
   public-base-url: ${PUBLIC_BASE_URL:}
-
-

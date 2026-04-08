@@ -9,14 +9,29 @@
       <el-card class="detail-card" shadow="never">
         <div class="detail-container">
           <div class="detail-left">
-            <el-carousel v-if="product.imageUrls.length > 0" height="500px" indicator-position="outside">
+            <el-carousel
+              v-if="product.imageUrls.length > 0"
+              height="500px"
+              indicator-position="outside"
+            >
               <el-carousel-item v-for="url in product.imageUrls" :key="url">
-                <el-image :src="url" fit="cover" style="width: 100%; height: 500px" :preview-src-list="product.imageUrls" />
+                <el-image
+                  :src="url"
+                  fit="cover"
+                  style="width: 100%; height: 500px"
+                  :preview-src-list="product.imageUrls"
+                />
               </el-carousel-item>
             </el-carousel>
-            <el-image v-else :src="product.coverImageUrl" fit="contain" style="width: 100%; height: 500px" :preview-src-list="[product.coverImageUrl]" />
+            <el-image
+              v-else
+              :src="product.coverImageUrl"
+              fit="contain"
+              style="width: 100%; height: 500px"
+              :preview-src-list="[product.coverImageUrl]"
+            />
           </div>
-          
+
           <div class="detail-right">
             <div class="product-header">
               <h1 class="title">{{ product.name }}</h1>
@@ -25,8 +40,12 @@
                   <span class="currency">¥</span>
                   <span class="price">{{ product.price }}</span>
                 </div>
-                <el-tag :type="product.status === 1 ? 'success' : 'info'" effect="plain" class="status-tag">
-                  {{ product.status === 1 ? '在售' : '已下架' }}
+                <el-tag
+                  :type="product.status === 1 ? 'success' : 'info'"
+                  effect="plain"
+                  class="status-tag"
+                >
+                  {{ product.status === 1 ? "在售" : "已下架" }}
                 </el-tag>
               </div>
             </div>
@@ -37,10 +56,16 @@
             </div>
 
             <div class="digital-assets-buttons">
-              <el-button v-if="product.traceQrUrl" @click="qrDialogVisible = true">
+              <el-button
+                v-if="product.traceQrUrl"
+                @click="qrDialogVisible = true"
+              >
                 <el-icon><View /></el-icon> 查看溯源码
               </el-button>
-              <el-button v-if="product.model3dUrl" @click="modelDialogVisible = true">
+              <el-button
+                v-if="product.model3dUrl"
+                @click="modelDialogVisible = true"
+              >
                 <el-icon><View /></el-icon> 查看3D模型
               </el-button>
             </div>
@@ -51,8 +76,21 @@
                 <el-input-number v-model="quantity" :min="1" :max="99" />
               </div>
               <div class="action-buttons">
-                <el-button type="primary" size="default" class="buy-btn" @click="addToCart">加入购物车</el-button>
-                <el-button type="danger" size="default" class="buy-btn" plain @click="buyNow">立即购买</el-button>
+                <el-button
+                  type="primary"
+                  size="default"
+                  class="buy-btn"
+                  @click="addToCart"
+                  >加入购物车</el-button
+                >
+                <el-button
+                  type="danger"
+                  size="default"
+                  class="buy-btn"
+                  plain
+                  @click="buyNow"
+                  >立即购买</el-button
+                >
               </div>
             </div>
           </div>
@@ -60,17 +98,34 @@
       </el-card>
 
       <!-- Traceability QR Code Dialog -->
-      <el-dialog v-model="qrDialogVisible" title="溯源信息" width="600px" align-center>
+      <el-dialog
+        v-model="qrDialogVisible"
+        title="溯源信息"
+        width="600px"
+        align-center
+      >
         <div class="dialog-content">
           <div class="qr-display">
-             <el-image :src="product.traceQrUrl" fit="contain" class="qr-dialog-image" />
-             <p class="dialog-hint">溯源码：{{ product.traceCode }}</p>
+            <el-image
+              :src="product.traceQrUrl"
+              fit="contain"
+              class="qr-dialog-image"
+            />
+            <p class="dialog-hint">溯源码：{{ product.traceCode }}</p>
           </div>
         </div>
         <template #footer>
           <div class="dialog-footer">
             <el-button @click="qrDialogVisible = false">关闭</el-button>
-            <el-button type="primary" @click="handleDownload(product.traceQrUrl, `${product.name}-trace-qr.png`)">
+            <el-button
+              type="primary"
+              @click="
+                handleDownload(
+                  product.traceQrUrl,
+                  `${product.name}-trace-qr.png`,
+                )
+              "
+            >
               <el-icon><Download /></el-icon> 下载二维码
             </el-button>
           </div>
@@ -78,7 +133,13 @@
       </el-dialog>
 
       <!-- 3D Model Dialog -->
-      <el-dialog v-model="modelDialogVisible" title="3D模型" width="800px" align-center class="model-dialog">
+      <el-dialog
+        v-model="modelDialogVisible"
+        title="3D模型"
+        width="800px"
+        align-center
+        class="model-dialog"
+      >
         <div class="dialog-content">
           <model-viewer
             class="model3d-viewer"
@@ -94,12 +155,19 @@
             @error="handleModelError"
           />
           <div v-if="modelViewerLoading" class="model3d-loading">加载中...</div>
-          <div v-if="modelViewerError" class="model3d-error">{{ modelViewerError }}</div>
+          <div v-if="modelViewerError" class="model3d-error">
+            {{ modelViewerError }}
+          </div>
         </div>
         <template #footer>
           <div class="dialog-footer">
             <el-button @click="modelDialogVisible = false">关闭</el-button>
-            <el-button type="primary" @click="handleDownload(product.model3dUrl, `${product.name}-model.glb`)">
+            <el-button
+              type="primary"
+              @click="
+                handleDownload(product.model3dUrl, `${product.name}-model.glb`)
+              "
+            >
               <el-icon><Download /></el-icon> 下载模型
             </el-button>
           </div>
@@ -110,163 +178,176 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { getProductDetail } from '@/api/shop'
-import { addCartItem } from '@/api/cart'
-import { FullScreen, Picture as IconPicture, TopRight, View, Download } from '@element-plus/icons-vue'
+import { computed, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
+import { getProductDetail } from "@/api/shop";
+import { addCartItem } from "@/api/cart";
+import {
+  FullScreen,
+  Picture as IconPicture,
+  TopRight,
+  View,
+  Download,
+} from "@element-plus/icons-vue";
+import { getImageUrl } from "@/config/api.js";
 
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
-const quantity = ref(1)
-const loading = ref(false)
-const modelViewerLoading = ref(false)
-const modelViewerError = ref('')
-const qrDialogVisible = ref(false)
-const modelDialogVisible = ref(false)
+const quantity = ref(1);
+const loading = ref(false);
+const modelViewerLoading = ref(false);
+const modelViewerError = ref("");
+const qrDialogVisible = ref(false);
+const modelDialogVisible = ref(false);
 
 const backTo = computed(() => {
-  const from = route.query?.from
-  if (typeof from === 'string' && from.startsWith('/')) return from
-  return '/products'
-})
+  const from = route.query?.from;
+  if (typeof from === "string" && from.startsWith("/")) return from;
+  return "/products";
+});
 
 const backLabel = computed(() => {
-  const from = route.query?.from
-  if (typeof from === 'string') {
-    if (from.startsWith('/home')) return '首页'
-    if (from.startsWith('/products')) return '商品列表'
-    if (from.startsWith('/cart')) return '购物车'
-    if (from.startsWith('/orders')) return '我的订单'
+  const from = route.query?.from;
+  if (typeof from === "string") {
+    if (from.startsWith("/home")) return "首页";
+    if (from.startsWith("/products")) return "商品列表";
+    if (from.startsWith("/cart")) return "购物车";
+    if (from.startsWith("/orders")) return "我的订单";
   }
-  return '商品列表'
-})
+  return "商品列表";
+});
 
 const PLACEHOLDER_IMAGE =
-  'data:image/svg+xml;charset=utf-8,' +
+  "data:image/svg+xml;charset=utf-8," +
   encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
       <rect width="800" height="600" fill="#f5f7fa"/>
       <path d="M210 420l120-150 100 110 80-80 160 200H210z" fill="#dcdfe6"/>
       <circle cx="320" cy="240" r="38" fill="#dcdfe6"/>
       <text x="400" y="500" text-anchor="middle" font-size="22" fill="#909399">暂无图片</text>
-    </svg>`
-  )
+    </svg>`,
+  );
 
 const product = ref({
   id: null,
-  name: '',
-  description: '',
+  name: "",
+  description: "",
   price: 0,
   status: 1,
-  traceCode: '',
-  traceQrUrl: '',
-  model3dUrl: '',
+  traceCode: "",
+  traceQrUrl: "",
+  model3dUrl: "",
   coverImageUrl: PLACEHOLDER_IMAGE,
-  imageUrls: []
-})
+  imageUrls: [],
+});
 
 const normalizeUrl = (url) => {
-  if (!url) return ''
-  if (url.startsWith('http')) return url
-  return `http://localhost:8080${url}`
-}
+  return getImageUrl(url);
+};
 
 const handleModelLoad = () => {
-  modelViewerLoading.value = false
-  modelViewerError.value = ''
-}
+  modelViewerLoading.value = false;
+  modelViewerError.value = "";
+};
 
 const handleModelError = (e) => {
-  modelViewerLoading.value = false
-  modelViewerError.value = e?.detail?.message || '模型加载失败'
-}
+  modelViewerLoading.value = false;
+  modelViewerError.value = e?.detail?.message || "模型加载失败";
+};
 
 const loadDetail = async (id) => {
-  if (!id) return
-  loading.value = true
+  if (!id) return;
+  loading.value = true;
   try {
-    const res = await getProductDetail(id)
-    const data = res.data || {}
+    const res = await getProductDetail(id);
+    const data = res.data || {};
     product.value = {
       ...data,
       coverImageUrl: normalizeUrl(data.coverImageUrl) || PLACEHOLDER_IMAGE,
-      traceQrUrl: data.traceQrUrl ? normalizeUrl(data.traceQrUrl) : '',
-      model3dUrl: data.model3dUrl ? normalizeUrl(data.model3dUrl) : '',
-      imageUrls: Array.isArray(data.imageUrls) ? data.imageUrls.map(normalizeUrl) : []
-    }
-    modelViewerLoading.value = !!product.value.model3dUrl
-    modelViewerError.value = ''
+      traceQrUrl: data.traceQrUrl ? normalizeUrl(data.traceQrUrl) : "",
+      model3dUrl: data.model3dUrl ? normalizeUrl(data.model3dUrl) : "",
+      imageUrls: Array.isArray(data.imageUrls)
+        ? data.imageUrls.map(normalizeUrl)
+        : [],
+    };
+    modelViewerLoading.value = !!product.value.model3dUrl;
+    modelViewerError.value = "";
   } catch (e) {
-    ElMessage.error('获取商品详情失败')
+    ElMessage.error("获取商品详情失败");
     product.value = {
       id: null,
-      name: '',
-      description: '',
+      name: "",
+      description: "",
       price: 0,
       status: 1,
-      traceCode: '',
-      traceQrUrl: '',
-      model3dUrl: '',
+      traceCode: "",
+      traceQrUrl: "",
+      model3dUrl: "",
       coverImageUrl: PLACEHOLDER_IMAGE,
-      imageUrls: []
-    }
-    modelViewerLoading.value = false
-    modelViewerError.value = ''
+      imageUrls: [],
+    };
+    modelViewerLoading.value = false;
+    modelViewerError.value = "";
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const addToCart = async () => {
-  if (!product.value?.id) return
+  if (!product.value?.id) return;
   try {
-    await addCartItem({ productId: product.value.id, quantity: quantity.value })
-    ElMessage.success('已加入购物车')
+    await addCartItem({
+      productId: product.value.id,
+      quantity: quantity.value,
+    });
+    ElMessage.success("已加入购物车");
   } catch (e) {
-    ElMessage.error('加入购物车失败')
+    ElMessage.error("加入购物车失败");
   }
-}
+};
 
 const buyNow = async () => {
-  if (!product.value?.id) return
+  if (!product.value?.id) return;
   try {
-    await addCartItem({ productId: product.value.id, quantity: quantity.value })
-    router.push('/cart')
+    await addCartItem({
+      productId: product.value.id,
+      quantity: quantity.value,
+    });
+    router.push("/cart");
   } catch (e) {
-    ElMessage.error('加入购物车失败')
+    ElMessage.error("加入购物车失败");
   }
-}
+};
 
 onMounted(() => {
-  loadDetail(route.params.id)
-})
+  loadDetail(route.params.id);
+});
 
 watch(
   () => route.params.id,
   (id) => {
-    loadDetail(id)
-  }
-)
+    loadDetail(id);
+  },
+);
 
 watch(
   () => product.value.model3dUrl,
   (url) => {
-    modelViewerLoading.value = !!url
-    modelViewerError.value = ''
-  }
-)
+    modelViewerLoading.value = !!url;
+    modelViewerError.value = "";
+  },
+);
 
 const handleDownload = (url, filename) => {
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-}
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
 </script>
 
 <style scoped>
@@ -438,7 +519,8 @@ const handleDownload = (url, filename) => {
   box-shadow: none;
 }
 
-.quantity-selector :deep(.el-input-number.is-controls-right:focus-within .el-input__wrapper),
+.quantity-selector
+  :deep(.el-input-number.is-controls-right:focus-within .el-input__wrapper),
 .quantity-selector :deep(.el-input-number:focus-within .el-input__wrapper) {
   box-shadow: none;
   border-color: #e0e6ef;
@@ -574,7 +656,7 @@ const handleDownload = (url, filename) => {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
-  border-left: 4px solid #409EFF;
+  border-left: 4px solid #409eff;
   padding-left: 12px;
 }
 
@@ -603,7 +685,7 @@ const handleDownload = (url, filename) => {
   left: 50%;
   transform: translate(-50%, -50%);
   color: #fff;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   padding: 8px 16px;
   border-radius: 4px;
 }
@@ -650,7 +732,7 @@ const handleDownload = (url, filename) => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -687,27 +769,27 @@ const handleDownload = (url, filename) => {
   .detail-container {
     flex-direction: column;
   }
-  
+
   .detail-left {
     flex: none;
     width: 100%;
     border-right: none;
     border-bottom: 1px solid var(--border-color-base);
   }
-  
+
   .detail-left .el-image,
   .detail-left .el-carousel {
     height: 360px !important;
   }
-  
+
   .detail-right {
     padding: 24px;
   }
-  
+
   .product-content {
     padding: 20px;
   }
-  
+
   .model3d-viewer {
     height: 300px;
   }
