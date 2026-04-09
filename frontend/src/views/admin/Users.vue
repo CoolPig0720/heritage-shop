@@ -1,7 +1,5 @@
 <template>
   <div class="users">
-    <h1 class="page-title">用户管理</h1>
-
     <el-card class="table-card">
       <div class="table-header">
         <div class="search-filters">

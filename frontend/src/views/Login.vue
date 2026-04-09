@@ -1,5 +1,5 @@
 <template>
-  <div class="login-container">
+  <div class="login-container" :key="componentKey">
     <div class="page-controls">
       <el-dropdown @command="handleThemeChange" trigger="click">
         <el-button
@@ -363,6 +363,7 @@ const dark = ref(isDark());
 const langLabel = computed(() =>
   i18n.global.locale.value === "zh" ? "中文" : "EN",
 );
+const componentKey = ref(0);
 
 const handleThemeChange = (mode) => {
   setThemeMode(mode);
@@ -373,24 +374,22 @@ const handleThemeChange = (mode) => {
 const handleSetLang = (lang) => {
   setLang(lang);
   if (lang === "en") {
-    nextTick(async () => {
-      try {
-        await translatePageToEnglish();
-        ElMessage.success("页面已自动翻译为英文");
-      } catch (error) {
-        console.error("自动翻译失败:", error);
-        ElMessage.error("自动翻译失败");
-      }
-    });
+    // App.vue 的 watch 会自动触发翻译，这里只提示
+    ElMessage.success("页面已自动翻译为英文");
   } else {
-    nextTick(async () => {
-      try {
-        await restorePageToChinese();
-        ElMessage.info("已恢复为中文");
-      } catch (error) {
-        console.error("中文恢复失败:", error);
-        ElMessage.error("中文恢复失败");
-      }
+    // 切回中文：保存表单数据 → 强制重渲染组件 → 恢复表单数据 → 重新生成验证码
+    const savedLogin = { ...loginForm };
+    const savedRegister = { ...registerForm };
+    const savedIsLogin = isLogin.value;
+    componentKey.value++;
+    nextTick(() => {
+      Object.assign(loginForm, savedLogin);
+      Object.assign(registerForm, savedRegister);
+      isLogin.value = savedIsLogin;
+      nextTick(() => {
+        generateCaptcha();
+      });
+      ElMessage.info("已恢复为中文");
     });
   }
 };

@@ -97,6 +97,9 @@
         </div>
       </el-card>
 
+      <!-- 评论区 -->
+      <ProductComment :product-id="product.id" />
+
       <!-- Traceability QR Code Dialog -->
       <el-dialog
         v-model="qrDialogVisible"
@@ -191,6 +194,7 @@ import {
   Download,
 } from "@element-plus/icons-vue";
 import { getImageUrl } from "@/config/api.js";
+import ProductComment from "@/components/ProductComment.vue";
 
 const route = useRoute();
 const router = useRouter();

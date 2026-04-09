@@ -1,7 +1,5 @@
 <template>
   <div class="heritage">
-    <h1 class="page-title">非遗文化管理</h1>
-
     <el-card class="table-card">
       <div class="table-header">
         <div class="search-filters">

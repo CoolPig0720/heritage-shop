@@ -1,7 +1,5 @@
 <template>
   <div class="products">
-    <h1 class="page-title">商品管理</h1>
-
     <el-card class="table-card">
       <div class="table-header">
         <el-input
