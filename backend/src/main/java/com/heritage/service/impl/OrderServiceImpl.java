@@ -146,7 +146,7 @@ public class OrderServiceImpl extends ServiceImpl<OrdersMapper, Orders> implemen
     }
 
     @Override
-    public Page<OrderVO> pageMyOrders(Long userId, PageQuery query, String status) {
+    public Page<OrderVO> pageMyOrders(Long userId, PageQuery query, String status, String keyword) {
         if (userId == null) {
             throw new BusinessException("未登录或登录已过期");
         }
@@ -156,6 +156,9 @@ public class OrderServiceImpl extends ServiceImpl<OrdersMapper, Orders> implemen
         wrapper.eq(Orders::getUserId, userId);
         if (status != null && !status.trim().isEmpty()) {
             wrapper.eq(Orders::getStatus, status.trim());
+        }
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            wrapper.like(Orders::getOrderNo, keyword.trim());
         }
         wrapper.orderByDesc(Orders::getCreateTime).orderByDesc(Orders::getId);
 
@@ -174,7 +177,8 @@ public class OrderServiceImpl extends ServiceImpl<OrdersMapper, Orders> implemen
                 .toList();
         Map<Long, List<OrderItem>> itemMap = loadOrderItemMap(orderIds);
 
-        List<OrderVO> voList = orders.stream().map(o -> toOrderVO(o, itemMap.getOrDefault(o.getId(), Collections.emptyList()))).toList();
+        List<OrderVO> voList = orders.stream()
+                .map(o -> toOrderVO(o, itemMap.getOrDefault(o.getId(), Collections.emptyList()))).toList();
         Page<OrderVO> voPage = new Page<>(orderPage.getCurrent(), orderPage.getSize(), orderPage.getTotal());
         voPage.setRecords(voList);
         return voPage;
@@ -308,4 +312,3 @@ public class OrderServiceImpl extends ServiceImpl<OrdersMapper, Orders> implemen
         return "O" + timePart + rnd;
     }
 }
-

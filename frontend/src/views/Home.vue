@@ -75,7 +75,7 @@
           >
             <div class="product-image">
               <img :src="getCover(product)" :alt="product.name" />
-              <div class="product-badge">推荐</div>
+              <div class="product-badge">热门</div>
             </div>
             <div class="product-info">
               <h3 class="product-name"><TransText :text="product.name" /></h3>
@@ -87,6 +87,15 @@
               </p>
               <div class="product-footer">
                 <span class="price">¥{{ product.price }}</span>
+                <span class="product-rating" v-if="product.ratingCount > 0">
+                  <el-rate
+                    :model-value="product.avgRating"
+                    disabled
+                    :colors="['#F7BA2A', '#F7BA2A', '#F7BA2A']"
+                    size="small"
+                  />
+                  <span class="rating-text">{{ product.avgRating }}</span>
+                </span>
               </div>
             </div>
           </div>
@@ -147,7 +156,7 @@ import {
   Van,
   ArrowRight,
 } from "@element-plus/icons-vue";
-import { getRecommendProducts } from "@/api/shop";
+import { getHotProducts } from "@/api/shop";
 import { getHeritageCategoryTree, pageHeritageProjects } from "@/api/heritage";
 import { pageAiImageRecords } from "@/api/aiImage";
 import { getImageUrl } from "@/config/api.js";
@@ -216,7 +225,7 @@ const loadHomeData = async () => {
   heritageLoading.value = true;
   try {
     const results = await Promise.allSettled([
-      getRecommendProducts({ count: 8 }),
+      getHotProducts({ count: 8 }),
       getHeritageCategoryTree(),
       pageHeritageProjects({ page: 1, size: 1 }),
       pageAiImageRecords({ page: 1, size: 1 }),
@@ -503,6 +512,26 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.product-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.product-rating :deep(.el-rate) {
+  height: 16px;
+}
+
+.product-rating :deep(.el-rate__icon) {
+  font-size: 12px !important;
+}
+
+.rating-text {
+  font-size: 12px;
+  color: #f7ba2a;
+  font-weight: 600;
 }
 
 .price {

@@ -11,7 +11,7 @@ public interface OrderService extends IService<Orders> {
 
     Long createOrderFromCart(Long userId, OrderCreateRequest request);
 
-    Page<OrderVO> pageMyOrders(Long userId, PageQuery query, String status);
+    Page<OrderVO> pageMyOrders(Long userId, PageQuery query, String status, String keyword);
 
     OrderVO getMyOrderDetail(Long userId, Long orderId);
 

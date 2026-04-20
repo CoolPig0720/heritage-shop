@@ -1,8 +1,6 @@
 <template>
   <div class="orders">
     <div class="orders-container">
-      <h1 class="page-title">我的订单</h1>
-
       <div class="orders-toolbar">
         <el-tabs v-model="activeTab" class="orders-tabs">
           <el-tab-pane label="全部订单" name="all" />
@@ -10,6 +8,18 @@
           <el-tab-pane label="已支付" name="paid" />
           <el-tab-pane label="已取消" name="cancelled" />
         </el-tabs>
+        <el-input
+          v-model="keyword"
+          placeholder="搜索订单"
+          clearable
+          style="width: 180px"
+          @clear="handleSearch"
+          @keyup.enter="handleSearch"
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
         <el-button
           class="refresh-btn"
           size="small"
@@ -259,13 +269,14 @@
 <script setup>
 import { computed, onMounted, ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { Refresh } from "@element-plus/icons-vue";
+import { Refresh, Search } from "@element-plus/icons-vue";
 import AppPagination from "@/components/AppPagination.vue";
 import { getOrderDetail, pageOrders, cancelOrder } from "@/api/order";
 import { createPayment, mockPay } from "@/api/payment";
 import { getImageUrl } from "@/config/api.js";
 
 const activeTab = ref("all");
+const keyword = ref("");
 const loading = ref(false);
 const orders = ref([]);
 const page = ref(1);
@@ -329,6 +340,7 @@ const fetchOrders = async () => {
       page: page.value,
       size: size.value,
       status: statusParam.value,
+      ...(keyword.value.trim() ? { keyword: keyword.value.trim() } : {}),
     });
     const data = res.data || {};
     orders.value = (data.records || []).map((o) => ({
@@ -444,6 +456,11 @@ watch(activeTab, async () => {
   page.value = 1;
   await fetchOrders();
 });
+
+const handleSearch = () => {
+  page.value = 1;
+  fetchOrders();
+};
 
 onMounted(() => {
   fetchOrders();

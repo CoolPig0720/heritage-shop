@@ -5,6 +5,7 @@ import com.heritage.common.Result;
 import com.heritage.dto.PageQuery;
 import com.heritage.dto.ProductCreateRequest;
 import com.heritage.dto.ProductImageAddRequest;
+import com.heritage.dto.ProductImageBatchSortRequest;
 import com.heritage.dto.ProductImageUpdateRequest;
 import com.heritage.dto.ProductImageVO;
 import com.heritage.dto.ProductStatusUpdateRequest;
@@ -34,7 +35,8 @@ public class ProductController {
     @Operation(summary = "新增商品（管理员/商家）")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MERCHANT')")
     public Result<Long> create(@Valid @RequestBody ProductCreateRequest request) {
-        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
         Long userId = userDetails.getUserId();
         boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
         Long productId = productService.createProduct(userId, isAdmin, request);
@@ -45,7 +47,8 @@ public class ProductController {
     @Operation(summary = "更新商品（管理员/商家）")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MERCHANT')")
     public Result<Void> update(@PathVariable Long id, @Valid @RequestBody ProductUpdateRequest request) {
-        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
         Long userId = userDetails.getUserId();
         boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
         productService.updateProduct(userId, isAdmin, id, request);
@@ -56,7 +59,8 @@ public class ProductController {
     @Operation(summary = "商品上下架（管理员/商家）")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MERCHANT')")
     public Result<Void> updateStatus(@PathVariable Long id, @Valid @RequestBody ProductStatusUpdateRequest request) {
-        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
         Long userId = userDetails.getUserId();
         boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
         productService.updateProductStatus(userId, isAdmin, id, request.getStatus());
@@ -67,7 +71,8 @@ public class ProductController {
     @Operation(summary = "删除商品（管理员/商家）")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MERCHANT')")
     public Result<Void> delete(@PathVariable Long id) {
-        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
         Long userId = userDetails.getUserId();
         boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
         productService.deleteProduct(userId, isAdmin, id);
@@ -78,7 +83,8 @@ public class ProductController {
     @Operation(summary = "管理端商品分页列表（管理员/商家）")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MERCHANT')")
     public Result<Page<ProductVO>> page(PageQuery query, @RequestParam(required = false) Integer status) {
-        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
         Long userId = userDetails.getUserId();
         boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
         Page<ProductVO> page = productService.pageManageProducts(userId, isAdmin, query, status);
@@ -89,7 +95,8 @@ public class ProductController {
     @Operation(summary = "获取商品图片列表（管理员/商家）")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MERCHANT')")
     public Result<List<ProductImageVO>> listImages(@PathVariable Long id) {
-        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
         Long userId = userDetails.getUserId();
         boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
         return Result.success(productService.listManageProductImages(userId, isAdmin, id));
@@ -98,8 +105,10 @@ public class ProductController {
     @PostMapping("/{id}/images")
     @Operation(summary = "新增商品图片（管理员/商家）")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MERCHANT')")
-    public Result<List<ProductImageVO>> addImages(@PathVariable Long id, @Valid @RequestBody ProductImageAddRequest request) {
-        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    public Result<List<ProductImageVO>> addImages(@PathVariable Long id,
+            @Valid @RequestBody ProductImageAddRequest request) {
+        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
         Long userId = userDetails.getUserId();
         boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
         return Result.success(productService.addManageProductImages(userId, isAdmin, id, request));
@@ -109,10 +118,23 @@ public class ProductController {
     @Operation(summary = "更新商品图片（管理员/商家）")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MERCHANT')")
     public Result<Void> updateImage(@PathVariable Long imageId, @Valid @RequestBody ProductImageUpdateRequest request) {
-        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
         Long userId = userDetails.getUserId();
         boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
         productService.updateManageProductImage(userId, isAdmin, imageId, request);
+        return Result.success();
+    }
+
+    @PutMapping("/images/batch-sort")
+    @Operation(summary = "批量更新商品图片排序（管理员/商家）")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MERCHANT')")
+    public Result<Void> batchSortImages(@Valid @RequestBody ProductImageBatchSortRequest request) {
+        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
+        Long userId = userDetails.getUserId();
+        boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        productService.batchUpdateImageSort(userId, isAdmin, request);
         return Result.success();
     }
 
@@ -120,7 +142,8 @@ public class ProductController {
     @Operation(summary = "删除商品图片（管理员/商家）")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MERCHANT')")
     public Result<Void> deleteImage(@PathVariable Long imageId) {
-        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
         Long userId = userDetails.getUserId();
         boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
         productService.deleteManageProductImage(userId, isAdmin, imageId);

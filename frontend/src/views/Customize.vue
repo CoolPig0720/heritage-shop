@@ -6,6 +6,12 @@
         <div class="hero-subtitle">上传图片，AI智能生成个性化定制方案</div>
         <div class="hero-actions">
           <el-button @click="openHistoryDialog">历史记录</el-button>
+          <el-button
+            v-if="!isMerchant"
+            type="primary"
+            @click="openCustomizeDialog"
+            >发起定制</el-button
+          >
         </div>
       </div>
     </div>
@@ -305,6 +311,260 @@
         </div>
       </div>
 
+      <!-- 发起定制对话框 -->
+      <el-dialog
+        v-model="customizeDialogVisible"
+        title="发起定制"
+        width="560px"
+      >
+        <el-form label-position="top">
+          <el-form-item label="定制标题" required>
+            <el-input
+              v-model="customizeForm.title"
+              placeholder="如：蜡染定制围巾"
+              maxlength="200"
+            />
+          </el-form-item>
+          <el-form-item label="需求描述" required>
+            <el-input
+              v-model="customizeForm.description"
+              type="textarea"
+              :rows="3"
+              placeholder="描述你的定制需求"
+              maxlength="2000"
+            />
+          </el-form-item>
+          <el-form-item label="参考图片">
+            <div class="customize-upload-area">
+              <div class="customize-upload-list">
+                <div
+                  v-for="(url, idx) in customizeForm.imageUrls"
+                  :key="idx"
+                  class="customize-upload-item"
+                >
+                  <img
+                    :src="getImageUrl(url)"
+                    class="customize-upload-thumb"
+                    @click="previewCustomizeImage(url)"
+                  />
+                  <div
+                    class="customize-upload-item-delete"
+                    @click="removeCustomizeImage(idx)"
+                  >
+                    <el-icon><Close /></el-icon>
+                  </div>
+                </div>
+                <el-upload
+                  v-if="customizeForm.imageUrls.length < 3"
+                  :auto-upload="true"
+                  :show-file-list="false"
+                  :before-upload="beforeCustomizeImageUpload"
+                  :on-success="handleCustomizeImageSuccess"
+                  :on-error="handleCustomizeImageError"
+                  accept=".jpg,.jpeg,.png,.bmp,.webp"
+                  :action="uploadUrl"
+                  :headers="uploadHeaders"
+                  name="file"
+                >
+                  <div class="customize-upload-trigger">
+                    <el-icon class="customize-upload-icon"><Plus /></el-icon>
+                    <div class="customize-upload-text">上传图片</div>
+                    <div class="customize-upload-hint">
+                      {{ customizeForm.imageUrls.length }}/3
+                    </div>
+                  </div>
+                </el-upload>
+              </div>
+              <div class="customize-upload-tip">
+                支持 JPG/PNG，不超过 5MB，最多 3 张
+              </div>
+            </div>
+          </el-form-item>
+          <el-form-item label="选择商家" required>
+            <div class="merchant-select-row">
+              <span v-if="customizeForm.merchantId" class="selected-merchant"
+                >已选：{{ customizeForm.merchantName }}</span
+              >
+              <span v-else class="no-merchant">未选择商家</span>
+              <el-button type="primary" link @click="openMerchantDialog"
+                >选择商家</el-button
+              >
+            </div>
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button @click="customizeDialogVisible = false">取消</el-button>
+          <el-button
+            type="primary"
+            :loading="customizeSubmitting"
+            @click="handleSubmitCustomize"
+            >提交</el-button
+          >
+        </template>
+      </el-dialog>
+
+      <!-- 商家选择弹窗 -->
+      <el-dialog
+        v-model="merchantDialogVisible"
+        title="选择商家"
+        width="960px"
+        top="5vh"
+      >
+        <div v-loading="merchantLoading">
+          <el-empty
+            v-if="!merchantLoading && merchantList.length === 0"
+            description="暂无商家"
+          />
+          <el-table
+            v-else
+            :data="merchantList"
+            style="width: 100%"
+            highlight-current-row
+            @current-change="handleMerchantCurrentChange"
+            :row-class-name="getMerchantRowClass"
+          >
+            <el-table-column label="选择" width="60" align="center">
+              <template #default="{ row }">
+                <el-radio v-model="selectedMerchantId" :value="row.id"
+                  >&nbsp;</el-radio
+                >
+              </template>
+            </el-table-column>
+            <el-table-column label="商家" min-width="160" align="center">
+              <template #default="{ row }">
+                <div class="merchant-table-info">
+                  <el-avatar :size="36" :src="getAvatarUrl(row.avatar)">{{
+                    row.name?.charAt(0)
+                  }}</el-avatar>
+                  <div class="merchant-table-detail">
+                    <div class="merchant-table-name">{{ row.name }}</div>
+                    <div class="merchant-table-count">
+                      在售 {{ row.productCount }} 件
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column label="高星商品" min-width="420">
+              <template #default="{ row }">
+                <div
+                  class="merchant-table-products"
+                  v-if="row.topProducts?.length"
+                >
+                  <div
+                    v-for="p in row.topProducts"
+                    :key="p.id"
+                    class="merchant-table-product"
+                  >
+                    <img
+                      :src="getImageUrl(p.coverImageUrl)"
+                      class="merchant-table-product-thumb"
+                    />
+                    <div class="merchant-table-product-info">
+                      <div class="merchant-table-product-name">
+                        {{ p.name }}
+                      </div>
+                      <div class="merchant-table-product-meta">
+                        <span class="merchant-table-product-price"
+                          >¥{{ p.price }}</span
+                        >
+                        <span
+                          v-if="p.avgRating"
+                          class="merchant-table-product-rating"
+                          >{{ p.avgRating }}分</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <span v-else class="merchant-table-empty">暂无商品</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="100" align="center">
+              <template #default="{ row }">
+                <el-button type="primary" link @click="openMerchantDetail(row)"
+                  >详情</el-button
+                >
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <div
+            class="merchant-table-pagination"
+            v-if="merchantTotal > merchantSize"
+          >
+            <AppPagination
+              v-model:current-page="merchantPage"
+              v-model:page-size="merchantSize"
+              :total="merchantTotal"
+              @current-change="fetchMerchantList"
+              @size-change="handleMerchantSizeChange"
+            />
+          </div>
+        </div>
+        <template #footer>
+          <el-button @click="merchantDialogVisible = false">取消</el-button>
+          <el-button
+            type="primary"
+            :disabled="!selectedMerchantId"
+            @click="confirmMerchantSelection"
+            >确认选择</el-button
+          >
+        </template>
+      </el-dialog>
+
+      <!-- 商家商品详情弹窗 -->
+      <el-dialog
+        v-model="merchantDetailVisible"
+        :title="merchantDetailName + ' 的商品'"
+        width="800px"
+        top="6vh"
+      >
+        <div v-loading="merchantDetailLoading">
+          <el-empty
+            v-if="!merchantDetailLoading && merchantDetailProducts.length === 0"
+            description="暂无商品"
+          />
+          <div class="merchant-detail-grid" v-else>
+            <div
+              v-for="p in merchantDetailProducts"
+              :key="p.id"
+              class="merchant-detail-card"
+              @click="goProductDetail(p.id)"
+            >
+              <img
+                :src="getImageUrl(p.coverImageUrl)"
+                class="merchant-detail-cover"
+              />
+              <div class="merchant-detail-body">
+                <div class="merchant-detail-name">{{ p.name }}</div>
+                <div class="merchant-detail-meta">
+                  <span class="merchant-detail-price">¥{{ p.price }}</span>
+                  <span v-if="p.avgRating" class="merchant-detail-rating"
+                    >{{ p.avgRating }}分</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="merchant-detail-pagination"
+          v-if="merchantDetailTotal > merchantDetailSize"
+        >
+          <AppPagination
+            v-model:current-page="merchantDetailPage"
+            v-model:page-size="merchantDetailSize"
+            :total="merchantDetailTotal"
+            @current-change="fetchMerchantDetailProducts"
+            @size-change="handleMerchantDetailSizeChange"
+          />
+        </div>
+        <template #footer>
+          <el-button @click="merchantDetailVisible = false">关闭</el-button>
+        </template>
+      </el-dialog>
+
       <el-dialog v-model="historyDialogVisible" width="1100px">
         <template #header>
           <div class="history-dialog-header">
@@ -432,13 +692,37 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
-import { ElMessage } from "element-plus";
-import { QuestionFilled, UploadFilled } from "@element-plus/icons-vue";
+import { useRoute, useRouter } from "vue-router";
+import { ElMessage, ElMessageBox } from "element-plus";
+import {
+  QuestionFilled,
+  UploadFilled,
+  Plus,
+  Close,
+} from "@element-plus/icons-vue";
 import AppPagination from "@/components/AppPagination.vue";
 import { imageToImage, pageAiImageRecords, textToImage } from "@/api/aiImage";
-import { getImageUrl } from "@/config/api.js";
+import {
+  createCustomizeRequest,
+  getMerchantList,
+  pageMerchantProducts,
+} from "@/api/customize";
+import { getImageUrl, UPLOAD_URL, getAvatarUrl } from "@/config/api.js";
+import { useUserStore } from "@/stores/user";
+
+const userStore = useUserStore();
+const isMerchant = computed(() => userStore.userInfo?.role === "MERCHANT");
+
+const uploadUrl = UPLOAD_URL;
+const uploadHeaders = computed(() => {
+  const token = localStorage.getItem("token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+});
 
 const activeTab = ref("img2img");
+
+const router = useRouter();
+const route = useRoute();
 const generating = ref(false);
 
 const fileList = ref([]);
@@ -463,6 +747,17 @@ const txt2imgForm = ref({
 
 const resultImages = ref([]);
 
+// 定制渠道
+const customizeDialogVisible = ref(false);
+const customizeSubmitting = ref(false);
+const customizeForm = ref({
+  title: "",
+  description: "",
+  imageUrls: [],
+  merchantId: null,
+  merchantName: "",
+});
+
 const historyLoading = ref(false);
 const historyRecords = ref([]);
 const historyTotal = ref(0);
@@ -470,6 +765,202 @@ const historyPage = ref(1);
 const historySize = ref(12);
 const historyDialogVisible = ref(false);
 const historyTypeTab = ref("img2img");
+
+const openCustomizeDialog = () => {
+  customizeForm.value = {
+    title: "",
+    description: "",
+    imageUrls: [],
+    merchantId: route.query.merchantId ? Number(route.query.merchantId) : null,
+    merchantName: route.query.merchantName || "",
+  };
+  customizeDialogVisible.value = true;
+};
+
+// 商家选择弹窗
+const merchantDialogVisible = ref(false);
+const merchantLoading = ref(false);
+const merchantList = ref([]);
+const selectedMerchantId = ref(null);
+const merchantPage = ref(1);
+const merchantSize = ref(10);
+const merchantTotal = ref(0);
+
+// 商家商品详情弹窗
+const merchantDetailVisible = ref(false);
+const merchantDetailLoading = ref(false);
+const merchantDetailProducts = ref([]);
+const merchantDetailName = ref("");
+const merchantDetailId = ref(null);
+const merchantDetailPage = ref(1);
+const merchantDetailSize = ref(8);
+const merchantDetailTotal = ref(0);
+
+const openMerchantDialog = async () => {
+  selectedMerchantId.value = customizeForm.value.merchantId;
+  merchantPage.value = 1;
+  merchantDialogVisible.value = true;
+  await fetchMerchantList();
+};
+
+const fetchMerchantList = async () => {
+  merchantLoading.value = true;
+  try {
+    const res = await getMerchantList({
+      page: merchantPage.value,
+      size: merchantSize.value,
+    });
+    // 兼容分页和非分页返回
+    if (res?.data?.records) {
+      merchantList.value = res.data.records;
+      merchantTotal.value = res.data.total || 0;
+    } else {
+      merchantList.value = res?.data || [];
+      merchantTotal.value = merchantList.value.length;
+    }
+  } catch (e) {
+    ElMessage.error("获取商家列表失败");
+  } finally {
+    merchantLoading.value = false;
+  }
+};
+
+const handleMerchantSizeChange = () => {
+  merchantPage.value = 1;
+  fetchMerchantList();
+};
+
+const handleMerchantCurrentChange = (row) => {
+  if (row) {
+    selectedMerchantId.value = row.id;
+  }
+};
+
+const getMerchantRowClass = ({ row }) => {
+  return row.id === selectedMerchantId.value ? "merchant-selected-row" : "";
+};
+
+const confirmMerchantSelection = () => {
+  if (!selectedMerchantId.value) return;
+  const m = merchantList.value.find((x) => x.id === selectedMerchantId.value);
+  customizeForm.value.merchantId = selectedMerchantId.value;
+  customizeForm.value.merchantName = m?.name || "";
+  merchantDialogVisible.value = false;
+};
+
+const openMerchantDetail = (merchant) => {
+  merchantDetailId.value = merchant.id;
+  merchantDetailName.value = merchant.name;
+  merchantDetailPage.value = 1;
+  merchantDetailVisible.value = true;
+  fetchMerchantDetailProducts();
+};
+
+const fetchMerchantDetailProducts = async () => {
+  merchantDetailLoading.value = true;
+  try {
+    const res = await pageMerchantProducts(merchantDetailId.value, {
+      page: merchantDetailPage.value,
+      size: merchantDetailSize.value,
+    });
+    merchantDetailProducts.value = res?.data?.records || [];
+    merchantDetailTotal.value = res?.data?.total || 0;
+  } catch (e) {
+    ElMessage.error("获取商品列表失败");
+  } finally {
+    merchantDetailLoading.value = false;
+  }
+};
+
+const handleMerchantDetailSizeChange = () => {
+  merchantDetailPage.value = 1;
+  fetchMerchantDetailProducts();
+};
+
+const goProductDetail = (productId) => {
+  const url = router.resolve({ path: `/product/${productId}` }).href;
+  window.open(url, "_blank");
+};
+
+const handleSubmitCustomize = async () => {
+  const form = customizeForm.value;
+  if (!form.title.trim()) {
+    ElMessage.warning("请输入定制标题");
+    return;
+  }
+  if (!form.description.trim()) {
+    ElMessage.warning("请输入需求描述");
+    return;
+  }
+  if (!form.merchantId) {
+    ElMessage.warning("请选择商家");
+    return;
+  }
+  customizeSubmitting.value = true;
+  try {
+    const res = await createCustomizeRequest({
+      merchantId: form.merchantId,
+      title: form.title.trim(),
+      description: form.description.trim(),
+      imageUrls: form.imageUrls.length > 0 ? form.imageUrls : undefined,
+    });
+    ElMessage.success("定制请求已提交");
+    customizeDialogVisible.value = false;
+    router.push(`/customize/requests/${res.data}`);
+  } catch (e) {
+    ElMessage.error(e?.response?.data?.message || "提交失败");
+  } finally {
+    customizeSubmitting.value = false;
+  }
+};
+
+const beforeCustomizeImageUpload = (file) => {
+  if (customizeForm.value.imageUrls.length >= 3) {
+    ElMessage.warning("最多上传3张参考图片");
+    return false;
+  }
+  const isImage = [
+    "image/jpeg",
+    "image/png",
+    "image/bmp",
+    "image/webp",
+  ].includes(file.type);
+  if (!isImage) {
+    ElMessage.error("仅支持 JPG/PNG/BMP/WEBP 格式");
+    return false;
+  }
+  const isLt5M = file.size / 1024 / 1024 < 5;
+  if (!isLt5M) {
+    ElMessage.error("图片大小不能超过 5MB");
+    return false;
+  }
+  return true;
+};
+
+const handleCustomizeImageSuccess = (response) => {
+  if (response.code === 200 && response.data) {
+    customizeForm.value.imageUrls.push(response.data);
+  } else {
+    ElMessage.error(response.message || "上传失败");
+  }
+};
+
+const handleCustomizeImageError = () => {
+  ElMessage.error("图片上传失败");
+};
+
+const removeCustomizeImage = (idx) => {
+  customizeForm.value.imageUrls.splice(idx, 1);
+};
+
+const previewCustomizeImage = (url) => {
+  ElMessageBox({
+    message: `<img src="${getImageUrl(url)}" style="max-width:100%;max-height:70vh" />`,
+    dangerouslyUseHTMLString: true,
+    showConfirmButton: false,
+    customClass: "image-preview-dialog",
+  });
+};
 
 const normalizeUrl = (url) => {
   return getImageUrl(url);
@@ -1111,5 +1602,279 @@ onMounted(() => {
   .preview-image {
     height: 260px;
   }
+}
+
+.customize-ai-preview {
+  max-width: 100%;
+  max-height: 150px;
+  border-radius: 6px;
+}
+
+.merchant-select-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.selected-merchant {
+  color: var(--el-color-primary);
+  font-weight: 500;
+}
+
+.no-merchant {
+  color: var(--el-text-color-placeholder);
+}
+
+.customize-upload-area {
+  width: 100%;
+}
+
+.customize-upload-list {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.customize-upload-item {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--el-border-color-lighter);
+}
+
+.customize-upload-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.customize-upload-item-delete {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.customize-upload-item:hover .customize-upload-item-delete {
+  opacity: 1;
+}
+
+.customize-upload-trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
+  border: 1px dashed var(--el-border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--el-fill-color-lighter);
+}
+
+.customize-upload-trigger:hover {
+  border-color: var(--el-color-primary);
+  background: var(--el-color-primary-light-9);
+}
+
+.customize-upload-icon {
+  font-size: 24px;
+  color: var(--el-text-color-placeholder);
+  margin-bottom: 6px;
+}
+
+.customize-upload-text {
+  font-size: 13px;
+  color: var(--el-text-color-regular);
+}
+
+.customize-upload-hint {
+  font-size: 12px;
+  color: var(--el-text-color-placeholder);
+  margin-top: 2px;
+}
+
+.customize-upload-tip {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  margin-top: 6px;
+}
+
+/* 商家选择弹窗 */
+/* 商家选择表格 */
+.merchant-table-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}
+
+.merchant-table-detail {
+  text-align: left;
+}
+
+.merchant-table-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--el-text-color-primary);
+}
+
+.merchant-table-count {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  margin-top: 2px;
+}
+
+.merchant-table-products {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.merchant-table-product {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 8px;
+  background: var(--el-fill-color-lighter);
+  border-radius: 8px;
+  min-width: 170px;
+  max-width: 200px;
+}
+
+.merchant-table-product-thumb {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.merchant-table-product-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.merchant-table-product-name {
+  font-size: 13px;
+  color: var(--el-text-color-regular);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 110px;
+}
+
+.merchant-table-product-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.merchant-table-product-price {
+  color: var(--el-color-danger);
+  font-weight: 600;
+}
+
+.merchant-table-product-rating {
+  color: #ff9900;
+}
+
+.merchant-table-empty {
+  color: var(--el-text-color-secondary);
+  font-size: 13px;
+}
+
+.merchant-table-pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+:deep(.merchant-selected-row) {
+  background-color: var(--el-color-primary-light-9) !important;
+}
+
+:deep(.merchant-selected-row:hover > td) {
+  background-color: var(--el-color-primary-light-8) !important;
+}
+
+/* 商家商品详情弹窗 */
+.merchant-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 14px;
+}
+
+.merchant-detail-card {
+  background: var(--el-bg-color);
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.merchant-detail-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.merchant-detail-cover {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+}
+
+.merchant-detail-body {
+  padding: 10px;
+}
+
+.merchant-detail-name {
+  font-size: 14px;
+  color: var(--el-text-color-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.merchant-detail-meta {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.merchant-detail-price {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--el-color-danger);
+}
+
+.merchant-detail-rating {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+.merchant-detail-pagination {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
 }
 </style>

@@ -40,10 +40,15 @@ public class Product {
     @TableField("status")
     private Integer status;
 
+    @TableField("avg_rating")
+    private BigDecimal avgRating;
+
+    @TableField("rating_count")
+    private Integer ratingCount;
+
     @TableField("create_time")
     private LocalDateTime createTime;
 
     @TableField("update_time")
     private LocalDateTime updateTime;
 }
-

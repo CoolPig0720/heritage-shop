@@ -1,8 +1,5 @@
 <template>
   <div class="cart">
-    <div class="page-header">
-      <h1>购物车</h1>
-    </div>
     <div class="cart-container">
       <el-skeleton v-if="loading" :rows="6" animated />
       <div v-else-if="cartItems.length > 0">

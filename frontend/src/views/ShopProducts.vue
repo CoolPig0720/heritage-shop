@@ -52,7 +52,7 @@
 
       <div v-loading="loading" class="product-grid">
         <div
-          v-for="product in filteredProducts"
+          v-for="product in pagedProducts"
           :key="product.id"
           class="product-card"
           @click="goToDetail(product.id)"
@@ -65,10 +65,29 @@
             <p class="product-desc">{{ product.description }}</p>
             <div class="product-footer">
               <span class="price">¥{{ product.price }}</span>
+              <span class="product-rating" v-if="product.ratingCount > 0">
+                <el-rate
+                  :model-value="product.avgRating"
+                  disabled
+                  :colors="['#F7BA2A', '#F7BA2A', '#F7BA2A']"
+                  size="small"
+                />
+                <span class="rating-text">{{ product.avgRating }}</span>
+              </span>
             </div>
           </div>
         </div>
       </div>
+
+      <AppPagination
+        v-if="filteredProducts.length > 0"
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :total="filteredProducts.length"
+        :page-sizes="[8, 12, 20, 40]"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
 
       <div v-if="!loading && products.length === 0" class="empty">
         <el-empty description="暂无商品" />
@@ -85,6 +104,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { getRecommendProducts } from "@/api/shop";
 import { getImageUrl } from "@/config/api.js";
+import AppPagination from "@/components/AppPagination.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -97,6 +117,9 @@ const minPrice = ref(null);
 const maxPrice = ref(null);
 const sort = ref("default");
 const hasImageOnly = ref(false);
+
+const currentPage = ref(1);
+const pageSize = ref(8);
 
 const PLACEHOLDER_IMAGE =
   "data:image/svg+xml;charset=utf-8," +
@@ -171,10 +194,37 @@ const filteredProducts = computed(() => {
     list.sort((a, b) => Number(a?.price ?? 0) - Number(b?.price ?? 0));
   } else if (sort.value === "priceDesc") {
     list.sort((a, b) => Number(b?.price ?? 0) - Number(a?.price ?? 0));
+  } else {
+    // 默认排序：有评分 > 无评分，星级降序 > 评论数降序 > 创建时间降序
+    list.sort((a, b) => {
+      const aHasRating = (a?.ratingCount ?? 0) > 0 ? 1 : 0;
+      const bHasRating = (b?.ratingCount ?? 0) > 0 ? 1 : 0;
+      if (aHasRating !== bHasRating) return bHasRating - aHasRating;
+      const ratingDiff = Number(b?.avgRating ?? 0) - Number(a?.avgRating ?? 0);
+      if (ratingDiff !== 0) return ratingDiff;
+      const countDiff = (b?.ratingCount ?? 0) - (a?.ratingCount ?? 0);
+      if (countDiff !== 0) return countDiff;
+      return new Date(b?.createTime ?? 0) - new Date(a?.createTime ?? 0);
+    });
   }
 
   return list;
 });
+
+const pagedProducts = computed(() => {
+  const list = filteredProducts.value;
+  const start = (currentPage.value - 1) * pageSize.value;
+  return list.slice(start, start + pageSize.value);
+});
+
+const handleSizeChange = (val) => {
+  pageSize.value = val;
+  currentPage.value = 1;
+};
+
+const handleCurrentChange = (val) => {
+  currentPage.value = val;
+};
 
 const resetFilters = () => {
   keyword.value = "";
@@ -182,6 +232,7 @@ const resetFilters = () => {
   maxPrice.value = null;
   sort.value = "default";
   hasImageOnly.value = false;
+  currentPage.value = 1;
 };
 
 const goToDetail = (id) => {
@@ -328,6 +379,26 @@ onMounted(() => {
   justify-content: space-between;
 }
 
+.product-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.product-rating :deep(.el-rate) {
+  height: 16px;
+}
+
+.product-rating :deep(.el-rate__icon) {
+  font-size: 12px !important;
+}
+
+.rating-text {
+  font-size: 12px;
+  color: #f7ba2a;
+  font-weight: 600;
+}
+
 .price {
   font-size: 18px;
   font-weight: bold;
@@ -336,6 +407,12 @@ onMounted(() => {
 
 .empty {
   margin-top: 40px;
+}
+
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
 }
 
 @media (max-width: 1200px) {

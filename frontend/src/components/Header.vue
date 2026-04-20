@@ -18,6 +18,7 @@
           <el-menu-item index="/products">商品列表</el-menu-item>
           <el-menu-item index="/heritage">非遗文化</el-menu-item>
           <el-menu-item index="/customize">智能定制</el-menu-item>
+          <el-menu-item index="/info">资讯</el-menu-item>
         </el-menu>
       </div>
       <div class="header-right">
@@ -78,6 +79,16 @@
                   >我的订单</el-dropdown-item
                 >
                 <el-dropdown-item
+                  v-if="!canGoCustomizeManage"
+                  @click="goToMyCustomize"
+                  >我的定制
+                  <el-badge
+                    v-if="customizeUnread > 0"
+                    :value="customizeUnread"
+                    :max="99"
+                    class="dropdown-badge"
+                /></el-dropdown-item>
+                <el-dropdown-item
                   v-if="canGoUsers"
                   @click="goToUsers"
                   :divided="true"
@@ -90,9 +101,22 @@
                   >商品管理</el-dropdown-item
                 >
                 <el-dropdown-item
+                  v-if="canGoCustomizeManage"
+                  @click="goToMerchantCustomize"
+                  >定制管理
+                  <el-badge
+                    v-if="customizeUnread > 0"
+                    :value="customizeUnread"
+                    :max="99"
+                    class="dropdown-badge"
+                /></el-dropdown-item>
+                <el-dropdown-item
                   v-if="canGoHeritageManage"
                   @click="goToManageHeritage"
                   >非遗管理</el-dropdown-item
+                >
+                <el-dropdown-item v-if="canGoInfoManage" @click="goToManageInfo"
+                  >资讯管理</el-dropdown-item
                 >
                 <el-dropdown-item divided @click="handleLogout"
                   >退出登录</el-dropdown-item
@@ -111,11 +135,12 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useUserStore } from "@/stores/user";
 import { ElMessage } from "element-plus";
 import { getProfile } from "@/api/auth";
+import { getCustomizeUnreadCount } from "@/api/customize";
 import { Moon, Sunny, Monitor } from "@element-plus/icons-vue";
 import { i18n } from "@/i18n";
 import {
@@ -126,10 +151,6 @@ import {
   ThemeMode,
 } from "@/utils/theme";
 import { setLang } from "@/utils/lang";
-import {
-  translatePageToEnglish,
-  restorePageToChinese,
-} from "@/utils/autoTranslate";
 import { getAvatarUrl } from "@/config/api.js";
 
 const router = useRouter();
@@ -144,39 +165,50 @@ const canGoProducts = computed(
   () => role.value === "ADMIN" || role.value === "MERCHANT",
 );
 const canGoHeritageManage = computed(() => role.value === "ADMIN");
+const canGoInfoManage = computed(() => role.value === "ADMIN");
+const canGoCustomizeManage = computed(() => role.value === "MERCHANT");
+
+// ---- 定制未读计数 ----
+const customizeUnread = ref(0);
+let unreadTimer = null;
+
+const fetchUnreadCount = async () => {
+  if (!userStore.token) {
+    customizeUnread.value = 0;
+    return;
+  }
+  try {
+    const res = await getCustomizeUnreadCount();
+    if (res.code === 200 && res.data) {
+      // 红点：未读消息 + 待处理工单（商家看PENDING待报价，用户看QUOTED待确认）
+      const unread = res.data.unreadMessageCount || 0;
+      const actionNeeded =
+        role.value === "MERCHANT"
+          ? res.data.pendingCount || 0
+          : res.data.quotedCount || 0;
+      customizeUnread.value = unread + actionNeeded;
+    }
+  } catch {
+    // ignore
+  }
+};
+
+const startUnreadPoll = () => {
+  fetchUnreadCount();
+  unreadTimer = setInterval(fetchUnreadCount, 30000);
+};
+
+const stopUnreadPoll = () => {
+  if (unreadTimer) {
+    clearInterval(unreadTimer);
+    unreadTimer = null;
+  }
+};
 
 const themeMode = ref(getThemeMode());
 const dark = ref(isDark());
 const langLabel = computed(() =>
   i18n.global.locale.value === "zh" ? "中文" : "EN",
-);
-
-// 监听语言变化，自动翻译页面
-watch(
-  () => i18n.global.locale.value,
-  async (newLang, oldLang) => {
-    if (newLang !== oldLang) {
-      if (newLang === "en") {
-        // 切换到英文时，自动翻译页面
-        try {
-          await translatePageToEnglish();
-          ElMessage.success("页面已自动翻译为英文");
-        } catch (error) {
-          console.error("自动翻译失败:", error);
-          ElMessage.error("自动翻译失败");
-        }
-      } else {
-        // 切换到中文时，恢复原始中文文本
-        try {
-          await restorePageToChinese();
-          ElMessage.info("已恢复为中文");
-        } catch (error) {
-          console.error("中文恢复失败:", error);
-          ElMessage.error("中文恢复失败");
-        }
-      }
-    }
-  },
 );
 
 // 主题图标
@@ -211,6 +243,11 @@ onMounted(() => {
   initTheme();
   themeMode.value = getThemeMode();
   dark.value = isDark();
+  startUnreadPoll();
+});
+
+onUnmounted(() => {
+  stopUnreadPoll();
 });
 
 const goToLogin = () => {
@@ -249,7 +286,21 @@ const goToManageHeritage = () => {
   router.push("/manage/heritage");
 };
 
+const goToManageInfo = () => {
+  router.push("/manage/info");
+};
+
+const goToMyCustomize = () => {
+  router.push("/customize/requests");
+};
+
+const goToMerchantCustomize = () => {
+  router.push("/merchant/customize");
+};
+
 const handleLogout = () => {
+  stopUnreadPoll();
+  customizeUnread.value = 0;
   userStore.logout();
   ElMessage.success(i18n.global.t("common.logoutSuccess"));
   router.push("/login");
@@ -344,6 +395,7 @@ const handleSetLang = (lang) => {
   gap: 8px;
   cursor: pointer;
   color: var(--nav-text);
+  outline: none;
 }
 
 .username {
@@ -395,5 +447,16 @@ html.dark .header-menu.el-menu--horizontal .el-menu-item {
 
 html.dark .header-menu.el-menu--horizontal .el-menu-item:hover {
   background-color: var(--nav-active-bg);
+}
+
+.dropdown-badge {
+  margin-left: 6px;
+}
+
+.dropdown-badge :deep(.el-badge__content) {
+  position: relative;
+  top: 0;
+  right: 0;
+  transform: none;
 }
 </style>

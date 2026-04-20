@@ -28,10 +28,15 @@ public class ShopProductController {
         return Result.success(productService.getRandomOnSaleProducts(count));
     }
 
+    @GetMapping("/hot")
+    @Operation(summary = "热门商品（按星级排序）")
+    public Result<List<ProductVO>> hot(@RequestParam(defaultValue = "8") Integer count) {
+        return Result.success(productService.getHotProducts(count));
+    }
+
     @GetMapping("/products/{id}")
     @Operation(summary = "商品详情")
     public Result<ProductVO> detail(@PathVariable Long id) {
         return Result.success(productService.getProductDetail(id));
     }
 }
-

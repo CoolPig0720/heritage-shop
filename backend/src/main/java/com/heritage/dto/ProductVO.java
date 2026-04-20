@@ -29,6 +29,10 @@ public class ProductVO {
 
     private Integer status;
 
+    private BigDecimal avgRating;
+
+    private Integer ratingCount;
+
     private String coverImageUrl;
 
     private List<String> imageUrls;

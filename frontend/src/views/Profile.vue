@@ -88,12 +88,6 @@
         </el-tab-pane>
         <el-tab-pane label="收货地址" name="address">
           <div class="address-section">
-            <div class="address-toolbar">
-              <el-button type="primary" @click="openAddAddress"
-                >新增地址</el-button
-              >
-            </div>
-
             <el-skeleton v-if="addressLoading" :rows="5" animated />
 
             <el-empty
@@ -159,6 +153,12 @@
                     设为默认
                   </el-button>
                 </div>
+              </div>
+
+              <div class="address-add-row">
+                <el-button type="primary" @click="openAddAddress"
+                  ><el-icon><Plus /></el-icon> 新增地址</el-button
+                >
               </div>
 
               <div class="pagination-container">
@@ -370,7 +370,7 @@ import {
   setDefaultAddress,
 } from "@/api/auth";
 import { regionData, CodeToText, TextToCode } from "element-china-area-data";
-import { Camera, Edit, Delete } from "@element-plus/icons-vue";
+import { Camera, Edit, Delete, Plus } from "@element-plus/icons-vue";
 import { UPLOAD_URL, getAvatarUrl } from "@/config/api.js";
 
 const userStore = useUserStore();
@@ -1027,10 +1027,10 @@ onMounted(() => {
 }
 
 /* Address Styling */
-.address-toolbar {
+.address-add-row {
   display: flex;
-  justify-content: flex-end;
-  margin-bottom: 16px;
+  justify-content: center;
+  margin-top: 12px;
 }
 
 .address-list {

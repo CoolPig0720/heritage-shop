@@ -1,7 +1,5 @@
 <template>
   <div class="products">
-    <h1 class="page-title">商品管理</h1>
-
     <el-card class="table-card">
       <div class="table-header">
         <el-input
@@ -54,6 +52,7 @@
               v-model="row.status"
               :active-value="1"
               :inactive-value="0"
+              inline-prompt
               active-text="上架"
               inactive-text="下架"
               @change="(val) => handleStatusChange(row, val)"
@@ -194,14 +193,14 @@
                   >删除</el-button
                 >
               </div>
-              <div v-if="form.traceQrUrl" class="qr-preview">
-                <el-image
-                  class="qr-preview-image"
-                  :src="normalizeUrl(form.traceQrUrl)"
-                  fit="contain"
-                />
-              </div>
             </el-form-item>
+            <div v-if="form.traceQrUrl" class="qr-preview">
+              <el-image
+                class="qr-preview-image"
+                :src="normalizeUrl(form.traceQrUrl)"
+                fit="contain"
+              />
+            </div>
           </el-col>
           <el-col :xs="24" :md="12">
             <el-form-item label="3D 模型" prop="model3dUrl">
@@ -232,32 +231,21 @@
                   <el-button size="small" @click="clearModel">删除</el-button>
                 </div>
               </div>
-
-              <div
-                v-if="form.model3dUrl && modelPreviewVisible"
-                class="model-preview"
-              >
-                <model-viewer
-                  class="model-preview-viewer"
-                  :src="normalizeUrl(form.model3dUrl)"
-                  :poster="modelPosterUrl"
-                  :alt="form.name || '3D 模型预览'"
-                  camera-controls
-                  auto-rotate
-                  shadow-intensity="1"
-                  exposure="1"
-                  touch-action="pan-y"
-                  @load="handleModelPreviewLoad"
-                  @error="handleModelPreviewError"
-                />
-                <div v-if="modelPreviewLoading" class="model-preview-loading">
-                  模型加载中...
-                </div>
-                <div v-if="modelPreviewError" class="model-preview-error">
-                  {{ modelPreviewError }}
-                </div>
-              </div>
             </el-form-item>
+            <div
+              v-if="form.model3dUrl && modelPreviewVisible"
+              class="model-preview"
+            >
+              <ModelViewer
+                :src="normalizeUrl(form.model3dUrl)"
+                :poster="modelPosterUrl"
+                :alt="form.name || '3D 模型预览'"
+                :auto-rotate="true"
+                height="240px"
+                @load="handleModelPreviewLoad"
+                @error="handleModelPreviewError"
+              />
+            </div>
           </el-col>
         </el-row>
 
@@ -280,6 +268,14 @@
                 :loading="imagesLoading"
                 @click="fetchProductImages"
                 >刷新</el-button
+              >
+              <el-button
+                v-if="productImages.length > 1"
+                size="small"
+                type="success"
+                :loading="sortSaving"
+                @click="saveImageSort"
+                >保存排序</el-button
               >
             </div>
 
@@ -314,42 +310,54 @@
                   <span v-else class="muted">—</span>
                 </template>
               </el-table-column>
-              <el-table-column label="排序" width="140" align="center">
-                <template #default="{ row }">
-                  <el-input-number
-                    v-model="row.sortOrder"
-                    :min="0"
-                    :step="1"
-                    controls-position="right"
-                    size="small"
-                    class="sort-input"
-                  />
+              <el-table-column label="排序" width="100" align="center">
+                <template #default="{ row, $index }">
+                  <div class="sort-controls">
+                    <el-button
+                      link
+                      size="small"
+                      :disabled="$index === 0"
+                      @click="moveImageUp($index)"
+                    >
+                      <el-icon><ArrowUp /></el-icon>
+                    </el-button>
+                    <span class="sort-index">{{ $index + 1 }}</span>
+                    <el-button
+                      link
+                      size="small"
+                      :disabled="$index === productImages.length - 1"
+                      @click="moveImageDown($index)"
+                    >
+                      <el-icon><ArrowDown /></el-icon>
+                    </el-button>
+                  </div>
                 </template>
               </el-table-column>
               <el-table-column label="操作" min-width="240" align="center">
                 <template #default="{ row }">
                   <div class="image-actions">
                     <el-button
-                      link
+                      type="primary"
+                      plain
+                      round
                       size="small"
                       :disabled="row.isCover === 1"
                       @click="setCoverImage(row)"
                     >
                       设为封面
                     </el-button>
-                    <el-button link size="small" @click="saveImageRow(row)"
-                      >保存</el-button
-                    >
                     <el-button
-                      link
+                      plain
+                      round
                       size="small"
                       @click="downloadFile(row.imageUrl)"
                       >下载</el-button
                     >
                     <el-button
-                      link
-                      size="small"
                       type="danger"
+                      plain
+                      round
+                      size="small"
                       @click="deleteImageRow(row)"
                       >删除</el-button
                     >
@@ -373,11 +381,19 @@
 
 <script setup>
 import { computed, nextTick, onMounted, reactive, ref, watch } from "vue";
-import { Search, Plus, Edit, Delete } from "@element-plus/icons-vue";
+import {
+  Search,
+  Plus,
+  Edit,
+  Delete,
+  ArrowUp,
+  ArrowDown,
+} from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import AppPagination from "@/components/AppPagination.vue";
 import {
   addProductImages,
+  batchUpdateImageSort,
   createProduct,
   deleteProduct,
   deleteProductImage,
@@ -389,6 +405,7 @@ import {
 } from "@/api/product";
 import { useUserStore } from "@/stores/user";
 import { UPLOAD_URL, getImageUrl } from "@/config/api.js";
+import ModelViewer from "@/components/ModelViewer.vue";
 
 const userStore = useUserStore();
 
@@ -577,6 +594,8 @@ const clearModel = async () => {
 
 const productImages = ref([]);
 const imagesLoading = ref(false);
+const sortSaving = ref(false);
+const sortDirty = ref(false);
 const getImageRowClass = ({ row }) =>
   Number(row?.isCover) === 1 ? "row-is-cover" : "";
 
@@ -681,14 +700,6 @@ const handleProductImageUploadSuccess = async (response) => {
 const setCoverImage = async (row) => {
   if (!row?.id) return;
   try {
-    const others = productImages.value.filter(
-      (img) => img?.id && img.id !== row.id && Number(img.isCover) === 1,
-    );
-    if (others.length) {
-      await Promise.all(
-        others.map((img) => updateProductImage(img.id, { isCover: 0 })),
-      );
-    }
     await updateProductImage(row.id, { isCover: 1 });
     ElMessage.success("已设置封面");
     await fetchProductImages();
@@ -697,11 +708,49 @@ const setCoverImage = async (row) => {
   }
 };
 
-const saveImageRow = async (row) => {
-  if (!row?.id) return;
-  await updateProductImage(row.id, { sortOrder: row.sortOrder ?? 0 });
-  ElMessage.success("已保存");
-  await fetchProductImages();
+const moveImageUp = (index) => {
+  if (index <= 0) return;
+  const list = [...productImages.value];
+  [list[index - 1], list[index]] = [list[index], list[index - 1]];
+  // Update sortOrder based on position
+  list.forEach((img, i) => {
+    img.sortOrder = i;
+    img.isCover = i === 0 ? 1 : 0;
+  });
+  productImages.value = list;
+  sortDirty.value = true;
+};
+
+const moveImageDown = (index) => {
+  if (index >= productImages.value.length - 1) return;
+  const list = [...productImages.value];
+  [list[index], list[index + 1]] = [list[index + 1], list[index]];
+  // Update sortOrder based on position
+  list.forEach((img, i) => {
+    img.sortOrder = i;
+    img.isCover = i === 0 ? 1 : 0;
+  });
+  productImages.value = list;
+  sortDirty.value = true;
+};
+
+const saveImageSort = async () => {
+  if (!form.id) return;
+  sortSaving.value = true;
+  try {
+    const items = productImages.value.map((img) => ({
+      imageId: img.id,
+      sortOrder: img.sortOrder,
+    }));
+    await batchUpdateImageSort({ productId: form.id, items });
+    ElMessage.success("排序已保存");
+    sortDirty.value = false;
+    await fetchProductImages();
+  } catch (e) {
+    ElMessage.error("保存排序失败");
+  } finally {
+    sortSaving.value = false;
+  }
 };
 
 const deleteImageRow = async (row) => {
@@ -814,6 +863,15 @@ const handleSubmit = async () => {
       if (form.traceQrUrl !== undefined) payload.traceQrUrl = form.traceQrUrl;
       if (form.model3dUrl !== undefined) payload.model3dUrl = form.model3dUrl;
       await updateProduct(form.id, payload);
+      // 同时保存图片排序（如果有变更）
+      if (sortDirty.value && form.id) {
+        const items = productImages.value.map((img) => ({
+          imageId: img.id,
+          sortOrder: img.sortOrder,
+        }));
+        await batchUpdateImageSort({ productId: form.id, items });
+        sortDirty.value = false;
+      }
       ElMessage.success("保存成功");
     }
     dialogVisible.value = false;
@@ -911,11 +969,30 @@ onMounted(() => {
   flex-wrap: nowrap;
 }
 
+.asset-box :deep(.el-upload) {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.asset-box :deep(.el-upload__trigger) {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
 .asset-preview {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: nowrap;
+}
+
+.asset-thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border-color-base);
+  background: var(--bg-base);
 }
 
 .asset-link {
@@ -929,7 +1006,7 @@ onMounted(() => {
   width: 240px;
   max-width: 100%;
   aspect-ratio: 1 / 1;
-  margin-top: 8px;
+  margin: 8px auto 0;
   border: 1px solid var(--border-color-base);
   border-radius: 8px;
   overflow: hidden;
@@ -948,7 +1025,7 @@ onMounted(() => {
   max-width: 100%;
   aspect-ratio: 1 / 1;
   position: relative;
-  margin-top: 8px;
+  margin: 8px auto 0;
   border: 1px solid var(--border-color-base);
   border-radius: 8px;
   overflow: hidden;
@@ -984,6 +1061,15 @@ onMounted(() => {
   font-size: 12px;
 }
 
+.model-preview-webgl-error {
+  padding: 12px;
+  color: #f56c6c;
+  font-size: 13px;
+  line-height: 1.6;
+  background: #fef0f0;
+  border-radius: 4px;
+}
+
 .images-panel {
   width: 100%;
   max-width: 100%;
@@ -993,7 +1079,7 @@ onMounted(() => {
 .images-toolbar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 10px;
 }
 
@@ -1015,13 +1101,8 @@ onMounted(() => {
   width: 100%;
 }
 
-.image-actions :deep(.el-button.is-link) {
-  padding: 4px 8px;
-  border-radius: 8px;
-}
-
-.image-actions :deep(.el-button.is-link:hover) {
-  background: var(--bg-elevated);
+.image-actions :deep(.el-button) {
+  font-size: 13px;
 }
 
 .muted {
@@ -1061,8 +1142,19 @@ onMounted(() => {
   background: var(--bg-elevated);
 }
 
-:deep(.images-table .sort-input) {
-  width: 110px;
+:deep(.images-table .sort-controls) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.sort-controls .sort-index {
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 18px;
+  text-align: center;
+  color: var(--text-color-primary);
 }
 
 :deep(.images-table .el-table__header th) {
@@ -1123,6 +1215,7 @@ onMounted(() => {
 
 :deep(.product-edit-dialog .el-form-item) {
   margin-bottom: 12px;
+  align-items: center;
 }
 
 :deep(.product-edit-dialog .el-dialog__header) {
@@ -1146,6 +1239,14 @@ onMounted(() => {
 :deep(.product-edit-dialog .tracecode-input) {
   width: 230px;
   max-width: 100%;
+}
+
+:deep(.product-edit-dialog .images-item) {
+  align-items: flex-start;
+}
+
+:deep(.product-edit-dialog .images-item .el-form-item__label) {
+  margin-top: 0;
 }
 
 :deep(.product-edit-dialog .images-item .el-form-item__content) {

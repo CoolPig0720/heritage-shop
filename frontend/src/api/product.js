@@ -1,70 +1,78 @@
-import request from '@/utils/request'
+import request from "@/utils/request";
 
 export function createProduct(data) {
   return request({
-    url: '/api/products',
-    method: 'post',
-    data
-  })
+    url: "/api/products",
+    method: "post",
+    data,
+  });
 }
 
 export function updateProduct(id, data) {
   return request({
     url: `/api/products/${id}`,
-    method: 'put',
-    data
-  })
+    method: "put",
+    data,
+  });
 }
 
 export function updateProductStatus(id, data) {
   return request({
     url: `/api/products/${id}/status`,
-    method: 'put',
-    data
-  })
+    method: "put",
+    data,
+  });
 }
 
 export function deleteProduct(id) {
   return request({
     url: `/api/products/${id}`,
-    method: 'delete'
-  })
+    method: "delete",
+  });
 }
 
 export function pageProducts(params) {
   return request({
-    url: '/api/products',
-    method: 'get',
-    params
-  })
+    url: "/api/products",
+    method: "get",
+    params,
+  });
 }
 
 export function listProductImages(productId) {
   return request({
     url: `/api/products/${productId}/images`,
-    method: 'get'
-  })
+    method: "get",
+  });
 }
 
 export function addProductImages(productId, data) {
   return request({
     url: `/api/products/${productId}/images`,
-    method: 'post',
-    data
-  })
+    method: "post",
+    data,
+  });
 }
 
 export function updateProductImage(imageId, data) {
   return request({
     url: `/api/products/images/${imageId}`,
-    method: 'put',
-    data
-  })
+    method: "put",
+    data,
+  });
+}
+
+export function batchUpdateImageSort(data) {
+  return request({
+    url: "/api/products/images/batch-sort",
+    method: "put",
+    data,
+  });
 }
 
 export function deleteProductImage(imageId) {
   return request({
     url: `/api/products/images/${imageId}`,
-    method: 'delete'
-  })
+    method: "delete",
+  });
 }

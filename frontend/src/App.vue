@@ -6,10 +6,15 @@
 
 <script setup>
 import { computed, onMounted, watch } from "vue";
+import { useRoute } from "vue-router";
 import { i18n, getElementLocale } from "@/i18n";
-import { translatePageToEnglish } from "@/utils/autoTranslate";
+import {
+  translatePageToEnglish,
+  clearOriginalTextCache,
+} from "@/utils/autoTranslate";
 import { initTheme } from "@/utils/theme";
 
+const route = useRoute();
 const elementLocale = computed(() =>
   getElementLocale(i18n.global.locale.value),
 );
@@ -29,11 +34,37 @@ onMounted(async () => {
   }
 });
 
-// 监听语言变化，切换为英文时自动翻译
+// 监听路由变化，清除原始文本缓存
+// 这解决了页面切换时 DOM 节点引用失效的问题
+watch(
+  () => route.path,
+  (newPath, oldPath) => {
+    if (newPath !== oldPath) {
+      // 路由变化时清除原始文本缓存（保留翻译结果缓存）
+      clearOriginalTextCache();
+
+      // 如果当前是英文模式，等待新页面渲染后翻译
+      if (i18n.global.locale.value === "en") {
+        setTimeout(async () => {
+          try {
+            await translatePageToEnglish();
+          } catch (error) {
+            console.error("路由切换后自动翻译失败:", error);
+          }
+        }, 300);
+      }
+    }
+  },
+);
+
+// 监听语言变化，自动翻译或恢复
 watch(
   () => i18n.global.locale.value,
-  async (newLang) => {
+  async (newLang, oldLang) => {
+    if (newLang === oldLang) return;
+
     if (newLang === "en") {
+      // 切换到英文，翻译页面
       setTimeout(async () => {
         try {
           await translatePageToEnglish();
@@ -41,6 +72,9 @@ watch(
           console.error("语言切换自动翻译失败:", error);
         }
       }, 300);
+    } else {
+      // 切换到中文，恢复原始文本
+      clearOriginalTextCache();
     }
   },
 );

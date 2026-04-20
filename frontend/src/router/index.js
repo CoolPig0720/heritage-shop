@@ -1,175 +1,223 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import { useUserStore } from '@/stores/user'
+import { createRouter, createWebHistory } from "vue-router";
+import { useUserStore } from "@/stores/user";
 
 const routes = [
   {
-    path: '/login',
-    name: 'Login',
-    component: () => import('@/views/Login.vue'),
-    meta: { title: '登录注册' }
+    path: "/login",
+    name: "Login",
+    component: () => import("@/views/Login.vue"),
+    meta: { title: "登录注册" },
   },
   {
-    path: '/',
-    name: 'Layout',
-    component: () => import('@/layouts/MainLayout.vue'),
-    redirect: '/home',
+    path: "/",
+    name: "Layout",
+    component: () => import("@/layouts/MainLayout.vue"),
+    redirect: "/home",
     meta: { requiresAuth: true },
     children: [
       {
-        path: 'home',
-        name: 'Home',
-        component: () => import('@/views/Home.vue'),
-        meta: { title: '首页' }
+        path: "home",
+        name: "Home",
+        component: () => import("@/views/Home.vue"),
+        meta: { title: "首页" },
       },
       {
-        path: 'heritage',
-        name: 'Heritage',
-        component: () => import('@/views/Heritage.vue'),
-        meta: { title: '非遗文化' }
+        path: "heritage",
+        name: "Heritage",
+        component: () => import("@/views/Heritage.vue"),
+        meta: { title: "非遗文化" },
       },
       {
-        path: 'heritage/projects/:id',
-        name: 'HeritageProjectDetail',
-        component: () => import('@/views/HeritageProjectDetail.vue'),
-        meta: { title: '非遗项目详情' }
+        path: "heritage/projects/:id",
+        name: "HeritageProjectDetail",
+        component: () => import("@/views/HeritageProjectDetail.vue"),
+        meta: { title: "非遗项目详情" },
       },
       {
-        path: 'heritage/inheritors/:id',
-        name: 'HeritageInheritorDetail',
-        component: () => import('@/views/HeritageInheritorDetail.vue'),
-        meta: { title: '非遗传承人详情' }
+        path: "heritage/inheritors/:id",
+        name: "HeritageInheritorDetail",
+        component: () => import("@/views/HeritageInheritorDetail.vue"),
+        meta: { title: "非遗传承人详情" },
       },
       {
-        path: 'products',
-        name: 'Products',
-        component: () => import('@/views/ShopProducts.vue'),
-        meta: { title: '商品列表' }
+        path: "products",
+        name: "Products",
+        component: () => import("@/views/ShopProducts.vue"),
+        meta: { title: "商品列表" },
       },
       {
-        path: 'product/:id',
-        name: 'ProductDetail',
-        component: () => import('@/views/ProductDetail.vue'),
-        meta: { title: '商品详情' }
+        path: "product/:id",
+        name: "ProductDetail",
+        component: () => import("@/views/ProductDetail.vue"),
+        meta: { title: "商品详情" },
       },
       {
-        path: 'customize',
-        name: 'Customize',
-        component: () => import('@/views/Customize.vue'),
-        meta: { title: '智能定制' }
+        path: "customize",
+        name: "Customize",
+        component: () => import("@/views/Customize.vue"),
+        meta: { title: "智能定制" },
       },
       {
-        path: 'profile',
-        name: 'Profile',
-        component: () => import('@/views/Profile.vue'),
-        meta: { title: '个人中心' }
+        path: "customize/requests",
+        name: "CustomizeRequests",
+        component: () => import("@/views/CustomizeRequests.vue"),
+        meta: { title: "我的定制" },
       },
       {
-        path: 'cart',
-        name: 'Cart',
-        component: () => import('@/views/Cart.vue'),
-        meta: { title: '购物车' }
+        path: "customize/requests/:id",
+        name: "CustomizeRequestDetail",
+        component: () => import("@/views/CustomizeRequestDetail.vue"),
+        meta: { title: "定制详情" },
       },
       {
-        path: 'orders',
-        name: 'Orders',
-        component: () => import('@/views/Orders.vue'),
-        meta: { title: '我的订单' }
-      }
-    ]
+        path: "info",
+        name: "Info",
+        component: () => import("@/views/Info.vue"),
+        meta: { title: "资讯" },
+      },
+      {
+        path: "info/announcements/:id",
+        name: "AnnouncementDetail",
+        component: () => import("@/views/AnnouncementDetail.vue"),
+        meta: { title: "公告详情" },
+      },
+      {
+        path: "info/stories/:id",
+        name: "HeritageStoryDetail",
+        component: () => import("@/views/HeritageStoryDetail.vue"),
+        meta: { title: "非遗故事详情" },
+      },
+      {
+        path: "profile",
+        name: "Profile",
+        component: () => import("@/views/Profile.vue"),
+        meta: { title: "个人中心" },
+      },
+      {
+        path: "cart",
+        name: "Cart",
+        component: () => import("@/views/Cart.vue"),
+        meta: { title: "购物车" },
+      },
+      {
+        path: "orders",
+        name: "Orders",
+        component: () => import("@/views/Orders.vue"),
+        meta: { title: "我的订单" },
+      },
+    ],
   },
   {
-    path: '/manage',
-    name: 'Manage',
-    component: () => import('@/layouts/AdminLayout.vue'),
-    redirect: '/manage/users',
+    path: "/manage",
+    name: "Manage",
+    component: () => import("@/layouts/AdminLayout.vue"),
+    redirect: "/manage/users",
     meta: { requiresAuth: true, requiresAdmin: true },
     children: [
       {
-        path: 'dashboard',
-        name: 'ManageDashboard',
-        redirect: '/manage/users',
-        meta: { title: '管理后台' }
+        path: "dashboard",
+        name: "ManageDashboard",
+        redirect: "/manage/users",
+        meta: { title: "管理后台" },
       },
       {
-        path: 'users',
-        name: 'ManageUsers',
-        component: () => import('@/views/admin/Users.vue'),
-        meta: { title: '用户管理' }
+        path: "users",
+        name: "ManageUsers",
+        component: () => import("@/views/admin/Users.vue"),
+        meta: { title: "用户管理" },
       },
       {
-        path: 'products',
-        name: 'ManageProducts',
-        component: () => import('@/views/admin/Products.vue'),
-        meta: { title: '商品管理' }
+        path: "products",
+        name: "ManageProducts",
+        component: () => import("@/views/admin/Products.vue"),
+        meta: { title: "商品管理" },
       },
       {
-        path: 'heritage',
-        name: 'ManageHeritage',
-        component: () => import('@/views/admin/Heritage.vue'),
-        meta: { title: '非遗文化管理' }
-      }
-    ]
+        path: "heritage",
+        name: "ManageHeritage",
+        component: () => import("@/views/admin/Heritage.vue"),
+        meta: { title: "非遗文化管理" },
+      },
+      {
+        path: "info",
+        name: "ManageInfo",
+        component: () => import("@/views/admin/Info.vue"),
+        meta: { title: "资讯管理" },
+      },
+    ],
   },
   {
-    path: '/merchant',
-    name: 'Merchant',
-    component: () => import('@/layouts/MerchantLayout.vue'),
-    redirect: '/merchant/products',
+    path: "/merchant",
+    name: "Merchant",
+    component: () => import("@/layouts/MerchantLayout.vue"),
+    redirect: "/merchant/products",
     meta: { requiresAuth: true, requiresMerchant: true },
     children: [
       {
-        path: 'dashboard',
-        name: 'MerchantDashboard',
-        redirect: '/merchant/products',
-        meta: { title: '商家后台' }
+        path: "dashboard",
+        name: "MerchantDashboard",
+        redirect: "/merchant/products",
+        meta: { title: "商家后台" },
       },
       {
-        path: 'products',
-        name: 'MerchantProducts',
-        component: () => import('@/views/merchant/Products.vue'),
-        meta: { title: '商品管理' }
-      }
-    ]
+        path: "products",
+        name: "MerchantProducts",
+        component: () => import("@/views/merchant/Products.vue"),
+        meta: { title: "商品管理" },
+      },
+      {
+        path: "customize",
+        name: "MerchantCustomizeRequests",
+        component: () => import("@/views/merchant/CustomizeRequests.vue"),
+        meta: { title: "定制管理" },
+      },
+      {
+        path: "customize/:id",
+        name: "MerchantCustomizeRequestDetail",
+        component: () => import("@/views/merchant/CustomizeRequestDetail.vue"),
+        meta: { title: "定制详情" },
+      },
+    ],
   },
   {
-    path: '/:pathMatch(.*)*',
-    name: 'NotFound',
-    component: () => import('@/views/NotFound.vue'),
-    meta: { title: '页面不存在' }
-  }
-]
+    path: "/:pathMatch(.*)*",
+    name: "NotFound",
+    component: () => import("@/views/NotFound.vue"),
+    meta: { title: "页面不存在" },
+  },
+];
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
-})
+  routes,
+});
 
 router.beforeEach((to, from, next) => {
-  document.title = to.meta.title || '非遗产品智能定制商城'
+  document.title = to.meta.title || "非遗产品智能定制商城";
 
-  const userStore = useUserStore()
+  const userStore = useUserStore();
 
   if (to.meta.requiresAuth && !userStore.token) {
-    next('/login')
-    return
+    next("/login");
+    return;
   }
 
-  const role = userStore.userInfo?.role
-  const roles = to.meta.requiresRoles
+  const role = userStore.userInfo?.role;
+  const roles = to.meta.requiresRoles;
   if (Array.isArray(roles) && roles.length > 0 && !roles.includes(role)) {
-    next('/')
-    return
+    next("/");
+    return;
   }
-  if (to.meta.requiresAdmin && role !== 'ADMIN') {
-    next('/')
-    return
+  if (to.meta.requiresAdmin && role !== "ADMIN") {
+    next("/");
+    return;
   }
-  if (to.meta.requiresMerchant && role !== 'MERCHANT') {
-    next('/')
-    return
+  if (to.meta.requiresMerchant && role !== "MERCHANT") {
+    next("/");
+    return;
   }
 
-  next()
-})
+  next();
+});
 
-export default router
+export default router;

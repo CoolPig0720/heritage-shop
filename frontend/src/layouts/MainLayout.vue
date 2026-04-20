@@ -4,13 +4,18 @@
     <div class="main-content">
       <router-view />
     </div>
-    <Footer />
+    <Footer v-if="isHomePage" />
   </div>
 </template>
 
 <script setup>
-import Header from '@/components/Header.vue'
-import Footer from '@/components/Footer.vue'
+import { computed } from "vue";
+import { useRoute } from "vue-router";
+import Header from "@/components/Header.vue";
+import Footer from "@/components/Footer.vue";
+
+const route = useRoute();
+const isHomePage = computed(() => route.path === "/home");
 </script>
 
 <style scoped>

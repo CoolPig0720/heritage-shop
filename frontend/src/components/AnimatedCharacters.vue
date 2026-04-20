@@ -68,13 +68,6 @@
       </div>
       <div class="mouth"></div>
     </div>
-
-    <!-- 底部链接 -->
-    <div class="footer-links">
-      <a href="#">隐私政策</a>
-      <span>·</span>
-      <a href="#">服务条款</a>
-    </div>
   </div>
 </template>
 
@@ -649,29 +642,6 @@ onUnmounted(() => {
   background: #1a1a1a;
   border-radius: 3px;
   margin-top: 14px;
-}
-
-/* Footer links */
-.footer-links {
-  position: absolute;
-  bottom: 20px;
-  left: 24px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 12px;
-  z-index: 10;
-}
-
-.footer-links a {
-  color: rgba(255, 255, 255, 0.6);
-  text-decoration: none;
-  transition: color 0.3s;
-}
-
-.footer-links a:hover {
-  color: rgba(255, 255, 255, 0.9);
 }
 
 /* Responsive */

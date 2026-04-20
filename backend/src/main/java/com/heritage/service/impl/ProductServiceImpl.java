@@ -7,6 +7,7 @@ import com.heritage.common.BusinessException;
 import com.heritage.dto.PageQuery;
 import com.heritage.dto.ProductCreateRequest;
 import com.heritage.dto.ProductImageAddRequest;
+import com.heritage.dto.ProductImageBatchSortRequest;
 import com.heritage.dto.ProductImageUpdateRequest;
 import com.heritage.dto.ProductImageVO;
 import com.heritage.dto.ProductUpdateRequest;
@@ -193,6 +194,21 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     }
 
     @Override
+    public List<ProductVO> getHotProducts(Integer count) {
+        int limit = normalizeCount(count);
+
+        LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Product::getStatus, 1);
+        wrapper.last("ORDER BY avg_rating DESC, rating_count DESC, create_time DESC LIMIT " + limit);
+        List<Product> products = this.list(wrapper);
+
+        List<ProductVO> vos = toProductVOList(products);
+        fillImages(vos);
+        fillMerchantNames(vos);
+        return vos;
+    }
+
+    @Override
     public List<ProductImageVO> listManageProductImages(Long operatorUserId, boolean isAdmin, Long productId) {
         Product product = this.getById(productId);
         if (product == null) {
@@ -204,7 +220,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
     @Override
     @Transactional
-    public List<ProductImageVO> addManageProductImages(Long operatorUserId, boolean isAdmin, Long productId, ProductImageAddRequest request) {
+    public List<ProductImageVO> addManageProductImages(Long operatorUserId, boolean isAdmin, Long productId,
+            ProductImageAddRequest request) {
         Product product = this.getById(productId);
         if (product == null) {
             throw new BusinessException("商品不存在");
@@ -250,7 +267,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
     @Override
     @Transactional
-    public void updateManageProductImage(Long operatorUserId, boolean isAdmin, Long imageId, ProductImageUpdateRequest request) {
+    public void updateManageProductImage(Long operatorUserId, boolean isAdmin, Long imageId,
+            ProductImageUpdateRequest request) {
         ProductImage existing = productImageMapper.selectById(imageId);
         if (existing == null) {
             throw new BusinessException("图片不存在");
@@ -266,18 +284,64 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         }
 
         Integer isCover = request.getIsCover();
+        Integer sortOrder = request.getSortOrder();
+
+        // 设为封面时：将原封面的sortOrder与当前图片互换
         if (isCover != null && isCover == 1) {
-            ProductImage reset = new ProductImage();
-            reset.setIsCover(0);
-            LambdaQueryWrapper<ProductImage> resetWrapper = new LambdaQueryWrapper<>();
-            resetWrapper.eq(ProductImage::getProductId, existing.getProductId());
-            productImageMapper.update(reset, resetWrapper);
+            // 查找当前封面
+            LambdaQueryWrapper<ProductImage> coverWrapper = new LambdaQueryWrapper<>();
+            coverWrapper.eq(ProductImage::getProductId, existing.getProductId())
+                    .eq(ProductImage::getIsCover, 1)
+                    .last("LIMIT 1");
+            List<ProductImage> currentCovers = productImageMapper.selectList(coverWrapper);
+            if (!currentCovers.isEmpty()) {
+                ProductImage currentCover = currentCovers.get(0);
+                if (!currentCover.getId().equals(imageId)) {
+                    // 将原封面的sortOrder设为当前图片的sortOrder
+                    ProductImage swapCover = new ProductImage();
+                    swapCover.setId(currentCover.getId());
+                    swapCover.setSortOrder(existing.getSortOrder());
+                    swapCover.setIsCover(0);
+                    productImageMapper.updateById(swapCover);
+                }
+            }
+            // 当前图片设为封面，sortOrder=0
+            ProductImage update = new ProductImage();
+            update.setId(imageId);
+            update.setSortOrder(0);
+            update.setIsCover(1);
+            if (request.getImageUrl() != null) {
+                String url = request.getImageUrl().trim();
+                if (url.isEmpty()) {
+                    throw new BusinessException("图片地址不能为空");
+                }
+                update.setImageUrl(url);
+            }
+            productImageMapper.updateById(update);
+            // 重新整理sortOrder使其连续
+            reorderSortOrders(existing.getProductId());
+            return;
         }
 
+        // 普通更新（sortOrder变更等）
         ProductImage update = new ProductImage();
         update.setId(imageId);
-        if (request.getSortOrder() != null) {
-            update.setSortOrder(request.getSortOrder());
+        if (sortOrder != null) {
+            update.setSortOrder(sortOrder);
+            // sortOrder=0 自动设为封面
+            if (sortOrder == 0) {
+                // 取消原封面
+                ProductImage reset = new ProductImage();
+                reset.setIsCover(0);
+                LambdaQueryWrapper<ProductImage> resetWrapper = new LambdaQueryWrapper<>();
+                resetWrapper.eq(ProductImage::getProductId, existing.getProductId())
+                        .eq(ProductImage::getIsCover, 1);
+                productImageMapper.update(reset, resetWrapper);
+                update.setIsCover(1);
+            } else if (existing.getIsCover() != null && existing.getIsCover() == 1 && sortOrder > 0) {
+                // 封面图被移到非0位置，取消封面
+                update.setIsCover(0);
+            }
         }
         if (request.getImageUrl() != null) {
             String url = request.getImageUrl().trim();
@@ -292,6 +356,42 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         productImageMapper.updateById(update);
 
         ensureCoverImage(existing.getProductId());
+    }
+
+    @Override
+    @Transactional
+    public void batchUpdateImageSort(Long operatorUserId, boolean isAdmin, ProductImageBatchSortRequest request) {
+        Long productId = request.getProductId();
+        Product product = this.getById(productId);
+        if (product == null) {
+            throw new BusinessException("商品不存在");
+        }
+        assertManagePermission(operatorUserId, isAdmin, product);
+
+        // 验证所有imageId都属于该商品
+        List<Long> requestIds = request.getItems().stream()
+                .map(ProductImageBatchSortRequest.SortItem::getImageId)
+                .toList();
+        List<ProductImage> existingImages = productImageMapper.selectBatchIds(requestIds);
+        for (ProductImage img : existingImages) {
+            if (!img.getProductId().equals(productId)) {
+                throw new BusinessException("图片不属于该商品");
+            }
+        }
+
+        // 批量更新sortOrder和isCover
+        for (ProductImageBatchSortRequest.SortItem item : request.getItems()) {
+            ProductImage update = new ProductImage();
+            update.setId(item.getImageId());
+            update.setSortOrder(item.getSortOrder());
+            // sortOrder=0 的图自动设为封面
+            update.setIsCover(item.getSortOrder() == 0 ? 1 : 0);
+            productImageMapper.updateById(update);
+        }
+
+        // 重新整理sortOrder使其连续
+        reorderSortOrders(productId);
+        ensureCoverImage(productId);
     }
 
     @Override
@@ -365,8 +465,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
         LambdaQueryWrapper<ProductImage> wrapper = new LambdaQueryWrapper<>();
         wrapper.in(ProductImage::getProductId, productIds);
-        wrapper.orderByDesc(ProductImage::getIsCover)
-                .orderByAsc(ProductImage::getSortOrder)
+        wrapper.orderByAsc(ProductImage::getSortOrder)
                 .orderByAsc(ProductImage::getId);
         List<ProductImage> images = productImageMapper.selectList(wrapper);
 
@@ -443,8 +542,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     private List<ProductImage> selectProductImages(Long productId) {
         LambdaQueryWrapper<ProductImage> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ProductImage::getProductId, productId);
-        wrapper.orderByDesc(ProductImage::getIsCover)
-                .orderByAsc(ProductImage::getSortOrder)
+        wrapper.orderByAsc(ProductImage::getSortOrder)
                 .orderByAsc(ProductImage::getId);
         return productImageMapper.selectList(wrapper);
     }
@@ -501,6 +599,25 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         ProductImage first = new ProductImage();
         first.setId(list.get(0).getId());
         first.setIsCover(1);
+        first.setSortOrder(0);
         productImageMapper.updateById(first);
+    }
+
+    private void reorderSortOrders(Long productId) {
+        LambdaQueryWrapper<ProductImage> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ProductImage::getProductId, productId);
+        wrapper.orderByAsc(ProductImage::getSortOrder)
+                .orderByAsc(ProductImage::getId);
+        List<ProductImage> images = productImageMapper.selectList(wrapper);
+        for (int i = 0; i < images.size(); i++) {
+            ProductImage img = images.get(i);
+            if (img.getSortOrder() != null && img.getSortOrder() == i) {
+                continue;
+            }
+            ProductImage update = new ProductImage();
+            update.setId(img.getId());
+            update.setSortOrder(i);
+            productImageMapper.updateById(update);
+        }
     }
 }

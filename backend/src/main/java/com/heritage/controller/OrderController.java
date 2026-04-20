@@ -38,9 +38,10 @@ public class OrderController {
 
     @GetMapping
     @Operation(summary = "订单分页列表")
-    public Result<Page<OrderVO>> page(PageQuery query, @RequestParam(required = false) String status) {
+    public Result<Page<OrderVO>> page(PageQuery query, @RequestParam(required = false) String status,
+            @RequestParam(required = false) String keyword) {
         Long userId = getCurrentUserId();
-        return Result.success(orderService.pageMyOrders(userId, query, status));
+        return Result.success(orderService.pageMyOrders(userId, query, status, keyword));
     }
 
     @GetMapping("/{id}")
@@ -59,8 +60,8 @@ public class OrderController {
     }
 
     private Long getCurrentUserId() {
-        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
         return userDetails.getUserId();
     }
 }
-

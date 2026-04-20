@@ -57,6 +57,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/heritage/**").permitAll()
                         .requestMatchers("/api/shop/**").permitAll()
+                        .requestMatchers("/api/info/**").permitAll()
                         .requestMatchers("/api/translate/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/doc.html", "/webjars/**", "/swagger-resources/**", "/v3/api-docs/**",

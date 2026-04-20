@@ -10,12 +10,60 @@
         </div>
       </template>
 
+      <!-- 评分分布 -->
+      <div class="rating-summary" v-if="ratingData.ratingCount > 0">
+        <div class="rating-summary-left">
+          <div class="rating-big-score">{{ ratingData.avgRating }}</div>
+          <el-rate
+            :model-value="ratingData.avgRating"
+            disabled
+            :colors="['#F7BA2A', '#F7BA2A', '#F7BA2A']"
+            size="small"
+          />
+          <div class="rating-total">{{ ratingData.ratingCount }}人评价</div>
+        </div>
+        <div class="rating-summary-right">
+          <div
+            v-for="star in [5, 4, 3, 2, 1]"
+            :key="star"
+            class="rating-bar-row"
+          >
+            <span class="rating-bar-label">{{ star }}星</span>
+            <div class="rating-bar-track">
+              <div
+                class="rating-bar-fill"
+                :style="{
+                  width:
+                    ratingData.ratingCount > 0
+                      ? ((ratingData.distribution[star] || 0) /
+                          ratingData.ratingCount) *
+                          100 +
+                        '%'
+                      : '0%',
+                }"
+              ></div>
+            </div>
+            <span class="rating-bar-count">{{
+              ratingData.distribution[star] || 0
+            }}</span>
+          </div>
+        </div>
+      </div>
+
       <!-- 发表评论 -->
       <div class="comment-input-area">
         <el-avatar :size="36" :src="currentUserAvatar" class="comment-avatar">
           <el-icon :size="18"><User /></el-icon>
         </el-avatar>
         <div class="comment-input-wrapper">
+          <div class="rating-input-row" v-if="token">
+            <span class="rating-input-label">商品评分：</span>
+            <el-rate
+              v-model="myRating"
+              :colors="['#F7BA2A', '#F7BA2A', '#F7BA2A']"
+              size="default"
+            />
+          </div>
           <el-input
             v-model="newCommentContent"
             type="textarea"
@@ -25,15 +73,25 @@
             resize="none"
             @keydown.enter.exact.prevent="submitComment"
           />
-          <el-button
-            type="primary"
-            size="small"
-            :loading="submitting"
-            :disabled="!token || !newCommentContent.trim()"
-            @click="submitComment"
-          >
-            发表
-          </el-button>
+          <div class="comment-input-actions">
+            <el-button
+              v-if="myRating > 0 && !myRatingSubmitted"
+              size="small"
+              :loading="ratingSubmitting"
+              @click="submitRatingOnly"
+            >
+              提交评分
+            </el-button>
+            <el-button
+              type="primary"
+              size="small"
+              :loading="submitting"
+              :disabled="!token || !newCommentContent.trim()"
+              @click="submitComment"
+            >
+              发表
+            </el-button>
+          </div>
         </div>
       </div>
 
@@ -231,6 +289,7 @@ import {
   deleteComment,
   toggleCommentLike,
 } from "@/api/comment";
+import { getProductRating, submitRating, getMyRating } from "@/api/rating";
 
 const props = defineProps({
   productId: {
@@ -260,6 +319,17 @@ const replyingTo = ref(null);
 const replyContent = ref("");
 const replyParentComment = ref(null);
 const replyToUser = ref(null);
+
+// 评分相关
+const ratingData = ref({
+  avgRating: 0,
+  ratingCount: 0,
+  distribution: {},
+  myRating: null,
+});
+const myRating = ref(0);
+const myRatingSubmitted = ref(false);
+const ratingSubmitting = ref(false);
 
 const hasMore = computed(() => comments.value.length < total.value);
 
@@ -326,6 +396,41 @@ const loadComments = async (reset = false) => {
   }
 };
 
+const loadRatingData = async () => {
+  if (!props.productId) return;
+  try {
+    const res = await getProductRating(props.productId);
+    const data = res.data || {};
+    ratingData.value = data;
+    if (data.myRating) {
+      myRating.value = data.myRating;
+      myRatingSubmitted.value = true;
+    }
+  } catch (e) {
+    // 静默失败
+  }
+};
+
+const submitRatingOnly = async () => {
+  if (!token.value) {
+    ElMessage.warning("请先登录");
+    return;
+  }
+  if (myRating.value < 1) return;
+
+  ratingSubmitting.value = true;
+  try {
+    await submitRating({ productId: props.productId, rating: myRating.value });
+    ElMessage.success("评分成功");
+    myRatingSubmitted.value = true;
+    loadRatingData();
+  } catch (e) {
+    // 错误已在request拦截器中处理
+  } finally {
+    ratingSubmitting.value = false;
+  }
+};
+
 const loadMore = () => {
   currentPage.value++;
   loadComments(false);
@@ -354,6 +459,14 @@ const submitComment = async () => {
 
   submitting.value = true;
   try {
+    // 如果选择了评分且尚未提交，同步提交评分
+    if (myRating.value > 0 && !myRatingSubmitted.value) {
+      await submitRating({
+        productId: props.productId,
+        rating: myRating.value,
+      });
+      myRatingSubmitted.value = true;
+    }
     await createComment({
       productId: props.productId,
       content: newCommentContent.value.trim(),
@@ -361,6 +474,7 @@ const submitComment = async () => {
     ElMessage.success("评论发表成功");
     newCommentContent.value = "";
     loadComments(true);
+    loadRatingData();
   } catch (e) {
     // 错误已在request拦截器中处理
   } finally {
@@ -490,6 +604,7 @@ watch(
   (newVal) => {
     if (newVal) {
       loadComments(true);
+      loadRatingData();
     }
   },
   { immediate: true },
@@ -532,6 +647,102 @@ watch(
 .comment-count {
   font-size: 14px;
   color: var(--text-color-secondary);
+}
+
+/* 评分分布 */
+.rating-summary {
+  display: flex;
+  gap: 32px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background: var(--bg-elevated);
+  border-radius: 12px;
+  border: 1px solid var(--border-color-base);
+}
+
+.rating-summary-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
+}
+
+.rating-big-score {
+  font-size: 40px;
+  font-weight: 700;
+  color: #f7ba2a;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.rating-total {
+  font-size: 12px;
+  color: var(--text-color-secondary);
+  margin-top: 4px;
+}
+
+.rating-summary-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+}
+
+.rating-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rating-bar-label {
+  font-size: 12px;
+  color: var(--text-color-secondary);
+  width: 28px;
+  text-align: right;
+}
+
+.rating-bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--border-color-lighter);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.rating-bar-fill {
+  height: 100%;
+  background: #f7ba2a;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.rating-bar-count {
+  font-size: 12px;
+  color: var(--text-color-secondary);
+  width: 20px;
+  text-align: left;
+}
+
+/* 评分输入 */
+.rating-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.rating-input-label {
+  font-size: 14px;
+  color: var(--text-color-secondary);
+  white-space: nowrap;
+}
+
+.comment-input-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 /* 发表评论 */

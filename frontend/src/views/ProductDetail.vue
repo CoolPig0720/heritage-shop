@@ -14,23 +14,36 @@
               height="500px"
               indicator-position="outside"
             >
-              <el-carousel-item v-for="url in product.imageUrls" :key="url">
-                <el-image
+              <el-carousel-item
+                v-for="(url, index) in product.imageUrls"
+                :key="url"
+              >
+                <img
                   :src="url"
-                  fit="cover"
-                  style="width: 100%; height: 500px"
-                  :preview-src-list="product.imageUrls"
+                  class="carousel-image"
+                  @click="openImageViewer(index)"
                 />
               </el-carousel-item>
             </el-carousel>
-            <el-image
+            <img
               v-else
               :src="product.coverImageUrl"
-              fit="contain"
-              style="width: 100%; height: 500px"
-              :preview-src-list="[product.coverImageUrl]"
+              class="carousel-image"
+              @click="openImageViewer(0)"
             />
           </div>
+
+          <!-- 独立的图片查看器，不受轮播图事件干扰 -->
+          <el-image-viewer
+            v-if="imageViewerVisible"
+            :url-list="
+              product.imageUrls.length > 0
+                ? product.imageUrls
+                : [product.coverImageUrl]
+            "
+            :initial-index="imageViewerIndex"
+            @close="imageViewerVisible = false"
+          />
 
           <div class="detail-right">
             <div class="product-header">
@@ -48,6 +61,20 @@
                   {{ product.status === 1 ? "在售" : "已下架" }}
                 </el-tag>
               </div>
+            </div>
+
+            <!-- 商品评分 -->
+            <div class="product-rating-row" v-if="product.ratingCount > 0">
+              <el-rate
+                :model-value="product.avgRating"
+                disabled
+                :colors="['#F7BA2A', '#F7BA2A', '#F7BA2A']"
+                size="small"
+              />
+              <span class="rating-score">{{ product.avgRating }}</span>
+              <span class="rating-count"
+                >({{ product.ratingCount }}人评价)</span
+              >
             </div>
 
             <div class="product-description-preview">
@@ -144,23 +171,14 @@
         class="model-dialog"
       >
         <div class="dialog-content">
-          <model-viewer
-            class="model3d-viewer"
+          <ModelViewer
             :src="product.model3dUrl"
             :poster="product.coverImageUrl"
             :alt="product.name"
-            camera-controls
-            auto-rotate
-            shadow-intensity="1"
-            exposure="1"
-            touch-action="pan-y"
+            :auto-rotate="true"
             @load="handleModelLoad"
             @error="handleModelError"
           />
-          <div v-if="modelViewerLoading" class="model3d-loading">加载中...</div>
-          <div v-if="modelViewerError" class="model3d-error">
-            {{ modelViewerError }}
-          </div>
         </div>
         <template #footer>
           <div class="dialog-footer">
@@ -183,7 +201,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElImageViewer } from "element-plus";
 import { getProductDetail } from "@/api/shop";
 import { addCartItem } from "@/api/cart";
 import {
@@ -195,6 +213,7 @@ import {
 } from "@element-plus/icons-vue";
 import { getImageUrl } from "@/config/api.js";
 import ProductComment from "@/components/ProductComment.vue";
+import ModelViewer from "@/components/ModelViewer.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -205,6 +224,13 @@ const modelViewerLoading = ref(false);
 const modelViewerError = ref("");
 const qrDialogVisible = ref(false);
 const modelDialogVisible = ref(false);
+const imageViewerVisible = ref(false);
+const imageViewerIndex = ref(0);
+
+const openImageViewer = (index) => {
+  imageViewerIndex.value = index;
+  imageViewerVisible.value = true;
+};
 
 const backTo = computed(() => {
   const from = route.query?.from;
@@ -245,6 +271,8 @@ const product = ref({
   model3dUrl: "",
   coverImageUrl: PLACEHOLDER_IMAGE,
   imageUrls: [],
+  avgRating: 0,
+  ratingCount: 0,
 });
 
 const normalizeUrl = (url) => {
@@ -291,6 +319,8 @@ const loadDetail = async (id) => {
       model3dUrl: "",
       coverImageUrl: PLACEHOLDER_IMAGE,
       imageUrls: [],
+      avgRating: 0,
+      ratingCount: 0,
     };
     modelViewerLoading.value = false;
     modelViewerError.value = "";
@@ -393,9 +423,16 @@ const handleDownload = (url, filename) => {
   background: var(--card-bg);
 }
 
-.detail-left .el-image {
+.detail-left .carousel-image {
   width: 100%;
   height: 500px;
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.detail-left .carousel-image:hover {
+  transform: scale(1.02);
 }
 
 .detail-right {
@@ -421,7 +458,25 @@ const handleDownload = (url, filename) => {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
+}
+
+.product-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.rating-score {
+  font-size: 18px;
+  font-weight: 700;
+  color: #f7ba2a;
+}
+
+.rating-count {
+  font-size: 13px;
+  color: var(--text-color-secondary);
 }
 
 .price-row {
@@ -562,16 +617,12 @@ const handleDownload = (url, filename) => {
 .quantity-selector :deep(.el-input-number__decrease:focus),
 .quantity-selector :deep(.el-input-number__increase:focus),
 .quantity-selector :deep(.el-input-number__decrease:focus-visible),
-.quantity-selector :deep(.el-input-number__increase:focus-visible) {
-  outline: none;
-  border-color: #e0e6ef;
-  box-shadow: none;
-}
-
+.quantity-selector :deep(.el-input-number__increase:focus-visible),
 .quantity-selector :deep(.el-input-number__decrease:active),
 .quantity-selector :deep(.el-input-number__increase:active) {
-  border-color: #e0e6ef;
-  box-shadow: none;
+  outline: none !important;
+  border-color: var(--border-color-base) !important;
+  box-shadow: none !important;
 }
 
 .quantity-selector :deep(.el-input-number__input) {
@@ -581,17 +632,12 @@ const handleDownload = (url, filename) => {
   color: var(--text-color-primary);
 }
 
+.quantity-selector :deep(.el-input__wrapper),
+.quantity-selector :deep(.el-input__wrapper:hover),
 .quantity-selector :deep(.el-input__wrapper.is-focus) {
-  box-shadow: none;
-  border-color: #e0e6ef;
-}
-
-.quantity-selector :deep(.el-input__wrapper) {
-  box-shadow: none;
-}
-
-.quantity-selector :deep(.el-input__wrapper:hover) {
-  border-color: #e0e6ef;
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: var(--border-color-base) !important;
 }
 
 .quantity-selector :deep(.el-input-number__decrease.is-disabled),
@@ -700,6 +746,22 @@ const handleDownload = (url, filename) => {
   padding: 20px;
 }
 
+.webgl-error {
+  text-align: left;
+  padding: 24px;
+  line-height: 1.8;
+}
+.webgl-error p {
+  margin: 0 0 8px;
+}
+.webgl-error ul {
+  margin: 4px 0 0 20px;
+  padding: 0;
+}
+.webgl-error li {
+  margin-bottom: 4px;
+}
+
 .trace-wrapper {
   display: flex;
   justify-content: flex-start;
@@ -781,7 +843,7 @@ const handleDownload = (url, filename) => {
     border-bottom: 1px solid var(--border-color-base);
   }
 
-  .detail-left .el-image,
+  .detail-left .carousel-image,
   .detail-left .el-carousel {
     height: 360px !important;
   }
