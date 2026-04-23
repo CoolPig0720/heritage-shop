@@ -10,8 +10,9 @@
         </div>
       </template>
 
-      <!-- 评分分布 -->
-      <div class="rating-summary" v-if="ratingData.ratingCount > 0">
+      <!-- 评分统计和发表评论 -->
+      <div class="rating-and-input" v-if="ratingData.ratingCount > 0">
+        <!-- 左侧：评分分布 -->
         <div class="rating-summary-left">
           <div class="rating-big-score">{{ ratingData.avgRating }}</div>
           <el-rate
@@ -22,7 +23,9 @@
           />
           <div class="rating-total">{{ ratingData.ratingCount }}人评价</div>
         </div>
-        <div class="rating-summary-right">
+
+        <!-- 中间：评分分布条形图 -->
+        <div class="rating-summary-middle">
           <div
             v-for="star in [5, 4, 3, 2, 1]"
             :key="star"
@@ -48,49 +51,102 @@
             }}</span>
           </div>
         </div>
+
+        <!-- 右侧：发表评论 -->
+        <div class="comment-input-section">
+          <div class="comment-input-box">
+            <el-avatar :size="36" :src="currentUserAvatar" class="comment-avatar">
+              <el-icon :size="18"><User /></el-icon>
+            </el-avatar>
+            <div class="comment-input-wrapper">
+              <div class="rating-input-row" v-if="token">
+                <span class="rating-input-label">商品评分：</span>
+                <el-rate
+                  v-model="myRating"
+                  :colors="['#F7BA2A', '#F7BA2A', '#F7BA2A']"
+                  size="default"
+                />
+              </div>
+              <el-input
+                v-model="newCommentContent"
+                type="textarea"
+                :placeholder="token ? '发表评论...' : '请先登录后再发表评论'"
+                :rows="2"
+                :disabled="!token"
+                resize="none"
+                @keydown.enter.exact.prevent="submitComment"
+                class="comment-text-input"
+              />
+              <div class="comment-input-actions">
+                <el-button
+                  v-if="myRating > 0 && !myRatingSubmitted && token"
+                  size="small"
+                  :loading="ratingSubmitting"
+                  @click="submitRatingOnly"
+                >
+                  提交评分
+                </el-button>
+                <el-button
+                  type="primary"
+                  size="small"
+                  :loading="submitting"
+                  :disabled="!token || !newCommentContent.trim()"
+                  @click="submitComment"
+                >
+                  发表
+                </el-button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- 发表评论 -->
-      <div class="comment-input-area">
-        <el-avatar :size="36" :src="currentUserAvatar" class="comment-avatar">
-          <el-icon :size="18"><User /></el-icon>
-        </el-avatar>
-        <div class="comment-input-wrapper">
-          <div class="rating-input-row" v-if="token">
-            <span class="rating-input-label">商品评分：</span>
-            <el-rate
-              v-model="myRating"
-              :colors="['#F7BA2A', '#F7BA2A', '#F7BA2A']"
-              size="default"
-            />
-          </div>
-          <el-input
-            v-model="newCommentContent"
-            type="textarea"
-            :placeholder="token ? '发表评论...' : '请先登录后再发表评论'"
-            :rows="2"
-            :disabled="!token"
-            resize="none"
-            @keydown.enter.exact.prevent="submitComment"
-          />
-          <div class="comment-input-actions">
-            <el-button
-              v-if="myRating > 0 && !myRatingSubmitted"
-              size="small"
-              :loading="ratingSubmitting"
-              @click="submitRatingOnly"
-            >
-              提交评分
-            </el-button>
-            <el-button
-              type="primary"
-              size="small"
-              :loading="submitting"
-              :disabled="!token || !newCommentContent.trim()"
-              @click="submitComment"
-            >
-              发表
-            </el-button>
+      <!-- 无评分时显示原来的发表评论 -->
+      <div class="rating-and-input no-rating" v-else>
+        <div class="comment-input-section full-width">
+          <div class="comment-input-box">
+            <el-avatar :size="36" :src="currentUserAvatar" class="comment-avatar">
+              <el-icon :size="18"><User /></el-icon>
+            </el-avatar>
+            <div class="comment-input-wrapper">
+              <div class="rating-input-row" v-if="token">
+                <span class="rating-input-label">商品评分：</span>
+                <el-rate
+                  v-model="myRating"
+                  :colors="['#F7BA2A', '#F7BA2A', '#F7BA2A']"
+                  size="default"
+                />
+              </div>
+              <el-input
+                v-model="newCommentContent"
+                type="textarea"
+                :placeholder="token ? '发表评论...' : '请先登录后再发表评论'"
+                :rows="2"
+                :disabled="!token"
+                resize="none"
+                @keydown.enter.exact.prevent="submitComment"
+                class="comment-text-input"
+              />
+              <div class="comment-input-actions">
+                <el-button
+                  v-if="myRating > 0 && !myRatingSubmitted && token"
+                  size="small"
+                  :loading="ratingSubmitting"
+                  @click="submitRatingOnly"
+                >
+                  提交评分
+                </el-button>
+                <el-button
+                  type="primary"
+                  size="small"
+                  :loading="submitting"
+                  :disabled="!token || !newCommentContent.trim()"
+                  @click="submitComment"
+                >
+                  发表
+                </el-button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -649,15 +705,16 @@ watch(
   color: var(--text-color-secondary);
 }
 
-/* 评分分布 */
-.rating-summary {
+/* 评分统计和发表评论 */
+.rating-and-input {
   display: flex;
-  gap: 32px;
+  gap: 24px;
   padding: 20px;
   margin-bottom: 20px;
   background: var(--bg-elevated);
   border-radius: 12px;
   border: 1px solid var(--border-color-base);
+  align-items: stretch;
 }
 
 .rating-summary-left {
@@ -665,11 +722,13 @@ watch(
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: 100px;
+  min-width: 80px;
+  padding-right: 20px;
+  border-right: 1px solid var(--border-color-lighter);
 }
 
 .rating-big-score {
-  font-size: 40px;
+  font-size: 36px;
   font-weight: 700;
   color: #f7ba2a;
   line-height: 1;
@@ -682,12 +741,53 @@ watch(
   margin-top: 4px;
 }
 
-.rating-summary-right {
-  flex: 1;
+.rating-summary-middle {
+  flex: 0 0 280px;
   display: flex;
   flex-direction: column;
   gap: 4px;
   justify-content: center;
+  padding-right: 20px;
+  border-right: 1px solid var(--border-color-lighter);
+}
+
+/* 发表评论区域 */
+.comment-input-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-width: 400px;
+}
+
+.comment-input-section.full-width {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.no-rating {
+  justify-content: center;
+}
+
+.comment-input-box {
+  display: flex;
+  gap: 12px;
+}
+
+.comment-input-section .rating-input-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.comment-input-section .comment-input-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .rating-bar-row {
@@ -761,24 +861,52 @@ watch(
 
 .comment-input-wrapper {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 
-.comment-input-wrapper :deep(.el-textarea__inner) {
+.comment-input-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.comment-text-input {
+  flex: 1;
+}
+
+.comment-text-input :deep(.el-textarea__inner) {
   border-radius: 8px;
   border-color: var(--border-color-base);
   background: var(--bg-elevated);
   color: var(--text-color-primary);
 }
 
-.comment-input-wrapper :deep(.el-textarea__inner:focus) {
+.comment-text-input :deep(.el-textarea__inner:focus) {
   border-color: var(--color-primary);
 }
 
-.comment-input-wrapper .el-button {
-  align-self: flex-end;
+.rating-submit-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 140px;
+}
+
+.rating-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.rating-input-label {
+  font-size: 14px;
+  color: var(--text-color-secondary);
+}
+
+.comment-input-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 /* 评论列表 */

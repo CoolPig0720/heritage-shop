@@ -18,7 +18,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/heritage-shop?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: root
-    password: 13655218c
+    password: 123456
 
   data:
     redis:
@@ -46,6 +46,8 @@ jwt:
 #     secret-key: ${TENCENTCLOUD_SECRET_KEY:}
 #     region: ${TENCENTCLOUD_REGION:ap-guangzhou}
 #     endpoint: ${TENCENTCLOUD_ENDPOINT:aiart.tencentcloudapi.com}
+
+
 
 knife4j:
   enable: true

@@ -165,6 +165,7 @@ import {
   listCustomizeMessages,
   sendCustomizeMessage,
   markMessagesRead,
+  markCancelledRead,
 } from "@/api/customize";
 import { getImageUrl } from "@/config/api";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -305,6 +306,10 @@ const previewImage = (url) => {
 onMounted(async () => {
   await fetchDetail();
   await fetchMessages();
+  // 如果是已取消状态，商家标记已读消除红点
+  if (detail.value.status === 'CANCELLED') {
+    markCancelledRead(requestId).catch(() => {});
+  }
   // 标记消息已读
   markMessagesRead(requestId).catch(() => {});
   pollTimer = setInterval(fetchMessages, 5000);

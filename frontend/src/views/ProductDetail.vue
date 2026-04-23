@@ -47,7 +47,7 @@
 
           <div class="detail-right">
             <div class="product-header">
-              <h1 class="title">{{ product.name }}</h1>
+              <h1 class="title"><TransText :text="product.name" /></h1>
               <div class="price-status-row">
                 <div class="price-row">
                   <span class="currency">¥</span>

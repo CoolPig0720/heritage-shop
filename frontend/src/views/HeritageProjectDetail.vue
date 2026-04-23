@@ -51,11 +51,12 @@
             </div>
           </div>
           <div v-if="displayImages.length > 0" class="image-grid">
-            <div v-for="img in displayImages" :key="img.id" class="media-item">
+            <div v-for="(img, index) in displayImages" :key="img.id" class="media-item">
               <el-image
                 :src="normalizeUrl(img.mediaUrl)"
                 fit="cover"
                 :preview-src-list="displayImagesPreview"
+                :initial-index="index"
                 preview-teleported
                 class="image"
               />
@@ -94,11 +95,12 @@
             </div>
           </div>
           <div v-if="processImages.length > 0" class="image-grid">
-            <div v-for="img in processImages" :key="img.id" class="media-item">
+            <div v-for="(img, index) in processImages" :key="img.id" class="media-item">
               <el-image
                 :src="normalizeUrl(img.mediaUrl)"
                 fit="cover"
                 :preview-src-list="processImagesPreview"
+                :initial-index="index"
                 preview-teleported
                 class="image"
               />

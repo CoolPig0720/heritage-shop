@@ -298,6 +298,7 @@ import {
   listCustomizeMessages,
   sendCustomizeMessage,
   markMessagesRead,
+  markCompletedRead,
 } from "@/api/customize";
 import { getImageUrl } from "@/config/api";
 import { listAddresses, createAddress } from "@/api/auth";
@@ -583,6 +584,10 @@ const fetchAddresses = async () => {
 onMounted(async () => {
   await fetchDetail();
   await fetchMessages();
+  // 如果是已完成状态且是用户端，标记已读消除红点
+  if (detail.value.status === 'COMPLETED' && isUser.value) {
+    markCompletedRead(requestId).catch(() => {});
+  }
   // 标记消息已读
   markMessagesRead(requestId).catch(() => {});
   // 轮询消息

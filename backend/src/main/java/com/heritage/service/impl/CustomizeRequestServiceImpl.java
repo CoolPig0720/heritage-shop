@@ -375,13 +375,19 @@ public class CustomizeRequestServiceImpl extends ServiceImpl<CustomizeRequestMap
     public CustomizeUnreadVO getUnreadCount(Long userId, String role) {
         CustomizeUnreadVO vo = new CustomizeUnreadVO();
         if ("MERCHANT".equals(role)) {
+            // 商家端红点：待报价（用户提交）、已确认（用户确认）、已取消（用户取消，排除已查看的）
             vo.setPendingCount(countByMerchantAndStatus(userId, "PENDING"));
             vo.setQuotedCount(countByMerchantAndStatus(userId, "QUOTED"));
             vo.setConfirmedCount(countByMerchantAndStatus(userId, "CONFIRMED"));
+            vo.setCancelledCount(countUnreadCancelledByMerchant(userId));
+            vo.setCompletedCount(countByMerchantAndStatus(userId, "COMPLETED"));
         } else {
+            // 用户端红点：已报价（商家报价待确认）、已完成（商家标记完成，排除已查看的）
             vo.setPendingCount(countByUserAndStatus(userId, "PENDING"));
             vo.setQuotedCount(countByUserAndStatus(userId, "QUOTED"));
             vo.setConfirmedCount(countByUserAndStatus(userId, "CONFIRMED"));
+            vo.setCancelledCount(countByUserAndStatus(userId, "CANCELLED"));
+            vo.setCompletedCount(countUnreadCompletedByUser(userId));
         }
         vo.setUnreadMessageCount(customizeMessageService.countUnreadMessages(userId));
         return vo;
@@ -397,6 +403,58 @@ public class CustomizeRequestServiceImpl extends ServiceImpl<CustomizeRequestMap
         LambdaQueryWrapper<CustomizeRequest> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(CustomizeRequest::getMerchantId, merchantId).eq(CustomizeRequest::getStatus, status);
         return this.count(wrapper);
+    }
+
+    /**
+     * 统计用户未查看的已完成工单数量（用于红点）
+     */
+    private Long countUnreadCompletedByUser(Long userId) {
+        LambdaQueryWrapper<CustomizeRequest> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(CustomizeRequest::getUserId, userId)
+               .eq(CustomizeRequest::getStatus, "COMPLETED")
+               .isNull(CustomizeRequest::getUserCompletedReadAt);
+        return this.count(wrapper);
+    }
+
+    @Override
+    public void markCompletedRead(Long userId, Long requestId) {
+        CustomizeRequest entity = this.getById(requestId);
+        if (entity == null) {
+            throw new BusinessException("工单不存在");
+        }
+        if (!entity.getUserId().equals(userId)) {
+            throw new BusinessException("无权限操作该工单");
+        }
+        if ("COMPLETED".equals(entity.getStatus()) && entity.getUserCompletedReadAt() == null) {
+            entity.setUserCompletedReadAt(LocalDateTime.now());
+            this.updateById(entity);
+        }
+    }
+
+    /**
+     * 统计商家未查看的已取消工单数量（用于红点）
+     */
+    private Long countUnreadCancelledByMerchant(Long merchantId) {
+        LambdaQueryWrapper<CustomizeRequest> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(CustomizeRequest::getMerchantId, merchantId)
+               .eq(CustomizeRequest::getStatus, "CANCELLED")
+               .isNull(CustomizeRequest::getMerchantCancelledReadAt);
+        return this.count(wrapper);
+    }
+
+    @Override
+    public void markCancelledRead(Long merchantId, Long requestId) {
+        CustomizeRequest entity = this.getById(requestId);
+        if (entity == null) {
+            throw new BusinessException("工单不存在");
+        }
+        if (!entity.getMerchantId().equals(merchantId)) {
+            throw new BusinessException("无权限操作该工单");
+        }
+        if ("CANCELLED".equals(entity.getStatus()) && entity.getMerchantCancelledReadAt() == null) {
+            entity.setMerchantCancelledReadAt(LocalDateTime.now());
+            this.updateById(entity);
+        }
     }
 
     private String generateOrderNo() {

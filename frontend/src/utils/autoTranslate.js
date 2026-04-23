@@ -391,6 +391,60 @@ export function clearTranslationCache() {
   console.log("翻译缓存已清除");
 }
 
+// MutationObserver 相关变量
+let domObserver = null;
+let observerDebounceTimer = null;
+
+/**
+ * 启动 DOM 变化监听，自动翻译新增的中文内容
+ * 当 Vue 异步加载数据并渲染新 DOM 节点时，Observer 会自动触发翻译
+ */
+export function startTranslationObserver() {
+  if (domObserver) return; // 已在监听
+
+  domObserver = new MutationObserver((mutations) => {
+    // 检查是否有新增节点
+    let hasNewContent = false;
+    for (const mutation of mutations) {
+      if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
+        hasNewContent = true;
+        break;
+      }
+    }
+
+    if (!hasNewContent) return;
+
+    // 防抖：避免频繁触发（如 Vue 批量更新 DOM）
+    clearTimeout(observerDebounceTimer);
+    observerDebounceTimer = setTimeout(async () => {
+      try {
+        await translatePageToEnglish();
+      } catch (error) {
+        console.error("DOM变化自动翻译失败:", error);
+      }
+    }, 200);
+  });
+
+  domObserver.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+
+  console.log("翻译DOM观察器已启动");
+}
+
+/**
+ * 停止 DOM 变化监听
+ */
+export function stopTranslationObserver() {
+  if (domObserver) {
+    domObserver.disconnect();
+    domObserver = null;
+  }
+  clearTimeout(observerDebounceTimer);
+  console.log("翻译DOM观察器已停止");
+}
+
 // 导出工具函数
 export default {
   translatePageToEnglish,
@@ -400,4 +454,6 @@ export default {
   clearAllCache,
   containsChinese,
   cleanText,
+  startTranslationObserver,
+  stopTranslationObserver,
 };

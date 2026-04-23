@@ -99,3 +99,23 @@ export function markMessagesRead(requestId) {
     method: "put",
   });
 }
+
+/**
+ * 用户标记已完成工单已读
+ */
+export function markCompletedRead(id) {
+  return request({
+    url: `/api/customize/requests/${id}/completed-read`,
+    method: "put",
+  });
+}
+
+/**
+ * 商家标记已取消工单已读
+ */
+export function markCancelledRead(id) {
+  return request({
+    url: `/api/customize/requests/${id}/cancelled-read`,
+    method: "put",
+  });
+}

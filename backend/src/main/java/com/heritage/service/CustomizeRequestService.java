@@ -30,4 +30,14 @@ public interface CustomizeRequestService extends IService<CustomizeRequest> {
     Long confirm(Long userId, Long id, CustomizeConfirmRequest request);
 
     void updateStatus(Long userId, String role, Long id, CustomizeStatusUpdateRequest request);
+
+    /**
+     * 用户标记已完成工单为已读
+     */
+    void markCompletedRead(Long userId, Long requestId);
+
+    /**
+     * 商家标记已取消工单为已读
+     */
+    void markCancelledRead(Long merchantId, Long requestId);
 }

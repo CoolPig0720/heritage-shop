@@ -180,12 +180,14 @@ const fetchUnreadCount = async () => {
   try {
     const res = await getCustomizeUnreadCount();
     if (res.code === 200 && res.data) {
-      // 红点：未读消息 + 待处理工单（商家看PENDING待报价，用户看QUOTED待确认）
+      // 红点：未读消息 + 需要处理的工单
+      // 商家：PENDING（待报价，用户新提交）+ CONFIRMED（已确认，用户确认了报价）+ CANCELLED（已取消，用户取消了）
+      // 用户：QUOTED（已报价，商家已报价待查看确认）+ COMPLETED（已完成，商家标记完成）
       const unread = res.data.unreadMessageCount || 0;
       const actionNeeded =
         role.value === "MERCHANT"
-          ? res.data.pendingCount || 0
-          : res.data.quotedCount || 0;
+          ? (res.data.pendingCount || 0) + (res.data.confirmedCount || 0) + (res.data.cancelledCount || 0)
+          : (res.data.quotedCount || 0) + (res.data.completedCount || 0);
       customizeUnread.value = unread + actionNeeded;
     }
   } catch {
@@ -195,7 +197,7 @@ const fetchUnreadCount = async () => {
 
 const startUnreadPoll = () => {
   fetchUnreadCount();
-  unreadTimer = setInterval(fetchUnreadCount, 30000);
+  unreadTimer = setInterval(fetchUnreadCount, 3000);
 };
 
 const stopUnreadPoll = () => {

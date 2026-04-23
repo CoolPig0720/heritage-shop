@@ -61,8 +61,8 @@
             <img :src="getCover(product)" :alt="product.name" />
           </div>
           <div class="product-info">
-            <h3 class="product-name">{{ product.name }}</h3>
-            <p class="product-desc">{{ product.description }}</p>
+            <h3 class="product-name"><TransText :text="product.name" /></h3>
+            <p class="product-desc"><TransText :text="product.description" :enabled="!!product.description" />{{ !product.description ? "暂无描述" : "" }}</p>
             <div class="product-footer">
               <span class="price">¥{{ product.price }}</span>
               <span class="product-rating" v-if="product.ratingCount > 0">

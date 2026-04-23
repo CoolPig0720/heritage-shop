@@ -2,8 +2,10 @@
   <div class="customize">
     <div class="hero">
       <div class="hero-inner">
-        <div class="hero-title">非遗智能定制</div>
-        <div class="hero-subtitle">上传图片，AI智能生成个性化定制方案</div>
+        <div class="hero-title-row">
+          <div class="hero-title">非遗智能定制</div>
+          <div class="hero-subtitle">上传图片，AI智能生成个性化定制方案</div>
+        </div>
         <div class="hero-actions">
           <el-button @click="openHistoryDialog">历史记录</el-button>
           <el-button
@@ -171,7 +173,7 @@
                     placeholder="请选择输出尺寸"
                     style="width: 100%"
                   >
-                    <el-option label="与输入图一致" value="" />
+                    <el-option label="与输入图一致" value="auto" />
                     <el-option label="768x768" value="768:768" />
                     <el-option label="1024x1024" value="1024:1024" />
                     <el-option label="768x1024" value="768:1024" />
@@ -222,12 +224,27 @@
         <el-tab-pane label="文生图" name="txt2img">
           <div class="txt2img-layout">
             <div class="card txt2img-form">
-              <div class="card-header">
-                <div class="card-title">文生图</div>
-                <div class="card-desc">输入Prompt，选择输出尺寸</div>
+              <div class="card-header card-header--row">
+                <div class="card-title-row">
+                  <div class="card-title">文生图</div>
+                  <div class="card-desc">输入Prompt，选择输出尺寸</div>
+                </div>
               </div>
               <el-form :model="txt2imgForm" label-width="110px" class="form">
-                <el-form-item label="Prompt">
+                <el-form-item>
+                  <template #label>
+                    <span class="form-label" @click.prevent>
+                      Prompt
+                      <el-tooltip placement="top" effect="dark">
+                        <template #content>
+                          用文字描述你希望生成的画面内容、风格与细节。描述越具体，结果越稳定。
+                        </template>
+                        <el-icon class="help-icon" @click.prevent.stop
+                          ><QuestionFilled
+                        /></el-icon>
+                      </el-tooltip>
+                    </span>
+                  </template>
                   <el-input
                     v-model="txt2imgForm.prompt"
                     type="textarea"
@@ -237,7 +254,20 @@
                     show-word-limit
                   />
                 </el-form-item>
-                <el-form-item label="输出尺寸">
+                <el-form-item>
+                  <template #label>
+                    <span class="form-label" @click.prevent>
+                      输出尺寸
+                      <el-tooltip placement="top" effect="dark">
+                        <template #content>
+                          选择生成图分辨率。
+                        </template>
+                        <el-icon class="help-icon" @click.prevent.stop
+                          ><QuestionFilled
+                        /></el-icon>
+                      </el-tooltip>
+                    </span>
+                  </template>
                   <el-select
                     v-model="txt2imgForm.resolution"
                     placeholder="请选择输出尺寸"
@@ -263,9 +293,11 @@
             </div>
 
             <div class="card txt2img-result">
-              <div class="card-header">
-                <div class="card-title">生图结果</div>
-                <div class="card-desc">支持完整预览与放大查看</div>
+              <div class="card-header card-header--row">
+                <div class="card-title-row">
+                  <div class="card-title">生图结果</div>
+                  <div class="card-desc">支持完整预览与放大查看</div>
+                </div>
               </div>
               <div class="txt2img-result-body">
                 <el-empty
@@ -736,7 +768,7 @@ const img2imgForm = ref({
   restoreFace: false,
   strength: 0.5,
   prompt: "",
-  resolution: "",
+  resolution: "auto",
   count: 1,
 });
 
@@ -1123,7 +1155,7 @@ const resetImg2Img = () => {
     restoreFace: false,
     strength: 0.5,
     prompt: "",
-    resolution: "",
+    resolution: "auto",
     count: 1,
   };
   resultImages.value = [];
@@ -1149,7 +1181,7 @@ const handleGenerateImg2Img = async () => {
     fd.append("restoreFace", String(img2imgForm.value.restoreFace));
     fd.append("count", String(img2imgForm.value.count));
     fd.append("rspImgType", "url");
-    if (img2imgForm.value.resolution) {
+    if (img2imgForm.value.resolution && img2imgForm.value.resolution !== "auto") {
       fd.append("resolution", img2imgForm.value.resolution);
     }
 
@@ -1239,6 +1271,12 @@ onMounted(() => {
   position: relative;
 }
 
+.hero-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .hero-title {
   font-size: 28px;
   font-weight: 700;
@@ -1289,6 +1327,17 @@ onMounted(() => {
   margin-bottom: 12px;
 }
 
+.card-header--row {
+  flex-direction: row;
+  align-items: center;
+}
+
+.card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .card-title {
   font-size: 16px;
   font-weight: 700;
@@ -1331,6 +1380,12 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+.form-label-top {
+  font-size: 14px;
+  color: var(--text-color-primary);
+  font-weight: 500;
 }
 
 .help-icon {

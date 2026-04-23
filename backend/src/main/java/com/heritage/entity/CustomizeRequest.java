@@ -50,4 +50,16 @@ public class CustomizeRequest {
 
     @TableField("update_time")
     private LocalDateTime updateTime;
+
+    /**
+     * 用户查看已完成状态的时间（用于红点消除）
+     */
+    @TableField("user_completed_read_at")
+    private LocalDateTime userCompletedReadAt;
+
+    /**
+     * 商家查看已取消状态的时间（用于红点消除）
+     */
+    @TableField("merchant_cancelled_read_at")
+    private LocalDateTime merchantCancelledReadAt;
 }

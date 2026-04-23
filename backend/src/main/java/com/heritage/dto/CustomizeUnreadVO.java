@@ -11,5 +11,9 @@ public class CustomizeUnreadVO {
 
     private Long confirmedCount;
 
+    private Long cancelledCount;
+
+    private Long completedCount;
+
     private Long unreadMessageCount;
 }

@@ -123,11 +123,7 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
-                    <systemPropertyVariables>
-                        <file.encoding>UTF-8</file.encoding>
-                        <sun.stdout.encoding>UTF-8</sun.stdout.encoding>
-                        <sun.stderr.encoding>UTF-8</sun.stderr.encoding>
-                    </systemPropertyVariables>
+                    <jvmArguments>-Dfile.encoding=UTF-8</jvmArguments>
                 </configuration>
             </plugin>
         </plugins>

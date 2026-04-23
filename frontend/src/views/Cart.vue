@@ -10,12 +10,22 @@
                 <div class="header-title">购物车</div>
                 <div class="header-subtitle">已选择 {{ selectedCount }} 件</div>
               </div>
-              <el-button
-                size="small"
-                :loading="loading || updating"
-                @click="fetchCart"
-                >重置</el-button
-              >
+              <div class="header-right">
+                <el-input
+                  v-model="searchKeyword"
+                  placeholder="搜索商品名称"
+                  clearable
+                  size="small"
+                  class="cart-search-input"
+                  :prefix-icon="Search"
+                />
+                <el-button
+                  size="small"
+                  :loading="loading || updating"
+                  @click="fetchCart"
+                  >重置</el-button
+                >
+              </div>
             </div>
             <div class="cart-table-header">
               <div class="col product">商品</div>
@@ -104,7 +114,7 @@
               <AppPagination
                 v-model:current-page="cartCurrentPage"
                 v-model:page-size="cartPageSize"
-                :total="cartItems.length"
+                :total="filteredCartItems.length"
               />
             </div>
           </div>
@@ -127,6 +137,9 @@
           >
         </div>
       </div>
+      <el-empty v-else-if="searchKeyword.trim() && cartItems.length > 0 && filteredCartItems.length === 0" description="未找到匹配的商品" >
+        <el-button type="primary" size="small" @click="searchKeyword = ''">清除搜索</el-button>
+      </el-empty>
       <el-empty v-else description="购物车空空如也" />
     </div>
 
@@ -184,10 +197,10 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { Delete } from "@element-plus/icons-vue";
+import { Delete, Search } from "@element-plus/icons-vue";
 import AppPagination from "@/components/AppPagination.vue";
 import {
   deleteCartItem,
@@ -215,13 +228,22 @@ const router = useRouter();
 const loading = ref(false);
 const updating = ref(false);
 const cartItems = ref([]);
+const searchKeyword = ref("");
 const cartCurrentPage = ref(1);
 const cartPageSize = ref(5);
+
+const filteredCartItems = computed(() => {
+  const keyword = searchKeyword.value.trim().toLowerCase();
+  if (!keyword) return cartItems.value;
+  return cartItems.value.filter((item) =>
+    (item.productName || "").toLowerCase().includes(keyword),
+  );
+});
 
 const pagedCartItems = computed(() => {
   const start = (cartCurrentPage.value - 1) * cartPageSize.value;
   const end = start + cartPageSize.value;
-  return cartItems.value.slice(start, end);
+  return filteredCartItems.value.slice(start, end);
 });
 
 const addressDialogVisible = ref(false);
@@ -376,6 +398,10 @@ const goManageAddress = () => {
 onMounted(() => {
   fetchCart();
 });
+
+watch(searchKeyword, () => {
+  cartCurrentPage.value = 1;
+});
 </script>
 
 <style scoped>
@@ -419,6 +445,16 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cart-search-input {
+  width: 200px;
 }
 
 .header-title {

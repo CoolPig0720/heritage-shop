@@ -18,18 +18,26 @@
                   class="tab-badge"
               /></template>
             </el-tab-pane>
-            <el-tab-pane name="QUOTED">
+            <el-tab-pane label="已报价" name="QUOTED" />
+            <el-tab-pane label="已确认" name="CONFIRMED">
               <template #label
-                >已报价<el-badge
-                  v-if="unreadCounts.quotedCount > 0"
-                  :value="unreadCounts.quotedCount"
+                >已确认<el-badge
+                  v-if="unreadCounts.confirmedCount > 0"
+                  :value="unreadCounts.confirmedCount"
                   :max="99"
                   class="tab-badge"
               /></template>
             </el-tab-pane>
-            <el-tab-pane label="已确认" name="CONFIRMED" />
             <el-tab-pane label="已完成" name="COMPLETED" />
-            <el-tab-pane label="已取消" name="CANCELLED" />
+            <el-tab-pane name="CANCELLED">
+              <template #label
+                >已取消<el-badge
+                  v-if="unreadCounts.cancelledCount > 0"
+                  :value="unreadCounts.cancelledCount"
+                  :max="99"
+                  class="tab-badge"
+              /></template>
+            </el-tab-pane>
           </el-tabs>
           <el-input
             v-model="keyword"
@@ -319,6 +327,103 @@ onMounted(() => {
 
 .status-tabs {
   flex-shrink: 0;
+  --el-tabs-header-height: 40px;
+}
+
+.status-tabs :deep(.el-tabs__nav-wrap) {
+  background-color: transparent !important;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.status-tabs :deep(.el-tabs__nav-wrap::after) {
+  height: 0;
+}
+
+.status-tabs :deep(.el-tabs__item) {
+  transition: all 0.3s ease !important;
+  border-radius: 6px !important;
+  margin: 0 !important;
+  padding: 0 16px !important;
+  color: #606266 !important;
+  font-weight: normal !important;
+  position: relative !important;
+  border: none !important;
+  background: transparent !important;
+  height: 40px !important;
+  line-height: 40px !important;
+}
+
+/* 暗色模式下的 tab 文字颜色 */
+html.dark .status-tabs :deep(.el-tabs__item) {
+  color: #c0c4cc !important;
+}
+
+/* 激活状态的 tab */
+.status-tabs :deep(.el-tabs__item.is-active) {
+  color: #409eff !important;
+  font-weight: 500 !important;
+  background-color: rgba(64, 158, 255, 0.05) !important;
+}
+
+/* 暗色模式下激活 tab */
+html.dark .status-tabs :deep(.el-tabs__item.is-active) {
+  color: #409eff !important;
+  background-color: rgba(64, 158, 255, 0.08) !important;
+}
+
+/* hover 状态 */
+.status-tabs :deep(.el-tabs__item:hover) {
+  color: #409eff !important;
+  background-color: rgba(64, 158, 255, 0.03) !important;
+}
+
+/* 暗色模式下 hover */
+html.dark .status-tabs :deep(.el-tabs__item:hover) {
+  background-color: rgba(64, 158, 255, 0.05) !important;
+}
+
+/* 底部指示线 */
+.status-tabs :deep(.el-tabs__active-bar) {
+  display: none !important;
+}
+
+.status-tabs :deep(.el-tabs__item.is-active)::after {
+  content: "" !important;
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  transform: none !important;
+  width: 100% !important;
+  height: 1px !important;
+  background-color: #409eff !important;
+  border-radius: 1px !important;
+  opacity: 0.7 !important;
+}
+
+.status-tabs :deep(.el-tabs__header) {
+  margin: 0;
+}
+
+.status-tabs :deep(.el-tabs__content) {
+  display: none;
+}
+
+.tab-badge {
+  margin-left: 6px;
+}
+
+.tab-badge :deep(.el-badge__content) {
+  position: relative;
+  top: 0;
+  right: 0;
+  transform: none;
+  height: 16px;
+  line-height: 16px;
+  padding: 0 5px;
+  font-size: 11px;
+  font-weight: 600;
+  border: none;
 }
 
 .text-muted {
@@ -338,17 +443,6 @@ onMounted(() => {
 
 :deep(.el-badge) {
   overflow: visible;
-}
-
-.tab-badge {
-  margin-left: 4px;
-}
-
-.tab-badge :deep(.el-badge__content) {
-  position: relative;
-  top: 0;
-  right: 0;
-  transform: none;
 }
 
 :deep(.striped-row) {

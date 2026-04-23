@@ -104,6 +104,22 @@ public class CustomizeRequestController {
         return Result.success();
     }
 
+    @PutMapping("/requests/{id}/completed-read")
+    @Operation(summary = "用户标记已完成工单已读")
+    public Result<Void> markCompletedRead(@PathVariable Long id) {
+        Long userId = getCurrentUserId();
+        customizeRequestService.markCompletedRead(userId, id);
+        return Result.success();
+    }
+
+    @PutMapping("/requests/{id}/cancelled-read")
+    @Operation(summary = "商家标记已取消工单已读")
+    public Result<Void> markCancelledRead(@PathVariable Long id) {
+        Long userId = getCurrentUserId();
+        customizeRequestService.markCancelledRead(userId, id);
+        return Result.success();
+    }
+
     // ====== 沟通消息 ======
 
     @PostMapping("/requests/{requestId}/messages")

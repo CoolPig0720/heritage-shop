@@ -11,6 +11,8 @@ import { i18n, getElementLocale } from "@/i18n";
 import {
   translatePageToEnglish,
   clearOriginalTextCache,
+  startTranslationObserver,
+  stopTranslationObserver,
 } from "@/utils/autoTranslate";
 import { initTheme } from "@/utils/theme";
 
@@ -19,61 +21,50 @@ const elementLocale = computed(() =>
   getElementLocale(i18n.global.locale.value),
 );
 
-// 页面加载时，如果语言设置为英文，自动翻译
+// 页面加载时，如果语言设置为英文，启动翻译观察器
 onMounted(async () => {
   initTheme();
   if (i18n.global.locale.value === "en") {
-    // 等待 DOM 渲染完成后翻译
-    setTimeout(async () => {
-      try {
-        await translatePageToEnglish();
-      } catch (error) {
-        console.error("页面加载自动翻译失败:", error);
-      }
-    }, 500);
+    // 先翻译当前已有内容
+    try {
+      await translatePageToEnglish();
+    } catch (error) {
+      console.error("页面加载自动翻译失败:", error);
+    }
+    // 启动 Observer 监听后续 DOM 变化（如异步数据加载后渲染的内容）
+    startTranslationObserver();
   }
 });
 
 // 监听路由变化，清除原始文本缓存
-// 这解决了页面切换时 DOM 节点引用失效的问题
+// Observer 会自动检测新页面渲染的中文内容并翻译
 watch(
   () => route.path,
   (newPath, oldPath) => {
     if (newPath !== oldPath) {
       // 路由变化时清除原始文本缓存（保留翻译结果缓存）
       clearOriginalTextCache();
-
-      // 如果当前是英文模式，等待新页面渲染后翻译
-      if (i18n.global.locale.value === "en") {
-        setTimeout(async () => {
-          try {
-            await translatePageToEnglish();
-          } catch (error) {
-            console.error("路由切换后自动翻译失败:", error);
-          }
-        }, 300);
-      }
     }
   },
 );
 
-// 监听语言变化，自动翻译或恢复
+// 监听语言变化，启动/停止翻译观察器
 watch(
   () => i18n.global.locale.value,
   async (newLang, oldLang) => {
     if (newLang === oldLang) return;
 
     if (newLang === "en") {
-      // 切换到英文，翻译页面
-      setTimeout(async () => {
-        try {
-          await translatePageToEnglish();
-        } catch (error) {
-          console.error("语言切换自动翻译失败:", error);
-        }
-      }, 300);
+      // 切换到英文，先翻译当前内容，再启动观察器
+      try {
+        await translatePageToEnglish();
+      } catch (error) {
+        console.error("语言切换自动翻译失败:", error);
+      }
+      startTranslationObserver();
     } else {
-      // 切换到中文，恢复原始文本
+      // 切换到中文，停止观察器并恢复原始文本
+      stopTranslationObserver();
       clearOriginalTextCache();
     }
   },
